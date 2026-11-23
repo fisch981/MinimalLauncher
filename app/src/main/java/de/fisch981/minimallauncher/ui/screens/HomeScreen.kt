@@ -38,6 +38,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,8 +47,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,6 +58,8 @@ import androidx.compose.ui.unit.sp
 import de.fisch981.minimallauncher.data.model.AppNotificationItem
 import de.fisch981.minimallauncher.ui.components.AppListItem
 import de.fisch981.minimallauncher.ui.components.AppPopupSheet
+import de.fisch981.minimallauncher.ui.components.DrawerLetterSection
+import de.fisch981.minimallauncher.ui.components.DrawerScrollMath
 import de.fisch981.minimallauncher.ui.components.FavoritesSelectionDialog
 import de.fisch981.minimallauncher.ui.components.HeaderWidget
 import de.fisch981.minimallauncher.ui.components.IconPickerDialog
@@ -135,6 +140,10 @@ fun HomeScreen(
         label = "waveClearanceOffset"
     )
 
+    val density = LocalDensity.current
+    var drawerViewportHeightPx by remember { mutableIntStateOf(0) }
+    var pendingDrawerScroll by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+
     val homeListState = rememberLazyListState()
     val drawerListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -142,11 +151,24 @@ fun HomeScreen(
     // Back button / return to launcher returns from App Drawer to Favorites Home & collapses recent list
     LaunchedEffect(scrollToTopEvent) {
         if (scrollToTopEvent > 0) {
+            pendingDrawerScroll = null
             if (isAppDrawerMode) {
                 isAppDrawerMode = false
             }
             isRecentExpanded = false
             homeListState.scrollToItem(0)
+        }
+    }
+
+    LaunchedEffect(isAppDrawerMode) {
+        if (isAppDrawerMode) {
+            val pending = pendingDrawerScroll
+            if (pending != null) {
+                pendingDrawerScroll = null
+                drawerListState.scrollToItem(pending.first, pending.second)
+            }
+        } else {
+            pendingDrawerScroll = null
         }
     }
 
@@ -173,20 +195,30 @@ fun HomeScreen(
         }
     }
 
-    // Index map for all-apps LazyColumn (index 0 is top spacer)
-    val letterIndexMap = remember(uiState.allApps) {
-        val map = mutableMapOf<Char, Int>()
+    // Index & item-count map for all-apps LazyColumn (index 0 is top spacer)
+    val letterSectionMap = remember(uiState.allApps) {
+        val map = mutableMapOf<Char, DrawerLetterSection>()
         var currentIndex = 1 // top spacer
-        var lastChar: Char? = null
+        var currentChar: Char? = null
+        var sectionHeaderIndex = 1
+        var sectionCount = 0
 
         for (app in uiState.allApps) {
             val char = app.initialChar
-            if (char != lastChar) {
-                map[char] = currentIndex
+            if (char != currentChar) {
+                currentChar?.let { prev ->
+                    map[prev] = DrawerLetterSection(sectionHeaderIndex, sectionCount)
+                }
+                currentChar = char
+                sectionHeaderIndex = currentIndex
+                sectionCount = 0
                 currentIndex++ // section letter header
-                lastChar = char
             }
+            sectionCount++
             currentIndex++ // app item
+        }
+        currentChar?.let { last ->
+            map[last] = DrawerLetterSection(sectionHeaderIndex, sectionCount)
         }
         map
     }
@@ -195,27 +227,36 @@ fun HomeScreen(
 
     fun scrollDrawerToLetter(letter: Char) {
         if (letter == '★') {
+            pendingDrawerScroll = null
             isAppDrawerMode = false
             return
         }
-        isAppDrawerMode = true
-        val exact = letterIndexMap[letter]
-        val targetIndex = if (exact != null) {
-            exact
+        val section = DrawerScrollMath.resolveLetterSection(letter, letterSectionMap, alphabetOrder)
+        val (targetIndex, scrollOffset) = if (section != null) {
+            val headerHeightPx = with(density) { (16.dp + 4.dp).toPx() + 13.sp.toPx() * 1.35f }
+            val textLinePx = with(density) { appFontSizeSp.coerceIn(13, 24).sp.toPx() * 1.35f }
+            val iconPx = if (showAppIcons) with(density) { 36.dp.toPx() } else 0f
+            val verticalPaddingPx = with(density) { (appRowSpacingDp.coerceIn(2, 18) * 2).dp.toPx() }
+            val estimatedRowHeightPx = maxOf(textLinePx, iconPx) + verticalPaddingPx
+            val headerTopOffsetPx = DrawerScrollMath.calculateHeaderTopOffsetPx(
+                viewportHeightPx = drawerViewportHeightPx,
+                headerHeightPx = headerHeightPx,
+                estimatedRowHeightPx = estimatedRowHeightPx,
+                appCount = section.appCount
+            )
+            section.headerIndex to -headerTopOffsetPx
         } else {
-            val startPos = alphabetOrder.indexOf(letter).coerceAtLeast(0)
-            var found: Int? = null
-            for (i in startPos until alphabetOrder.size) {
-                val candidate = letterIndexMap[alphabetOrder[i]]
-                if (candidate != null) {
-                    found = candidate
-                    break
-                }
-            }
-            found ?: 0
+            0 to 0
         }
-        coroutineScope.launch {
-            drawerListState.scrollToItem(targetIndex)
+
+        if (!isAppDrawerMode) {
+            pendingDrawerScroll = targetIndex to scrollOffset
+            isAppDrawerMode = true
+        } else {
+            pendingDrawerScroll = null
+            coroutineScope.launch {
+                drawerListState.scrollToItem(targetIndex, scrollOffset)
+            }
         }
     }
 
@@ -239,6 +280,7 @@ fun HomeScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .onSizeChanged { drawerViewportHeightPx = it.height }
             .background(PureBlack)
     ) {
         // Main Content Area (Favorites Home OR App Drawer A-Z)
@@ -406,6 +448,9 @@ fun HomeScreen(
             // ==========================================
             // MODE B: APP DRAWER (ALLE APPS A-Z)
             // ==========================================
+            val drawerTopSpacerDp = with(density) { (drawerViewportHeightPx * 0.50f).toDp() }.coerceAtLeast(24.dp)
+            val drawerBottomSpacerDp = with(density) { (drawerViewportHeightPx * 0.45f).toDp() }.coerceAtLeast(24.dp)
+
             LazyColumn(
                 state = drawerListState,
                 modifier = Modifier
@@ -413,7 +458,7 @@ fun HomeScreen(
                     .offset(x = waveClearanceOffset)
             ) {
                 item(key = "drawer_top_spacer") {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(drawerTopSpacerDp))
                 }
 
                 var currentSectionChar: Char? = null
@@ -485,6 +530,10 @@ fun HomeScreen(
                             onClick = { viewModel.setSettingsOpen(true) }
                         )
                     }
+                }
+
+                item(key = "drawer_bottom_spacer") {
+                    Spacer(modifier = Modifier.height(drawerBottomSpacerDp))
                 }
             }
         }

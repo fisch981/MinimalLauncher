@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.31] - 2026-11-23
+
+### Deutsch
+- **Ausgewählte Buchstaben in der Bildschirmmitte zentriert:** Beim Wählen oder Ziehen eines Buchstabens auf der linken oder rechten Buchstabenwelle erscheinen der Abschnitts-Header und die zugehörigen Apps nun vertikal zentriert in der Bildschirmmitte statt am oberen Rand.
+- **Saubere Zentrierung von `A` bis `Z`/`#`:** Dynamische Abstände am Anfang und Ende der App-Liste sowie eine nahtlose Übergangs-Positionierung beim Wechsel vom Homescreen in den App-Drawer sorgen dafür, dass auch der erste und letzte Buchstabe mittig im Blickfeld liegen.
+
+### English
+- **Vertically Centered Wave-Selected Letter Sections:** Selecting or scrubbing any letter on the left or right alphabet wave now positions that letter's section header and app entries in the vertical middle of the screen rather than at the top edge.
+- **Clean Edge-Letter & Transition Handling (`A` to `Z`/`#`):** Viewport-proportional top and bottom list spacers plus deferred first-frame drawer scrolling ensure the very first letter (`A`), trailing letters (`Z`/`#`), and the initial Home-to-Drawer switch all land comfortably centered.
+
+---
+
 ## [1.0.30] - 2026-11-23
 
 ### Deutsch
