@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.32] - 2026-11-23
+
+### Deutsch
+- **Benachrichtigungen per Wischgeste löschen:** Bei Apps mit aktiven Benachrichtigungen (sowohl in der Benachrichtigungsliste als auch in Favoriten, „Zuletzt benutzt“ und im App-Drawer) können die zugehörigen Benachrichtigungen nun einfach durch Wischen nach links oder rechts verworfen werden – inklusive dezentem `NotificationsOff`-Indikator und haptischem Feedback.
+- **Saubere Gruppensortierung:** Aktuelle Einzelbenachrichtigungen werden vor Gruppen-Zusammenfassungen angezeigt, sodass gelöschte Konversationen vollständig verschwinden und die Vorschau immer die neueste Meldung zeigt. Bei Apps ohne löschbare Benachrichtigung bleibt „Wisch nach rechts = App-Menü“ wie gewohnt erhalten.
+
+### English
+- **Swipe Left or Right to Dismiss Notifications:** Swiping left or right on any app entry displaying an active notification (in the active-notifications list as well as Favorites, Recently Used, and the App Drawer) now dismisses that app's clearable notifications, complete with a subtle `NotificationsOff` reveal icon and haptic feedback.
+- **Smart Group Ordering & Fallback Preservation:** Individual newest notifications rank ahead of group summaries, grouped notifications are cleared completely from the system shade, and apps without clearable notifications preserve swipe-right to open the app menu.
+
+---
+
 ## [1.0.31] - 2026-11-23
 
 ### Deutsch

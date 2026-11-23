@@ -337,7 +337,10 @@ fun HomeScreen(
                                 fontSizeSp = appFontSizeSp,
                                 verticalPaddingDp = appRowSpacingDp,
                                 hasLeftWave = hasLeftWave,
-                                hasRightWave = hasRightWave
+                                hasRightWave = hasRightWave,
+                                onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) },
+                                slideOutOnDismiss = true,
+                                modifier = Modifier.animateItem()
                             )
                         }
 
@@ -372,7 +375,8 @@ fun HomeScreen(
                             fontSizeSp = appFontSizeSp,
                             verticalPaddingDp = appRowSpacingDp,
                             hasLeftWave = hasLeftWave,
-                            hasRightWave = hasRightWave
+                            hasRightWave = hasRightWave,
+                            onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) }
                         )
                     }
 
@@ -388,6 +392,7 @@ fun HomeScreen(
                                     viewModel.launchApp(it)
                                 },
                                 onLongClickApp = { viewModel.openPopup(it) },
+                                onDismissNotifications = { viewModel.dismissNotificationsForApp(it.packageName) },
                                 showIcon = showAppIcons,
                                 showNotificationPreview = showNotificationPreview,
                                 appFontFamily = appFontFamily,
@@ -495,7 +500,8 @@ fun HomeScreen(
                             fontSizeSp = appFontSizeSp,
                             verticalPaddingDp = appRowSpacingDp,
                             hasLeftWave = hasLeftWave,
-                            hasRightWave = hasRightWave
+                            hasRightWave = hasRightWave,
+                            onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) }
                         )
                     }
                 }
@@ -725,6 +731,7 @@ private fun RecentAppsEntry(
     onToggleExpand: () -> Unit,
     onLaunchApp: (AppItem) -> Unit,
     onLongClickApp: (AppItem) -> Unit,
+    onDismissNotifications: (AppItem) -> Unit = {},
     showIcon: Boolean,
     showNotificationPreview: Boolean,
     appFontFamily: FontFamily,
@@ -787,7 +794,8 @@ private fun RecentAppsEntry(
                     fontSizeSp = appFontSizeSp,
                     verticalPaddingDp = appRowSpacingDp,
                     hasLeftWave = hasLeftWave,
-                    hasRightWave = hasRightWave
+                    hasRightWave = hasRightWave,
+                    onDismissNotifications = { onDismissNotifications(recentApp) }
                 )
             }
         }

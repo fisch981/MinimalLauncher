@@ -783,6 +783,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun mediaPrevious() = mediaHelper.skipToPrevious()
     fun refreshMediaListener() = mediaHelper.startListening()
 
+    fun dismissNotificationsForApp(packageName: String) {
+        LauncherNotificationService.dismissNotificationsForPackage(packageName)
+    }
+
     fun openActiveMediaApp() {
         val pkg = mediaState.value.packageName ?: return
         val matchedApp = launcherState.value.allApps.firstOrNull { it.packageName == pkg }

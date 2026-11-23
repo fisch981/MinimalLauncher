@@ -20,6 +20,9 @@ class LauncherNotificationService : NotificationListenerService() {
         private val _isServiceConnected = MutableStateFlow(false)
         val isServiceConnected: StateFlow<Boolean> = _isServiceConnected.asStateFlow()
 
+        @Volatile
+        private var activeService: LauncherNotificationService? = null
+
         fun isPermissionGranted(context: Context): Boolean {
             val enabledListeners = Settings.Secure.getString(
                 context.contentResolver,
@@ -28,18 +31,33 @@ class LauncherNotificationService : NotificationListenerService() {
             val myComponent = ComponentName(context, LauncherNotificationService::class.java).flattenToString()
             return enabledListeners.contains(myComponent)
         }
+
+        fun dismissNotificationsForPackage(packageName: String): Boolean {
+            return activeService?.cancelPackageNotifications(packageName) ?: false
+        }
     }
 
     override fun onListenerConnected() {
         super.onListenerConnected()
+        activeService = this
         _isServiceConnected.value = true
         refreshAllNotifications()
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
+        if (activeService === this) {
+            activeService = null
+        }
         _isServiceConnected.value = false
         _notifications.value = emptyMap()
+    }
+
+    override fun onDestroy() {
+        if (activeService === this) {
+            activeService = null
+        }
+        super.onDestroy()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -52,10 +70,55 @@ class LauncherNotificationService : NotificationListenerService() {
         refreshAllNotifications()
     }
 
+    private fun cancelPackageNotifications(packageName: String): Boolean {
+        val keysToCancel = linkedSetOf<String>()
+        try {
+            val active = activeNotifications
+            if (active != null) {
+                for (sbn in active) {
+                    if (
+                        sbn.packageName == packageName &&
+                        sbn.isClearable &&
+                        (sbn.notification.flags and Notification.FLAG_ONGOING_EVENT) == 0
+                    ) {
+                        keysToCancel.add(sbn.key)
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            // Fall back to tracked clearable notification keys below
+        }
+
+        _notifications.value[packageName]
+            .orEmpty()
+            .filter { it.isClearable }
+            .forEach { keysToCancel.add(it.key) }
+
+        if (keysToCancel.isEmpty()) return false
+
+        try {
+            cancelNotifications(keysToCancel.toTypedArray())
+        } catch (_: Exception) {
+            for (key in keysToCancel) {
+                try {
+                    cancelNotification(key)
+                } catch (_: Exception) {
+                }
+            }
+        }
+
+        _notifications.value = NotificationStateUtils.removeDismissedKeys(
+            current = _notifications.value,
+            packageName = packageName,
+            dismissedKeys = keysToCancel
+        )
+        return true
+    }
+
     private fun refreshAllNotifications() {
         try {
             val active = activeNotifications ?: return
-            val map = mutableMapOf<String, MutableList<AppNotificationItem>>()
+            val map = mutableMapOf<String, MutableList<RankedNotification>>()
 
             for (sbn in active) {
                 // Ignore ongoing system notifications (like charging, persistent foreground service)
@@ -74,12 +137,16 @@ class LauncherNotificationService : NotificationListenerService() {
                     packageName = pkg,
                     title = title,
                     text = text,
-                    postTime = sbn.postTime
+                    postTime = sbn.postTime,
+                    isClearable = sbn.isClearable
                 )
+                val isGroupSummary = (sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0
 
-                map.getOrPut(pkg) { mutableListOf() }.add(item)
+                map.getOrPut(pkg) { mutableListOf() }.add(RankedNotification(item, isGroupSummary))
             }
-            _notifications.value = map
+            _notifications.value = map.mapValues { (_, items) ->
+                NotificationStateUtils.sortPackageNotifications(items)
+            }
         } catch (_: Exception) {
             // Service might not be ready yet
         }
