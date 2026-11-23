@@ -5,6 +5,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import java.io.File
+import java.util.Locale
 import java.util.zip.ZipFile
 
 /** Importiert die Icon-Zuordnung aus einer `.novabackup`-Datei (ZIP mit `nova.db` und `nova.xml`). */
@@ -21,7 +22,10 @@ class NovaBackupImporter(
         val customLabels: Map<String, String> = emptyMap()
     )
 
-    fun importFromUri(uri: Uri): ImportResult {
+    fun importFromUri(
+        uri: Uri,
+        isGerman: Boolean = Locale.getDefault().language.equals("de", ignoreCase = true)
+    ): ImportResult {
         val workDir = File(context.cacheDir, "nova_import").apply {
             deleteRecursively()
             mkdirs()
@@ -29,7 +33,14 @@ class NovaBackupImporter(
         try {
             val zipFile = File(workDir, "backup.zip")
             val input = context.contentResolver.openInputStream(uri)
-                ?: return ImportResult(0, errorMessage = "Die Datei konnte nicht geöffnet werden.")
+                ?: return ImportResult(
+                    0,
+                    errorMessage = if (isGerman) {
+                        "Die Datei konnte nicht geöffnet werden."
+                    } else {
+                        "The file could not be opened."
+                    }
+                )
             input.use { src -> zipFile.outputStream().use { dst -> src.copyTo(dst) } }
 
             var dbFile: File? = null
@@ -49,17 +60,39 @@ class NovaBackupImporter(
                     }
                 }
             } catch (e: java.util.zip.ZipException) {
-                return ImportResult(0, errorMessage = "Das ist keine gültige Nova-Backup-Datei (kein ZIP-Archiv).")
+                return ImportResult(
+                    0,
+                    errorMessage = if (isGerman) {
+                        "Das ist keine gültige Nova-Backup-Datei (kein ZIP-Archiv)."
+                    } else {
+                        "This is not a valid Nova backup file (not a ZIP archive)."
+                    }
+                )
             }
 
             val db = dbFile
-                ?: return ImportResult(0, errorMessage = "Im Backup wurde keine nova.db gefunden.")
+                ?: return ImportResult(
+                    0,
+                    errorMessage = if (isGerman) {
+                        "Im Backup wurde keine nova.db gefunden."
+                    } else {
+                        "No nova.db was found in the backup."
+                    }
+                )
 
             val result = SQLiteDatabase.openDatabase(db.absolutePath, null, SQLiteDatabase.OPEN_READONLY).use { sqlite ->
                 NovaBackupParser.parse(AndroidNovaDb(sqlite), xml)
             }
             if (result.icons.isEmpty()) {
-                return ImportResult(0, result.iconPackPackage, "Im Backup sind keine benutzerdefinierten Icons gespeichert.")
+                return ImportResult(
+                    0,
+                    result.iconPackPackage,
+                    if (isGerman) {
+                        "Im Backup sind keine benutzerdefinierten Icons gespeichert."
+                    } else {
+                        "No custom icons are stored in the backup."
+                    }
+                )
             }
             val count = store.replaceAll(result.icons)
             return ImportResult(
@@ -69,7 +102,14 @@ class NovaBackupImporter(
                 customLabels = result.customLabels
             )
         } catch (e: Exception) {
-            return ImportResult(0, errorMessage = "Import fehlgeschlagen: ${e.javaClass.simpleName}: ${e.message}")
+            return ImportResult(
+                0,
+                errorMessage = if (isGerman) {
+                    "Import fehlgeschlagen: ${e.javaClass.simpleName}: ${e.message}"
+                } else {
+                    "Import failed: ${e.javaClass.simpleName}: ${e.message}"
+                }
+            )
         } finally {
             workDir.deleteRecursively()
         }

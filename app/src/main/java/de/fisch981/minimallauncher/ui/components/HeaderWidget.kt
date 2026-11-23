@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import de.fisch981.minimallauncher.data.model.MediaState
 import de.fisch981.minimallauncher.ui.theme.GrayLight
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
+import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -61,13 +62,14 @@ fun HeaderWidget(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
     var currentTime by remember { mutableStateOf("") }
     var currentDate by remember { mutableStateOf("") }
     var batteryPercent by remember { mutableIntStateOf(100) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(strings.isGerman) {
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val dateFormat = SimpleDateFormat("EEEE, d. MMMM", Locale.getDefault())
+        val dateFormat = SimpleDateFormat(strings.dateFormatPattern, strings.dateLocale)
         val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
 
         while (true) {
@@ -154,7 +156,7 @@ fun HeaderWidget(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = mediaState.title ?: "Titel unbekannt",
+                        text = mediaState.title ?: strings.unknownTitle,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = PureWhite,
@@ -175,7 +177,7 @@ fun HeaderWidget(
                     IconButton(onClick = onMediaPrevious, modifier = Modifier.size(36.dp)) {
                         Icon(
                             imageVector = Icons.Default.SkipPrevious,
-                            contentDescription = "Vorheriger",
+                            contentDescription = strings.mediaPrevious,
                             tint = PureWhite,
                             modifier = Modifier.size(20.dp)
                         )
@@ -183,7 +185,7 @@ fun HeaderWidget(
                     IconButton(onClick = onMediaPlayPause, modifier = Modifier.size(36.dp)) {
                         Icon(
                             imageVector = if (mediaState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = "Play/Pause",
+                            contentDescription = strings.mediaPlayPause,
                             tint = PureWhite,
                             modifier = Modifier.size(24.dp)
                         )
@@ -191,7 +193,7 @@ fun HeaderWidget(
                     IconButton(onClick = onMediaNext, modifier = Modifier.size(36.dp)) {
                         Icon(
                             imageVector = Icons.Default.SkipNext,
-                            contentDescription = "Nächster",
+                            contentDescription = strings.mediaNext,
                             tint = PureWhite,
                             modifier = Modifier.size(20.dp)
                         )

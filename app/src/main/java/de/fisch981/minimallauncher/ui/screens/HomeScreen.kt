@@ -34,6 +34,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,11 +61,15 @@ import de.fisch981.minimallauncher.ui.components.RenameAppDialog
 import de.fisch981.minimallauncher.ui.components.SearchOverlay
 import de.fisch981.minimallauncher.ui.components.WaveScroller
 import de.fisch981.minimallauncher.ui.theme.BorderDark
+import de.fisch981.minimallauncher.ui.theme.EnglishStrings
+import de.fisch981.minimallauncher.ui.theme.GermanStrings
 import de.fisch981.minimallauncher.ui.theme.GrayLight
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
+import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.viewmodel.LauncherViewModel
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -71,6 +77,14 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val appLanguage by viewModel.appLanguage.collectAsState()
+    val systemLocale = remember(configuration) {
+        configuration.locales.get(0) ?: Locale.getDefault()
+    }
+    val strings = remember(appLanguage, systemLocale) {
+        if (appLanguage.isGerman(systemLocale)) GermanStrings else EnglishStrings
+    }
 
     val uiState by viewModel.launcherState.collectAsState()
     val mediaState by viewModel.mediaState.collectAsState()
@@ -183,12 +197,13 @@ fun HomeScreen(
         if (targetApp != null && data != null) {
             viewModel.applyPickedIconFromResult(targetApp, data) { saved ->
                 if (!saved && result.resultCode == Activity.RESULT_OK) {
-                    Toast.makeText(context, "Ausgewähltes Icon konnte nicht gelesen werden.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, strings.selectedIconReadError, Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
+    CompositionLocalProvider(LocalAppStrings provides strings) {
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -278,13 +293,13 @@ fun HomeScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Suche",
+                            contentDescription = strings.searchAppsButton,
                             tint = GrayMedium,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Suche",
+                            text = strings.searchAppsButton,
                             fontSize = 12.sp,
                             color = GrayMedium
                         )
@@ -292,7 +307,7 @@ fun HomeScreen(
 
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Einstellungen",
+                        contentDescription = strings.settingsContentDesc,
                         tint = GrayMedium,
                         modifier = Modifier
                             .clickable { viewModel.setSettingsOpen(true) }
@@ -364,17 +379,17 @@ fun HomeScreen(
 
                         ActionRowButton(
                             icon = Icons.Default.Search,
-                            label = "Suche",
+                            label = strings.searchAppsButton,
                             onClick = { viewModel.setSearchOpen(true) }
                         )
                         ActionRowButton(
                             icon = Icons.Default.Star,
-                            label = "Favoriten bearbeiten",
+                            label = strings.editFavorites,
                             onClick = { viewModel.setManageFavoritesOpen(true) }
                         )
                         ActionRowButton(
                             icon = Icons.Default.Settings,
-                            label = "Launcher-Einstellungen",
+                            label = strings.launcherSettings,
                             onClick = { viewModel.setSettingsOpen(true) }
                         )
                     }
@@ -473,7 +488,7 @@ fun HomeScreen(
                 favoriteKeys = latestFolderApp.subApps.map { it.key }.toSet(),
                 onToggleFavorite = { child -> viewModel.toggleSubApp(latestFolderApp, child) },
                 onDismiss = { viewModel.closeFolderEditor() },
-                title = "Ordner für ${latestFolderApp.label}"
+                title = strings.folderForTitle(latestFolderApp.label)
             )
         }
 
@@ -521,6 +536,7 @@ fun HomeScreen(
             )
         }
     }
+    }
 }
 
 @Composable
@@ -564,6 +580,7 @@ private fun RecentAppsEntry(
     hasRightWave: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     val startPadding = if (hasLeftWave) 72.dp else 28.dp
     val endPadding = if (hasRightWave) 56.dp else 24.dp
 
@@ -581,13 +598,13 @@ private fun RecentAppsEntry(
         ) {
             Icon(
                 imageVector = Icons.Default.History,
-                contentDescription = "Zuletzt benutzt",
+                contentDescription = strings.recentlyUsed,
                 tint = GrayLight,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Zuletzt benutzt",
+                text = strings.recentlyUsed,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = GrayLight,
@@ -595,7 +612,7 @@ private fun RecentAppsEntry(
             )
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "Einklappen" else "Ausklappen",
+                contentDescription = if (isExpanded) strings.collapse else strings.expand,
                 tint = GrayMedium,
                 modifier = Modifier.size(18.dp)
             )

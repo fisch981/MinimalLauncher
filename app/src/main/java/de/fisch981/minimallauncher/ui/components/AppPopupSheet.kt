@@ -52,6 +52,7 @@ import de.fisch981.minimallauncher.ui.theme.DarkSurface
 import de.fisch981.minimallauncher.ui.theme.GrayLight
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
 import de.fisch981.minimallauncher.ui.theme.GrayMuted
+import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 
@@ -73,6 +74,7 @@ fun AppPopupSheet(
     onAddSubAppClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -127,7 +129,7 @@ fun AppPopupSheet(
             // Pop-up Folder / Sub-Apps
             if (app.subApps.isNotEmpty()) {
                 Text(
-                    text = "Ordner / Unter-Apps",
+                    text = strings.folderSubAppsHeader,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = GrayMedium,
@@ -166,7 +168,7 @@ fun AppPopupSheet(
             // App Shortcuts
             if (shortcuts.isNotEmpty()) {
                 Text(
-                    text = "Shortcuts",
+                    text = strings.shortcutsHeader,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = GrayMedium,
@@ -214,7 +216,7 @@ fun AppPopupSheet(
             // Active Notifications
             if (notifications.isNotEmpty()) {
                 Text(
-                    text = "Benachrichtigungen",
+                    text = strings.notificationsHeader,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = GrayMedium,
@@ -259,10 +261,10 @@ fun AppPopupSheet(
 
             HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 8.dp))
 
-            // Actions: Favorite, Icon ändern, Sub-App hinzufügen, Verbergen, App-Info
+            // Actions: Favorite, Rename, Change icon, Restore icon, Add sub-app, Hide, App-Info
             PopupActionItem(
                 icon = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
-                label = if (isFavorite) "Aus Favoriten entfernen" else "Zu Favoriten hinzufügen",
+                label = if (isFavorite) strings.removeFromFavorites else strings.addToFavorites,
                 onClick = {
                     onToggleFavorite()
                     onDismiss()
@@ -271,7 +273,7 @@ fun AppPopupSheet(
 
             PopupActionItem(
                 icon = Icons.Default.Edit,
-                label = "Name ändern",
+                label = strings.renameAppAction,
                 onClick = {
                     onRenameAppClick()
                     onDismiss()
@@ -280,7 +282,7 @@ fun AppPopupSheet(
 
             PopupActionItem(
                 icon = Icons.Default.Edit,
-                label = "Icon ändern",
+                label = strings.changeIconAction,
                 onClick = {
                     onEditIconClick()
                     onDismiss()
@@ -289,7 +291,7 @@ fun AppPopupSheet(
 
             PopupActionItem(
                 icon = Icons.Default.Refresh,
-                label = "Standard-Icon wiederherstellen",
+                label = strings.restoreDefaultIconAction,
                 onClick = {
                     onResetIconClick()
                     onDismiss()
@@ -298,7 +300,7 @@ fun AppPopupSheet(
 
             PopupActionItem(
                 icon = Icons.Default.Add,
-                label = "Unter-App zu Ordner hinzufügen",
+                label = strings.addSubAppToFolderAction,
                 onClick = {
                     onAddSubAppClick()
                     onDismiss()
@@ -307,7 +309,7 @@ fun AppPopupSheet(
 
             PopupActionItem(
                 icon = Icons.Default.VisibilityOff,
-                label = "App verbergen",
+                label = strings.hideAppAction,
                 onClick = {
                     onHideApp()
                     onDismiss()
@@ -316,7 +318,7 @@ fun AppPopupSheet(
 
             PopupActionItem(
                 icon = Icons.Default.Info,
-                label = "App-Details im System",
+                label = strings.systemAppDetailsAction,
                 onClick = {
                     try {
                         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {

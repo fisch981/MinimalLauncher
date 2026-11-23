@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import de.fisch981.minimallauncher.data.model.ScrollerSide
+import de.fisch981.minimallauncher.ui.theme.AppLanguage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -32,6 +33,7 @@ class FavoritesRepository(private val context: Context) {
         private val KEY_RIGHT_WAVE_COUNT = intPreferencesKey("right_wave_usage_count")
         private val KEY_APP_LAUNCH_COUNTS = stringPreferencesKey("app_launch_counts")
         private val KEY_WAVE_IDLE_ALPHA = intPreferencesKey("wave_idle_alpha_percent")
+        private val KEY_APP_LANGUAGE = stringPreferencesKey("app_language")
     }
 
     val customIconsFlow: Flow<Map<String, String>> = context.dataStore.data.map { prefs ->
@@ -87,6 +89,10 @@ class FavoritesRepository(private val context: Context) {
 
     val waveIdleAlphaPercentFlow: Flow<Int> = context.dataStore.data.map { prefs ->
         (prefs[KEY_WAVE_IDLE_ALPHA] ?: 40).coerceIn(0, 100)
+    }
+
+    val appLanguageFlow: Flow<AppLanguage> = context.dataStore.data.map { prefs ->
+        AppLanguage.fromCode(prefs[KEY_APP_LANGUAGE])
     }
 
     val appLaunchCountsFlow: Flow<Map<String, Int>> = context.dataStore.data.map { prefs ->
@@ -253,6 +259,12 @@ class FavoritesRepository(private val context: Context) {
     suspend fun setWaveIdleAlphaPercent(percent: Int) {
         context.dataStore.edit { prefs ->
             prefs[KEY_WAVE_IDLE_ALPHA] = percent.coerceIn(0, 100)
+        }
+    }
+
+    suspend fun setAppLanguage(language: AppLanguage) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_APP_LANGUAGE] = language.code
         }
     }
 

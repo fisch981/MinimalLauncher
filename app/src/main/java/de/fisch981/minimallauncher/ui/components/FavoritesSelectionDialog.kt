@@ -40,6 +40,7 @@ import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.ui.theme.DarkSurface
 import de.fisch981.minimallauncher.ui.theme.DarkSurfaceVariant
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
+import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 
@@ -49,8 +50,10 @@ fun FavoritesSelectionDialog(
     favoriteKeys: Set<String>,
     onToggleFavorite: (AppItem) -> Unit,
     onDismiss: () -> Unit,
-    title: String = "Favoriten verwalten"
+    title: String? = null
 ) {
+    val strings = LocalAppStrings.current
+    val resolvedTitle = title ?: strings.selectFavoritesTitle
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -72,13 +75,13 @@ fun FavoritesSelectionDialog(
                 ) {
                     Column {
                         Text(
-                            text = title,
+                            text = resolvedTitle,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = PureWhite
                         )
                         Text(
-                            text = "${favoriteKeys.size} Apps ausgewählt",
+                            text = strings.appsSelectedSubtitle(favoriteKeys.size),
                             fontSize = 13.sp,
                             color = GrayMedium
                         )
@@ -87,7 +90,7 @@ fun FavoritesSelectionDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Schließen",
+                            contentDescription = strings.close,
                             tint = PureWhite
                         )
                     }
@@ -146,7 +149,7 @@ fun FavoritesSelectionDialog(
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Fertig", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(strings.done, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }

@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.ui.theme.DarkSurfaceVariant
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
+import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 
@@ -50,6 +51,7 @@ fun SearchOverlay(
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var query by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
 
@@ -88,7 +90,7 @@ fun SearchOverlay(
             IconButton(onClick = onClose) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Zurück",
+                    contentDescription = strings.back,
                     tint = PureWhite
                 )
             }
@@ -101,7 +103,7 @@ fun SearchOverlay(
             ) {
                 if (query.isEmpty()) {
                     Text(
-                        text = "Apps durchsuchen...",
+                        text = strings.searchAppsPlaceholder,
                         color = GrayMedium,
                         fontSize = 18.sp
                     )
@@ -125,7 +127,7 @@ fun SearchOverlay(
                 IconButton(onClick = { query = "" }) {
                     Icon(
                         imageVector = Icons.Default.Clear,
-                        contentDescription = "Löschen",
+                        contentDescription = strings.delete,
                         tint = GrayMedium
                     )
                 }
@@ -159,13 +161,13 @@ fun SearchOverlay(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
-                                text = "MinimalLauncher-Einstellungen",
+                                text = strings.settingsTitle,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = PureWhite
                             )
                             Text(
-                                text = "Nova Backup importieren, Favoriten, Design",
+                                text = strings.settingsSearchSubtitle,
                                 fontSize = 12.sp,
                                 color = GrayMedium
                             )

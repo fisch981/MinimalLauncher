@@ -6,6 +6,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.22] - 2026-11-23
+
+### Deutsch
+- **Zweisprachige Benutzeroberfläche (Deutsch & Englisch):**
+  - Alle Texte der App (Homescreen, Suche, Pop-up-Menüs, Dialoge, Datumsformat und Nova-Backup-Fehlermeldungen) sind nun vollständig auf **Deutsch** und **Englisch** verfügbar.
+  - **Systemsprache als Standard:** Im Modus *System* wird automatisch die Gerätesprache übernommen (`de` -> Deutsch; alle anderen Sprachen fallen auf Englisch zurück).
+  - **Manuelle Sprachwahl:** In den Einstellungen unter „Erscheinungsbild & Wave Scroller“ lässt sich die Sprache jederzeit zwischen `System`, `Deutsch` und `English` umschalten.
+- **Einstellungen:** Der Zusatzhinweis neben der Versionsnummer am Seitenende wurde entfernt (`MinimalLauncher v1.0.22`).
+
+### English
+- **Bilingual User Interface (English & German):**
+  - All in-app strings (Home screen, Search, Pop-up sheets, Dialogs, Date formatting, and Nova backup error messages) are now fully localized in **English** and **German**.
+  - **System Language Default:** In *System* mode, MinimalLauncher automatically uses the device locale (`de` -> German; all other languages fall back to English).
+  - **Manual Language Selector:** Added a `System` / `Deutsch` / `English` language toggle in Settings under “Appearance & Wave Scroller”.
+- **Settings:** Removed the extra tag next to the version display in the settings footer (`MinimalLauncher v1.0.22`).
+
+---
+
 ## [1.0.21] - 2026-11-23
 
 ### Deutsch

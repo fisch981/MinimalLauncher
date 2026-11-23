@@ -50,6 +50,7 @@ import de.fisch981.minimallauncher.data.repository.IconPackManager
 import de.fisch981.minimallauncher.ui.theme.DarkSurface
 import de.fisch981.minimallauncher.ui.theme.DarkSurfaceVariant
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
+import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 
@@ -61,6 +62,7 @@ fun IconPickerDialog(
     onResetDefault: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     var searchQuery by remember { mutableStateOf("") }
     val allDrawables = remember {
         iconPackManager.getAllAvailableDrawables()
@@ -96,7 +98,7 @@ fun IconPickerDialog(
                 ) {
                     Column {
                         Text(
-                            text = "Icon ändern für:",
+                            text = strings.changeIconForHeader,
                             fontSize = 13.sp,
                             color = GrayMedium
                         )
@@ -109,7 +111,7 @@ fun IconPickerDialog(
                     }
 
                     IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Schließen", tint = PureWhite)
+                        Icon(imageVector = Icons.Default.Close, contentDescription = strings.close, tint = PureWhite)
                     }
                 }
 
@@ -122,7 +124,7 @@ fun IconPickerDialog(
                     contentAlignment = Alignment.CenterStart
                 ) {
                     if (searchQuery.isEmpty()) {
-                        Text("Icons durchsuchen (z.B. camera, chat, music)...", color = GrayMedium, fontSize = 14.sp)
+                        Text(strings.searchIconsPlaceholder, color = GrayMedium, fontSize = 14.sp)
                     }
                     BasicTextField(
                         value = searchQuery,
@@ -189,7 +191,7 @@ fun IconPickerDialog(
                 ) {
                     Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Standard-Icon wiederherstellen", fontSize = 14.sp)
+                    Text(strings.restoreDefaultIconAction, fontSize = 14.sp)
                 }
             }
         }

@@ -37,6 +37,7 @@ import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.ui.theme.BorderDark
 import de.fisch981.minimallauncher.ui.theme.DarkSurfaceVariant
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
+import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 
@@ -46,6 +47,7 @@ fun RenameAppDialog(
     onSave: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     var text by remember(app.key) { mutableStateOf(app.label) }
     val focusRequester = remember { FocusRequester() }
 
@@ -62,14 +64,14 @@ fun RenameAppDialog(
                 .padding(20.dp)
         ) {
             Text(
-                text = "App umbenennen",
+                text = strings.renameAppTitle,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = PureWhite
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Original: ${app.originalLabel}",
+                text = strings.originalNameSubtitle(app.originalLabel),
                 fontSize = 12.sp,
                 color = GrayMedium
             )
@@ -110,7 +112,7 @@ fun RenameAppDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Zurücksetzen",
+                    text = strings.reset,
                     fontSize = 13.sp,
                     color = GrayMedium,
                     modifier = Modifier
@@ -120,7 +122,7 @@ fun RenameAppDialog(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Abbrechen",
+                        text = strings.cancel,
                         fontSize = 13.sp,
                         color = GrayMedium,
                         modifier = Modifier
@@ -136,7 +138,7 @@ fun RenameAppDialog(
                         ),
                         shape = RoundedCornerShape(6.dp)
                     ) {
-                        Text("Speichern", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(strings.save, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

@@ -20,6 +20,7 @@ import de.fisch981.minimallauncher.data.repository.StartupCache
 import de.fisch981.minimallauncher.data.repository.WaveUsageStats
 import de.fisch981.minimallauncher.data.service.LauncherNotificationService
 import de.fisch981.minimallauncher.data.service.MediaSessionHelper
+import de.fisch981.minimallauncher.ui.theme.AppLanguage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -88,6 +89,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     val waveIdleAlphaPercent: StateFlow<Int> = favoritesRepository.waveIdleAlphaPercentFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, 40)
+
+    val appLanguage: StateFlow<AppLanguage> = favoritesRepository.appLanguageFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, AppLanguage.SYSTEM)
 
     private val _scrollToTopEvent = MutableStateFlow(0)
     val scrollToTopEvent: StateFlow<Int> = _scrollToTopEvent.asStateFlow()
@@ -266,8 +270,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     /** Importiert die Icon-Zuordnung (und Dock-/Home-Favoriten) aus einer .novabackup-Datei. */
     fun importNovaBackup(uri: Uri, onComplete: (count: Int, error: String?) -> Unit) {
+        val isGerman = appLanguage.value.isGerman()
         viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) { novaBackupImporter.importFromUri(uri) }
+            val result = withContext(Dispatchers.IO) {
+                novaBackupImporter.importFromUri(uri, isGerman = isGerman)
+            }
             if (result.importedCount > 0) {
                 if (!result.iconPackPackage.isNullOrBlank()) {
                     iconPackManager.loadIconPack(result.iconPackPackage)
@@ -521,6 +528,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setWaveIdleAlphaPercent(percent: Int) {
         viewModelScope.launch {
             favoritesRepository.setWaveIdleAlphaPercent(percent)
+        }
+    }
+
+    fun setAppLanguage(language: AppLanguage) {
+        viewModelScope.launch {
+            favoritesRepository.setAppLanguage(language)
         }
     }
 

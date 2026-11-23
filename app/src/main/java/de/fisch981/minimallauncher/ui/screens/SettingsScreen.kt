@@ -61,10 +61,12 @@ import androidx.compose.ui.unit.sp
 import de.fisch981.minimallauncher.data.model.ScrollerSide
 import de.fisch981.minimallauncher.data.repository.LauncherUtils
 import de.fisch981.minimallauncher.data.service.LauncherNotificationService
+import de.fisch981.minimallauncher.ui.theme.AppLanguage
 import de.fisch981.minimallauncher.ui.theme.BorderDark
 import de.fisch981.minimallauncher.ui.theme.DarkSurfaceVariant
 import de.fisch981.minimallauncher.ui.theme.GrayLight
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
+import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 import de.fisch981.minimallauncher.ui.viewmodel.LauncherViewModel
@@ -77,7 +79,9 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
 
+    val appLanguage by viewModel.appLanguage.collectAsState()
     val scrollerSide by viewModel.scrollerSide.collectAsState()
     val waveIdleAlphaPercent by viewModel.waveIdleAlphaPercent.collectAsState()
     val showBattery by viewModel.showBattery.collectAsState()
@@ -113,7 +117,7 @@ fun SettingsScreen(
                 } else {
                     Toast.makeText(
                         context,
-                        "$count Icon-Zuordnungen erfolgreich aus Nova Launcher importiert!",
+                        strings.novaImportSuccessToast(count),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -137,13 +141,13 @@ fun SettingsScreen(
             IconButton(onClick = onClose) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Zurück",
+                    contentDescription = strings.back,
                     tint = PureWhite
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "MinimalLauncher-Einstellungen",
+                text = strings.settingsTitle,
                 fontSize = 19.sp,
                 fontWeight = FontWeight.Bold,
                 color = PureWhite
@@ -157,7 +161,7 @@ fun SettingsScreen(
         ) {
             // Standard-Launcher Card
             item {
-                SectionHeader("Standard-App")
+                SectionHeader(strings.sectionDefaultApp)
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -174,13 +178,13 @@ fun SettingsScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Standard-Launcher",
+                                text = strings.defaultLauncherTitle,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = PureWhite
                             )
                             Text(
-                                text = if (isDefaultLauncher) "MinimalLauncher ist aktiv" else "Tippen zum Aktivieren",
+                                text = if (isDefaultLauncher) strings.defaultLauncherActive else strings.defaultLauncherInactive,
                                 fontSize = 12.sp,
                                 color = GrayMedium
                             )
@@ -206,7 +210,7 @@ fun SettingsScreen(
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
-                                text = if (isDefaultLauncher) "Ändern" else "Festlegen",
+                                text = if (isDefaultLauncher) strings.changeButton else strings.setButton,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
@@ -218,14 +222,14 @@ fun SettingsScreen(
             // Nova Backup Import
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader("Nova Launcher Backup Importer")
+                SectionHeader(strings.sectionNovaImporter)
 
                 SettingItem(
-                    title = "Backup-Datei auswählen (.novabackup)",
+                    title = strings.selectNovaBackupTitle,
                     subtitle = if (customIconsCount > 0) {
-                        "$customIconsCount benutzerdefinierte Zuordnungen aktiv (tippen zum erneuten Import)"
+                        strings.novaCustomMappingsActive(customIconsCount)
                     } else {
-                        "Überträgt alle manuell zugewiesenen Icons direkt aus deiner Nova-Backup-Datei"
+                        strings.novaBackupSubtitleDefault
                     },
                     onClick = {
                         try {
@@ -236,24 +240,24 @@ fun SettingsScreen(
 
                 if (customIconsCount > 0) {
                     SettingItem(
-                        title = "Importierte Zuordnungen zurücksetzen",
-                        subtitle = "Entfernt alle $customIconsCount aus Nova importierten Icon-Zuweisungen",
+                        title = strings.resetNovaMappingsTitle,
+                        subtitle = strings.resetNovaMappingsSubtitle(customIconsCount),
                         onClick = {
                             viewModel.clearCustomIcons()
-                            Toast.makeText(context, "Zuordnungen zurückgesetzt", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, strings.novaMappingsResetToast, Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
             }
 
-            // Favoriten
+            // Favorites
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader("Favoriten")
+                SectionHeader(strings.sectionFavorites)
 
                 SettingItem(
-                    title = "Favoriten verwalten",
-                    subtitle = "${uiState.favoriteApps.size} Apps ausgewählt (auf dem Homescreen angezeigt)",
+                    title = strings.manageFavoritesTitle,
+                    subtitle = strings.manageFavoritesSubtitle(uiState.favoriteApps.size),
                     onClick = { viewModel.setManageFavoritesOpen(true) }
                 )
 
@@ -265,9 +269,9 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Zuletzt benutzte Apps anzeigen", color = PureWhite, fontSize = 15.sp)
+                        Text(strings.showRecentAppsTitle, color = PureWhite, fontSize = 15.sp)
                         Text(
-                            "Die 5 zuletzt geöffneten Apps auf der Favoriten-Seite einblenden",
+                            strings.showRecentAppsSubtitle,
                             color = GrayMedium,
                             fontSize = 12.sp
                         )
@@ -285,21 +289,71 @@ fun SettingsScreen(
                 }
             }
 
-            // Erscheinungsbild & Layout
+            // Appearance & Wave Scroller
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader("Erscheinungsbild & Wave Scroller")
+                SectionHeader(strings.sectionAppearanceWave)
 
-                // Position der Alphabet-Welle: Links / Rechts / Beidseitig
+                // App Language: System / Deutsch / English
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 ) {
-                    Text("Position der Alphabet-Welle", color = PureWhite, fontSize = 15.sp)
+                    Text(strings.languageTitle, color = PureWhite, fontSize = 15.sp)
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        "Wahlweise links, rechts oder auf beiden Seiten einblenden",
+                        strings.languageSubtitle,
+                        color = GrayMedium,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val languageOptions = listOf(
+                            AppLanguage.SYSTEM to strings.languageSystem,
+                            AppLanguage.DE to strings.languageGerman,
+                            AppLanguage.EN to strings.languageEnglish
+                        )
+                        for ((option, label) in languageOptions) {
+                            val selected = appLanguage == option
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (selected) PureWhite else DarkSurfaceVariant)
+                                    .border(
+                                        1.dp,
+                                        if (selected) PureWhite else BorderDark,
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { viewModel.setAppLanguage(option) }
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (selected) PureBlack else GrayLight,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Alphabet Wave Position: Left / Right / Both
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Text(strings.wavePositionTitle, color = PureWhite, fontSize = 15.sp)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        strings.wavePositionSubtitle,
                         color = GrayMedium,
                         fontSize = 12.sp
                     )
@@ -309,9 +363,9 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         val options = listOf(
-                            ScrollerSide.LEFT to "Links",
-                            ScrollerSide.RIGHT to "Rechts",
-                            ScrollerSide.BOTH to "Beidseitig"
+                            ScrollerSide.LEFT to strings.sideLeft,
+                            ScrollerSide.RIGHT to strings.sideRight,
+                            ScrollerSide.BOTH to strings.sideBoth
                         )
                         for ((option, label) in options) {
                             val selected = scrollerSide == option
@@ -340,7 +394,7 @@ fun SettingsScreen(
                     }
                 }
 
-                // Helligkeit der Buchstaben im Ruhezustand
+                // Idle letter brightness
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -352,7 +406,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Helligkeit der Buchstaben im Ruhezustand",
+                            strings.waveIdleBrightnessTitle,
                             color = PureWhite,
                             fontSize = 15.sp,
                             modifier = Modifier.weight(1f)
@@ -367,7 +421,7 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        "Bei Benutzung sofort 100% hell, danach nach 1 Sek. Verzögerung sanft ausfaden",
+                        strings.waveIdleBrightnessSubtitle,
                         color = GrayMedium,
                         fontSize = 12.sp
                     )
@@ -385,24 +439,24 @@ fun SettingsScreen(
                 }
 
                 SettingItem(
-                    title = "Lines Icon-Pack Status",
-                    subtitle = if (isLinesInstalled) "Lines Pack aktiv (weiße Konturen)" else "Nicht installiert - automatischer Schwarz-Weiß-Filter aktiv",
+                    title = strings.linesPackStatusTitle,
+                    subtitle = if (isLinesInstalled) strings.linesPackActiveSubtitle else strings.linesPackInactiveSubtitle,
                     onClick = { viewModel.reloadIcons() }
                 )
             }
 
-            // Nutzungsstatistik
+            // Usage Statistics
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader("Nutzungsstatistik")
+                SectionHeader(strings.sectionUsageStats)
 
                 val waveSummary = when {
-                    waveUsageStats.totalCount == 0 -> "Noch keine Wellen-Interaktionen aufgezeichnet"
+                    waveUsageStats.totalCount == 0 -> strings.waveUsageNone
                     waveUsageStats.leftCount > waveUsageStats.rightCount ->
-                        "Linke Welle wird häufiger genutzt (${waveUsageStats.leftPercent}%)"
+                        strings.waveUsageLeftMore(waveUsageStats.leftPercent)
                     waveUsageStats.rightCount > waveUsageStats.leftCount ->
-                        "Rechte Welle wird häufiger genutzt (${waveUsageStats.rightPercent}%)"
-                    else -> "Beide Seiten werden gleich häufig genutzt (50% / 50%)"
+                        strings.waveUsageRightMore(waveUsageStats.rightPercent)
+                    else -> strings.waveUsageEqual
                 }
 
                 Column(
@@ -410,7 +464,7 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 ) {
-                    Text("Alphabet-Welle: Seiten-Nutzung", color = PureWhite, fontSize = 15.sp)
+                    Text(strings.waveSideUsageTitle, color = PureWhite, fontSize = 15.sp)
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(waveSummary, color = GrayMedium, fontSize = 12.sp)
                     Spacer(modifier = Modifier.height(10.dp))
@@ -434,7 +488,7 @@ fun SettingsScreen(
                                 )
                                 .padding(horizontal = 12.dp, vertical = 10.dp)
                         ) {
-                            Text("Links", color = GrayMedium, fontSize = 11.sp)
+                            Text(strings.sideLeft, color = GrayMedium, fontSize = 11.sp)
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "${waveUsageStats.leftCount}× (${waveUsageStats.leftPercent}%)",
@@ -456,7 +510,7 @@ fun SettingsScreen(
                                 )
                                 .padding(horizontal = 12.dp, vertical = 10.dp)
                         ) {
-                            Text("Rechts", color = GrayMedium, fontSize = 11.sp)
+                            Text(strings.sideRight, color = GrayMedium, fontSize = 11.sp)
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "${waveUsageStats.rightCount}× (${waveUsageStats.rightPercent}%)",
@@ -498,10 +552,10 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text("Am häufigsten gestartete Apps", color = PureWhite, fontSize = 15.sp)
+                Text(strings.mostLaunchedAppsTitle, color = PureWhite, fontSize = 15.sp)
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    "Meistgenutzte Apps direkt zu den Favoriten hinzufügen",
+                    strings.mostLaunchedAppsSubtitle,
                     color = GrayMedium,
                     fontSize = 12.sp
                 )
@@ -509,7 +563,7 @@ fun SettingsScreen(
 
                 if (uiState.mostUsedApps.isEmpty()) {
                     Text(
-                        text = "Noch keine App-Starts aufgezeichnet",
+                        text = strings.noAppLaunchesRecorded,
                         color = GrayMedium,
                         fontSize = 13.sp,
                         modifier = Modifier.padding(vertical = 6.dp)
@@ -555,7 +609,7 @@ fun SettingsScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "${stat.launchCount}× gestartet",
+                                    text = strings.launchedCountSubtitle(stat.launchCount),
                                     color = GrayMedium,
                                     fontSize = 11.sp
                                 )
@@ -574,7 +628,7 @@ fun SettingsScreen(
                                     .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
                                 Text(
-                                    text = if (stat.app.isFavorite) "★ Favorit" else "+ Favorit",
+                                    text = if (stat.app.isFavorite) strings.favoriteBadgeActive else strings.favoriteBadgeAdd,
                                     color = if (stat.app.isFavorite) GrayLight else PureBlack,
                                     fontSize = 12.sp,
                                     fontWeight = if (stat.app.isFavorite) FontWeight.Normal else FontWeight.Medium
@@ -595,7 +649,7 @@ fun SettingsScreen(
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Text(
-                            text = "Statistik zurücksetzen",
+                            text = strings.resetStatsButton,
                             color = GrayLight,
                             fontSize = 12.sp
                         )
@@ -603,10 +657,10 @@ fun SettingsScreen(
                 }
             }
 
-            // Widgets & Benachrichtigungen
+            // Widgets & Notifications
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader("Widgets & Benachrichtigungen")
+                SectionHeader(strings.sectionWidgetsNotifications)
 
                 Row(
                     modifier = Modifier
@@ -616,8 +670,8 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Akku im Header anzeigen", color = PureWhite, fontSize = 15.sp)
-                        Text("Akkustand neben dem Datum einblenden", color = GrayMedium, fontSize = 12.sp)
+                        Text(strings.showBatteryTitle, color = PureWhite, fontSize = 15.sp)
+                        Text(strings.showBatterySubtitle, color = GrayMedium, fontSize = 12.sp)
                     }
                     Switch(
                         checked = showBattery,
@@ -639,8 +693,8 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Medienplayer anzeigen", color = PureWhite, fontSize = 15.sp)
-                        Text("Steuerung aktiver Musikwiedergabe im Header", color = GrayMedium, fontSize = 12.sp)
+                        Text(strings.showMediaTitle, color = PureWhite, fontSize = 15.sp)
+                        Text(strings.showMediaSubtitle, color = GrayMedium, fontSize = 12.sp)
                     }
                     Switch(
                         checked = showMedia,
@@ -655,8 +709,8 @@ fun SettingsScreen(
                 }
 
                 SettingItem(
-                    title = "Benachrichtigungszugriff",
-                    subtitle = if (isNotificationGranted) "Aktiviert (Vorschautexte & Mediensteuerung aktiv)" else "Tippen, um in Android-Einstellungen zu erlauben",
+                    title = strings.notificationAccessTitle,
+                    subtitle = if (isNotificationGranted) strings.notificationAccessGranted else strings.notificationAccessDenied,
                     onClick = {
                         try {
                             context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
@@ -667,16 +721,16 @@ fun SettingsScreen(
                 )
             }
 
-            // Ausgeblendete Apps
+            // Hidden Apps
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader("Ausgeblendete Apps (${uiState.hiddenApps.size})")
+                SectionHeader(strings.sectionHiddenApps(uiState.hiddenApps.size))
             }
 
             if (uiState.hiddenApps.isEmpty()) {
                 item {
                     Text(
-                        text = "Keine ausgeblendeten Apps",
+                        text = strings.noHiddenApps,
                         color = GrayMedium,
                         fontSize = 13.sp,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -695,7 +749,7 @@ fun SettingsScreen(
                         IconButton(onClick = { viewModel.unhideApp(app) }) {
                             Icon(
                                 imageVector = Icons.Default.Visibility,
-                                contentDescription = "Wieder anzeigen",
+                                contentDescription = strings.unhideAppContentDesc,
                                 tint = PureWhite
                             )
                         }
@@ -706,7 +760,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "MinimalLauncher v1.0.21 • 100% Schwarz-Weiß",
+                    text = "MinimalLauncher v1.0.22",
                     color = GrayMedium,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 32.dp)
