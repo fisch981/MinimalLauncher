@@ -13,6 +13,7 @@ data class LauncherBackupData(
     val clockDateFont: String = "system",
     val waveFont: String = "system",
     val appFontSizeSp: Int = 17,
+    val appRowSpacingDp: Int = 8,
     val dateSizeSp: Int = 15,
     val waveFontSizeSp: Int = 11,
     val showClock: Boolean = true,
@@ -54,6 +55,7 @@ object LauncherBackupCodec {
         appendField(sb, "clockDateFont", data.clockDateFont, indent = 2, trailingComma = true)
         appendField(sb, "waveFont", data.waveFont, indent = 2, trailingComma = true)
         appendIntField(sb, "appFontSizeSp", data.appFontSizeSp, indent = 2, trailingComma = true)
+        appendIntField(sb, "appRowSpacingDp", data.appRowSpacingDp, indent = 2, trailingComma = true)
         appendIntField(sb, "dateSizeSp", data.dateSizeSp, indent = 2, trailingComma = true)
         appendIntField(sb, "waveFontSizeSp", data.waveFontSizeSp, indent = 2, trailingComma = true)
         appendBoolField(sb, "showClock", data.showClock, indent = 2, trailingComma = true)
@@ -101,6 +103,7 @@ object LauncherBackupCodec {
             clockDateFont = (root["clockDateFont"] as? String)?.takeIf { it.isNotBlank() } ?: "system",
             waveFont = (root["waveFont"] as? String)?.takeIf { it.isNotBlank() } ?: "system",
             appFontSizeSp = ((root["appFontSizeSp"] as? Number)?.toInt() ?: 17).coerceIn(13, 24),
+            appRowSpacingDp = ((root["appRowSpacingDp"] as? Number)?.toInt() ?: 8).coerceIn(2, 18),
             dateSizeSp = ((root["dateSizeSp"] as? Number)?.toInt() ?: 15).coerceIn(11, 24),
             waveFontSizeSp = ((root["waveFontSizeSp"] as? Number)?.toInt() ?: 11).coerceIn(9, 16),
             showClock = (root["showClock"] as? Boolean) ?: true,

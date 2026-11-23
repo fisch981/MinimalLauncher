@@ -30,6 +30,7 @@ class LauncherBackupCodecTest {
             clockDateFont = "condensed",
             waveFont = "monospace",
             appFontSizeSp = 19,
+            appRowSpacingDp = 12,
             dateSizeSp = 13,
             waveFontSizeSp = 12,
             showClock = false,
@@ -75,6 +76,7 @@ class LauncherBackupCodecTest {
         assertEquals("condensed", decoded.clockDateFont)
         assertEquals("monospace", decoded.waveFont)
         assertEquals(19, decoded.appFontSizeSp)
+        assertEquals(12, decoded.appRowSpacingDp)
         assertEquals(13, decoded.dateSizeSp)
         assertEquals(12, decoded.waveFontSizeSp)
         assertFalse(decoded.showClock)

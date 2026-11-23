@@ -6,6 +6,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.28] - 2026-11-23
+
+### Deutsch
+- **Einstellbarer Zeilenabstand für App-Listen:**
+  - Neuer Schieberegler *„Zeilenabstand“* (`2`–`18 dp`, Standard: `8 dp`) unter „Einstellungen → Schriftarten & Größen“ (`TypographySubScreen`) inkl. zwei-zeiliger Live-Vorschau in der fixierten Vorschaukarte.
+  - Wirkt direkt in Favoriten, „Zuletzt benutzt“, App-Drawer sowie Suche und wird im `.json`-Backup (`appRowSpacingDp`) mitgesichert.
+
+### English
+- **Adjustable App List Line Spacing:**
+  - Added a *“Line spacing”* slider (`2`–`18 dp`, default: `8 dp`) under Settings → “Fonts & sizes” (`TypographySubScreen`) with a two-row live preview in the pinned preview card.
+  - Applies across Favorites, Recently used, App Drawer, and Search, and is persisted in `.json` backups (`appRowSpacingDp`).
+
+---
+
 ## [1.0.27] - 2026-11-23
 
 ### Deutsch

@@ -53,6 +53,7 @@ fun SearchOverlay(
     showAppIcons: Boolean = true,
     appFontFamily: FontFamily = FontFamily.SansSerif,
     appFontSizeSp: Int = 17,
+    appRowSpacingDp: Int = 8,
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -188,7 +189,8 @@ fun SearchOverlay(
                     onLongClick = { onAppClick(app) },
                     showIcon = showAppIcons,
                     fontFamily = appFontFamily,
-                    fontSizeSp = appFontSizeSp
+                    fontSizeSp = appFontSizeSp,
+                    verticalPaddingDp = appRowSpacingDp
                 )
             }
         }

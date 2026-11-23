@@ -891,7 +891,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "MinimalLauncher v1.0.27",
+                    text = "MinimalLauncher v1.0.28",
                     color = GrayMedium,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 32.dp)
@@ -927,6 +927,7 @@ private fun TypographySubScreen(
     val clockDateFont by viewModel.clockDateFont.collectAsState()
     val waveFont by viewModel.waveFont.collectAsState()
     val appFontSizeSp by viewModel.appFontSizeSp.collectAsState()
+    val appRowSpacingDp by viewModel.appRowSpacingDp.collectAsState()
     val clockSizeSp by viewModel.clockSizeSp.collectAsState()
     val dateSizeSp by viewModel.dateSizeSp.collectAsState()
     val waveFontSizeSp by viewModel.waveFontSizeSp.collectAsState()
@@ -1008,6 +1009,13 @@ private fun TypographySubScreen(
                                 fontFamily = appFontFamily,
                                 color = PureWhite
                             )
+                            Spacer(modifier = Modifier.height((appRowSpacingDp.coerceIn(2, 18) * 2).dp))
+                            Text(
+                                text = strings.previewSampleAppSecond,
+                                fontSize = appFontSizeSp.coerceIn(13, 24).sp,
+                                fontFamily = appFontFamily,
+                                color = PureWhite
+                            )
                         }
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -1049,6 +1057,14 @@ private fun TypographySubScreen(
                         value = appFontSizeSp,
                         valueRange = 13f..24f,
                         onValueChange = { viewModel.setAppFontSizeSp(it) }
+                    )
+                    TypographySliderItem(
+                        title = strings.appRowSpacingTitle,
+                        subtitle = strings.appRowSpacingSubtitle,
+                        value = appRowSpacingDp,
+                        valueRange = 2f..18f,
+                        unit = "dp",
+                        onValueChange = { viewModel.setAppRowSpacingDp(it) }
                     )
                 }
 
@@ -1171,6 +1187,7 @@ private fun TypographySliderItem(
     subtitle: String,
     value: Int,
     valueRange: ClosedFloatingPointRange<Float>,
+    unit: String = "sp",
     onValueChange: (Int) -> Unit
 ) {
     Column(
@@ -1191,7 +1208,7 @@ private fun TypographySliderItem(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "$value sp",
+                text = "$value $unit",
                 color = PureWhite,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold

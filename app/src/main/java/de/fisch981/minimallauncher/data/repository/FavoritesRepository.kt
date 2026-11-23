@@ -48,6 +48,7 @@ class FavoritesRepository(private val context: Context) {
         private val KEY_CLOCK_DATE_FONT = stringPreferencesKey("clock_date_font")
         private val KEY_WAVE_FONT = stringPreferencesKey("wave_font")
         private val KEY_APP_FONT_SIZE_SP = intPreferencesKey("app_font_size_sp")
+        private val KEY_APP_ROW_SPACING_DP = intPreferencesKey("app_row_spacing_dp")
         private val KEY_DATE_SIZE_SP = intPreferencesKey("date_size_sp")
         private val KEY_WAVE_FONT_SIZE_SP = intPreferencesKey("wave_font_size_sp")
     }
@@ -129,6 +130,10 @@ class FavoritesRepository(private val context: Context) {
 
     val appFontSizeSpFlow: Flow<Int> = context.dataStore.data.map { prefs ->
         (prefs[KEY_APP_FONT_SIZE_SP] ?: 17).coerceIn(13, 24)
+    }
+
+    val appRowSpacingDpFlow: Flow<Int> = context.dataStore.data.map { prefs ->
+        (prefs[KEY_APP_ROW_SPACING_DP] ?: 8).coerceIn(2, 18)
     }
 
     val dateSizeSpFlow: Flow<Int> = context.dataStore.data.map { prefs ->
@@ -348,6 +353,12 @@ class FavoritesRepository(private val context: Context) {
         }
     }
 
+    suspend fun setAppRowSpacingDp(spacingDp: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_APP_ROW_SPACING_DP] = spacingDp.coerceIn(2, 18)
+        }
+    }
+
     suspend fun setDateSizeSp(sizeSp: Int) {
         context.dataStore.edit { prefs ->
             prefs[KEY_DATE_SIZE_SP] = sizeSp.coerceIn(11, 24)
@@ -531,6 +542,7 @@ class FavoritesRepository(private val context: Context) {
             clockDateFont = LauncherFont.fromCode(prefs[KEY_CLOCK_DATE_FONT]).code,
             waveFont = LauncherFont.fromCode(prefs[KEY_WAVE_FONT]).code,
             appFontSizeSp = (prefs[KEY_APP_FONT_SIZE_SP] ?: 17).coerceIn(13, 24),
+            appRowSpacingDp = (prefs[KEY_APP_ROW_SPACING_DP] ?: 8).coerceIn(2, 18),
             dateSizeSp = (prefs[KEY_DATE_SIZE_SP] ?: 15).coerceIn(11, 24),
             waveFontSizeSp = (prefs[KEY_WAVE_FONT_SIZE_SP] ?: 11).coerceIn(9, 16),
             showClock = prefs[KEY_SHOW_CLOCK] ?: true,
@@ -569,6 +581,7 @@ class FavoritesRepository(private val context: Context) {
             prefs[KEY_CLOCK_DATE_FONT] = LauncherFont.fromCode(data.clockDateFont).code
             prefs[KEY_WAVE_FONT] = LauncherFont.fromCode(data.waveFont).code
             prefs[KEY_APP_FONT_SIZE_SP] = data.appFontSizeSp.coerceIn(13, 24)
+            prefs[KEY_APP_ROW_SPACING_DP] = data.appRowSpacingDp.coerceIn(2, 18)
             prefs[KEY_DATE_SIZE_SP] = data.dateSizeSp.coerceIn(11, 24)
             prefs[KEY_WAVE_FONT_SIZE_SP] = data.waveFontSizeSp.coerceIn(9, 16)
             prefs[KEY_SHOW_CLOCK] = data.showClock

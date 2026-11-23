@@ -50,6 +50,7 @@ fun AppListItem(
     showNotificationPreview: Boolean = true,
     fontFamily: FontFamily = FontFamily.SansSerif,
     fontSizeSp: Int = 17,
+    verticalPaddingDp: Int = 8,
     hasLeftWave: Boolean = false,
     hasRightWave: Boolean = true,
     modifier: Modifier = Modifier
@@ -58,6 +59,8 @@ fun AppListItem(
     val view = LocalView.current
     val thresholdPx = with(LocalDensity.current) { 48.dp.toPx() }
     val currentOnSwipeRight by rememberUpdatedState(onSwipeRight)
+
+    val vPad = verticalPaddingDp.coerceIn(2, 18).dp
 
     Row(
         modifier = modifier
@@ -95,8 +98,8 @@ fun AppListItem(
             .padding(
                 start = if (hasLeftWave) 72.dp else 28.dp,
                 end = if (hasRightWave) 56.dp else 24.dp,
-                top = 8.dp,
-                bottom = 8.dp
+                top = vPad,
+                bottom = vPad
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -146,7 +149,9 @@ fun AppListItem(
 
         // App Label + Notification Snippet
         Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            val vPad = verticalPaddingDp.coerceIn(2, 18).dp
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = app.label,
                     fontSize = fontSizeSp.coerceIn(13, 24).sp,

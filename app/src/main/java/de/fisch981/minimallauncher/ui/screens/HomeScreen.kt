@@ -107,6 +107,7 @@ fun HomeScreen(
     val clockDateFont by viewModel.clockDateFont.collectAsState()
     val waveFont by viewModel.waveFont.collectAsState()
     val appFontSizeSp by viewModel.appFontSizeSp.collectAsState()
+    val appRowSpacingDp by viewModel.appRowSpacingDp.collectAsState()
     val dateSizeSp by viewModel.dateSizeSp.collectAsState()
     val waveFontSizeSp by viewModel.waveFontSizeSp.collectAsState()
 
@@ -277,6 +278,7 @@ fun HomeScreen(
                             showNotificationPreview = showNotificationPreview,
                             fontFamily = appFontFamily,
                             fontSizeSp = appFontSizeSp,
+                            verticalPaddingDp = appRowSpacingDp,
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave
                         )
@@ -298,6 +300,7 @@ fun HomeScreen(
                                 showNotificationPreview = showNotificationPreview,
                                 appFontFamily = appFontFamily,
                                 appFontSizeSp = appFontSizeSp,
+                                appRowSpacingDp = appRowSpacingDp,
                                 hasLeftWave = hasLeftWave,
                                 hasRightWave = hasRightWave
                             )
@@ -395,6 +398,7 @@ fun HomeScreen(
                             showNotificationPreview = showNotificationPreview,
                             fontFamily = appFontFamily,
                             fontSizeSp = appFontSizeSp,
+                            verticalPaddingDp = appRowSpacingDp,
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave
                         )
@@ -569,7 +573,8 @@ fun HomeScreen(
                 onClose = { viewModel.setSearchOpen(false) },
                 showAppIcons = showAppIcons,
                 appFontFamily = appFontFamily,
-                appFontSizeSp = appFontSizeSp
+                appFontSizeSp = appFontSizeSp,
+                appRowSpacingDp = appRowSpacingDp
             )
         }
 
@@ -625,6 +630,7 @@ private fun RecentAppsEntry(
     showNotificationPreview: Boolean,
     appFontFamily: FontFamily,
     appFontSizeSp: Int,
+    appRowSpacingDp: Int,
     hasLeftWave: Boolean,
     hasRightWave: Boolean,
     modifier: Modifier = Modifier
@@ -680,6 +686,7 @@ private fun RecentAppsEntry(
                     showNotificationPreview = showNotificationPreview,
                     fontFamily = appFontFamily,
                     fontSizeSp = appFontSizeSp,
+                    verticalPaddingDp = appRowSpacingDp,
                     hasLeftWave = hasLeftWave,
                     hasRightWave = hasRightWave
                 )

@@ -134,6 +134,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val appFontSizeSp: StateFlow<Int> = favoritesRepository.appFontSizeSpFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, 17)
 
+    val appRowSpacingDp: StateFlow<Int> = favoritesRepository.appRowSpacingDpFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 8)
+
     val dateSizeSp: StateFlow<Int> = favoritesRepository.dateSizeSpFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, 15)
 
@@ -726,6 +729,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setAppFontSizeSp(sizeSp: Int) {
         viewModelScope.launch {
             favoritesRepository.setAppFontSizeSp(sizeSp)
+        }
+    }
+
+    fun setAppRowSpacingDp(spacingDp: Int) {
+        viewModelScope.launch {
+            favoritesRepository.setAppRowSpacingDp(spacingDp)
         }
     }
 
