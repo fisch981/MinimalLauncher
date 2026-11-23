@@ -613,9 +613,9 @@ private fun RecentAppsEntry(
                 text = strings.recentlyUsed,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = GrayLight,
-                modifier = Modifier.weight(1f)
+                color = GrayLight
             )
+            Spacer(modifier = Modifier.width(6.dp))
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = if (isExpanded) strings.collapse else strings.expand,

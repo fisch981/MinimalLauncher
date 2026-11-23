@@ -6,6 +6,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.25] - 2026-11-23
+
+### Deutsch
+- **Layout-Feinschliff für „Zuletzt benutzt“:** Der Pfeil zum Ein- und Ausklappen der zuletzt benutzten Apps sitzt auf dem Homescreen nun direkt hinter dem Text „Zuletzt benutzt“ (`6.dp` Abstand) statt am rechten Bildschirmrand.
+
+### English
+- **Recent Apps Layout Polish:** Placed the expand/collapse arrow right after the “Recently used” label (`6.dp` spacing) on the home screen instead of aligning it to the far right edge.
+
+---
+
 ## [1.0.24] - 2026-11-23
 
 ### Deutsch
