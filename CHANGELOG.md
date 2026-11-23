@@ -6,6 +6,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.29] - 2026-11-23
+
+### Deutsch
+- **Apps mit aktiven Benachrichtigungen auf dem Homescreen:**
+  - Zeigt Nicht-Favoriten-Apps mit aktiven Benachrichtigungen dynamisch zwischen Datum/Header und der Favoritenliste (sortiert nach neuester Benachrichtigung inkl. direktem App-Start, Benachrichtigungstext/Punkt und Pop-up-Menü, getrennt durch eine dezente Linie).
+  - Besonders praktisch bei ausgeblendeter System-Statusleiste; in den Einstellungen unter *„Widgets & Benachrichtigungen → Apps mit Benachrichtigungen anzeigen“* deaktivierbar und im `.json`-Backup (`showNotificationApps`) gespeichert.
+
+### English
+- **Active Notification Apps on Home Screen:**
+  - Dynamically lists non-favorite apps with active notifications between the date/header and Favorites (sorted by newest notification with direct launch, notification preview/dot, and pop-up actions, separated by a subtle divider).
+  - Especially useful when the system status bar is hidden; toggleable via Settings → *“Widgets & Notifications → Show apps with notifications”* and persisted in `.json` backups (`showNotificationApps`).
+
+---
+
 ## [1.0.28] - 2026-11-23
 
 ### Deutsch

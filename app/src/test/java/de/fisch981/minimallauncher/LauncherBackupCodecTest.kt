@@ -42,6 +42,7 @@ class LauncherBackupCodecTest {
             showAppIcons = false,
             hideStatusBar = true,
             showBottomActions = false,
+            showNotificationApps = false,
             showNotificationPreview = false,
             recentApps = listOf("com.example.browser/com.example.browser.Main#0"),
             leftWaveCount = 14,
@@ -88,6 +89,7 @@ class LauncherBackupCodecTest {
         assertFalse(decoded.showAppIcons)
         assertTrue(decoded.hideStatusBar)
         assertFalse(decoded.showBottomActions)
+        assertFalse(decoded.showNotificationApps)
         assertFalse(decoded.showNotificationPreview)
         assertEquals(original.recentApps, decoded.recentApps)
         assertEquals(14, decoded.leftWaveCount)

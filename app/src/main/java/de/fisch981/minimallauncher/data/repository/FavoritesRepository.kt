@@ -43,6 +43,7 @@ class FavoritesRepository(private val context: Context) {
         private val KEY_SHOW_APP_ICONS = booleanPreferencesKey("show_app_icons")
         private val KEY_HIDE_STATUS_BAR = booleanPreferencesKey("hide_status_bar")
         private val KEY_SHOW_BOTTOM_ACTIONS = booleanPreferencesKey("show_bottom_actions")
+        private val KEY_SHOW_NOTIFICATION_APPS = booleanPreferencesKey("show_notification_apps")
         private val KEY_SHOW_NOTIFICATION_PREVIEW = booleanPreferencesKey("show_notification_preview")
         private val KEY_APP_FONT = stringPreferencesKey("app_font")
         private val KEY_CLOCK_DATE_FONT = stringPreferencesKey("clock_date_font")
@@ -110,6 +111,10 @@ class FavoritesRepository(private val context: Context) {
 
     val showBottomActionsFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[KEY_SHOW_BOTTOM_ACTIONS] ?: true
+    }
+
+    val showNotificationAppsFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SHOW_NOTIFICATION_APPS] ?: true
     }
 
     val showNotificationPreviewFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
@@ -320,6 +325,12 @@ class FavoritesRepository(private val context: Context) {
     suspend fun setShowBottomActions(show: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[KEY_SHOW_BOTTOM_ACTIONS] = show
+        }
+    }
+
+    suspend fun setShowNotificationApps(show: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SHOW_NOTIFICATION_APPS] = show
         }
     }
 
@@ -554,6 +565,7 @@ class FavoritesRepository(private val context: Context) {
             showAppIcons = prefs[KEY_SHOW_APP_ICONS] ?: true,
             hideStatusBar = prefs[KEY_HIDE_STATUS_BAR] ?: false,
             showBottomActions = prefs[KEY_SHOW_BOTTOM_ACTIONS] ?: true,
+            showNotificationApps = prefs[KEY_SHOW_NOTIFICATION_APPS] ?: true,
             showNotificationPreview = prefs[KEY_SHOW_NOTIFICATION_PREVIEW] ?: true,
             recentApps = if (recentsRaw.isBlank()) emptyList() else recentsRaw.split(",").filter { it.isNotBlank() },
             leftWaveCount = (prefs[KEY_LEFT_WAVE_COUNT] ?: 0).coerceAtLeast(0),
@@ -593,6 +605,7 @@ class FavoritesRepository(private val context: Context) {
             prefs[KEY_SHOW_APP_ICONS] = data.showAppIcons
             prefs[KEY_HIDE_STATUS_BAR] = data.hideStatusBar
             prefs[KEY_SHOW_BOTTOM_ACTIONS] = data.showBottomActions
+            prefs[KEY_SHOW_NOTIFICATION_APPS] = data.showNotificationApps
             prefs[KEY_SHOW_NOTIFICATION_PREVIEW] = data.showNotificationPreview
             prefs[KEY_RECENT_APPS] = data.recentApps.filter { it.isNotBlank() }.take(15).joinToString(",")
             prefs[KEY_LEFT_WAVE_COUNT] = data.leftWaveCount.coerceAtLeast(0)

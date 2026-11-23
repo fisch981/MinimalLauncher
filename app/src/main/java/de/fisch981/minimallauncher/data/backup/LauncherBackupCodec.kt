@@ -25,6 +25,7 @@ data class LauncherBackupData(
     val showAppIcons: Boolean = true,
     val hideStatusBar: Boolean = false,
     val showBottomActions: Boolean = true,
+    val showNotificationApps: Boolean = true,
     val showNotificationPreview: Boolean = true,
     val recentApps: List<String> = emptyList(),
     val leftWaveCount: Int = 0,
@@ -67,6 +68,7 @@ object LauncherBackupCodec {
         appendBoolField(sb, "showAppIcons", data.showAppIcons, indent = 2, trailingComma = true)
         appendBoolField(sb, "hideStatusBar", data.hideStatusBar, indent = 2, trailingComma = true)
         appendBoolField(sb, "showBottomActions", data.showBottomActions, indent = 2, trailingComma = true)
+        appendBoolField(sb, "showNotificationApps", data.showNotificationApps, indent = 2, trailingComma = true)
         appendBoolField(sb, "showNotificationPreview", data.showNotificationPreview, indent = 2, trailingComma = true)
         appendStringListField(sb, "recentApps", data.recentApps, indent = 2, trailingComma = true)
         appendIntField(sb, "leftWaveCount", data.leftWaveCount, indent = 2, trailingComma = true)
@@ -115,6 +117,7 @@ object LauncherBackupCodec {
             showAppIcons = (root["showAppIcons"] as? Boolean) ?: true,
             hideStatusBar = (root["hideStatusBar"] as? Boolean) ?: false,
             showBottomActions = (root["showBottomActions"] as? Boolean) ?: true,
+            showNotificationApps = (root["showNotificationApps"] as? Boolean) ?: true,
             showNotificationPreview = (root["showNotificationPreview"] as? Boolean) ?: true,
             recentApps = asStringList(root["recentApps"]),
             leftWaveCount = ((root["leftWaveCount"] as? Number)?.toInt() ?: 0).coerceAtLeast(0),

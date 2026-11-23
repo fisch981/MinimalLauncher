@@ -98,6 +98,7 @@ fun SettingsScreen(
     val showAppIcons by viewModel.showAppIcons.collectAsState()
     val hideStatusBar by viewModel.hideStatusBar.collectAsState()
     val showBottomActions by viewModel.showBottomActions.collectAsState()
+    val showNotificationApps by viewModel.showNotificationApps.collectAsState()
     val showNotificationPreview by viewModel.showNotificationPreview.collectAsState()
     val isHiddenAppsOpen by viewModel.isHiddenAppsOpen.collectAsState()
     val isTypographyOpen by viewModel.isTypographyOpen.collectAsState()
@@ -854,6 +855,13 @@ fun SettingsScreen(
                 }
 
                 SettingSwitchItem(
+                    title = strings.showNotificationAppsTitle,
+                    subtitle = strings.showNotificationAppsSubtitle,
+                    checked = showNotificationApps,
+                    onCheckedChange = { viewModel.toggleShowNotificationApps(it) }
+                )
+
+                SettingSwitchItem(
                     title = strings.showNotificationPreviewTitle,
                     subtitle = strings.showNotificationPreviewSubtitle,
                     checked = showNotificationPreview,
@@ -891,7 +899,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "MinimalLauncher v1.0.28",
+                    text = "MinimalLauncher v1.0.29",
                     color = GrayMedium,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 32.dp)

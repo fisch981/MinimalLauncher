@@ -102,6 +102,7 @@ fun HomeScreen(
     val showRecentApps by viewModel.showRecentApps.collectAsState()
     val showAppIcons by viewModel.showAppIcons.collectAsState()
     val showBottomActions by viewModel.showBottomActions.collectAsState()
+    val showNotificationApps by viewModel.showNotificationApps.collectAsState()
     val showNotificationPreview by viewModel.showNotificationPreview.collectAsState()
     val appFont by viewModel.appFont.collectAsState()
     val clockDateFont by viewModel.clockDateFont.collectAsState()
@@ -157,6 +158,19 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         viewModel.checkDefaultLauncher()
+    }
+
+    val notifyingApps = remember(uiState.allApps, notifications) {
+        if (notifications.isEmpty()) {
+            emptyList()
+        } else {
+            uiState.allApps
+                .filter { !it.isFavorite && !notifications[it.packageName].isNullOrEmpty() }
+                .distinctBy { it.packageName }
+                .sortedByDescending { app ->
+                    notifications[app.packageName]?.maxOfOrNull { it.postTime } ?: 0L
+                }
+        }
     }
 
     // Index map for all-apps LazyColumn (index 0 is top spacer)
@@ -262,6 +276,42 @@ fun HomeScreen(
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave
                         )
+                    }
+
+                    if (showNotificationApps && notifyingApps.isNotEmpty()) {
+                        items(
+                            items = notifyingApps,
+                            key = { "home_notif_${it.key}" }
+                        ) { app ->
+                            AppListItem(
+                                app = app,
+                                notifications = notifications[app.packageName] ?: emptyList(),
+                                onClick = { viewModel.launchApp(app) },
+                                onLongClick = { viewModel.openPopup(app) },
+                                onSwipeRight = { viewModel.openPopup(app) },
+                                showIcon = showAppIcons,
+                                showNotificationPreview = showNotificationPreview,
+                                fontFamily = appFontFamily,
+                                fontSizeSp = appFontSizeSp,
+                                verticalPaddingDp = appRowSpacingDp,
+                                hasLeftWave = hasLeftWave,
+                                hasRightWave = hasRightWave
+                            )
+                        }
+
+                        if (uiState.favoriteApps.isNotEmpty()) {
+                            item(key = "home_notif_divider") {
+                                HorizontalDivider(
+                                    color = BorderDark,
+                                    modifier = Modifier.padding(
+                                        start = if (hasLeftWave) 72.dp else 28.dp,
+                                        end = if (hasRightWave) 56.dp else 24.dp,
+                                        top = 4.dp,
+                                        bottom = 4.dp
+                                    )
+                                )
+                            }
+                        }
                     }
 
                     items(

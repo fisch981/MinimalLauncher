@@ -19,7 +19,7 @@ Minimalistischer, ergonomischer Android-Launcher in kompromissloser **Schwarz-We
 - **Zuletzt benutzte Apps (optional):** Einklappbare vertikale Liste der bis zu 5 zuletzt geöffneten Nicht-Favoriten-Apps unterhalb der Favoriten (schließt sich nach App-Start und Rückkehr automatisch wieder).
 - **Lines Icon-Pack & Monochrom-Engine:** Lädt weiße Kontur-Icons aus *Lines* (`com.natewren.lines`, `linesfree`, `linesdark`) inkl. nativem Icon-Picker und wandelt alle übrigen App-Icons automatisch in kontraststarke Schwarz-Weiß-Icons um.
 - **Pop-up-Menü, Ordner & Umbenennen:** Rechtswisch oder Gedrückthalten auf einer App öffnet Unter-Apps (Pop-up-Ordner), App-Shortcuts, eigene Namen und individuelle Icon-Auswahl.
-- **Benachrichtigungsvorschau:** Zeigt aktive Benachrichtigungstexte direkt unter dem jeweiligen App-Namen über den `NotificationListenerService`.
+- **Benachrichtigungsvorschau & Benachrichtigungs-Apps:** Zeigt aktive Benachrichtigungstexte direkt unter App-Namen und blendet optional alle Apps mit aktiven Benachrichtigungen dynamisch zwischen Datum und Favoriten ein (ideal bei ausgeblendeter Statusleiste).
 - **Nutzungsstatistik in den Einstellungen:** Zeigt, welche Wellen-Seite (Links/Rechts) häufiger genutzt wird, sowie die meistgestarteten Apps mit direkter `+ Favorit`-Schaltfläche.
 - **Nova-Backup-Import (in den Einstellungen):** Übernimmt benutzerdefinierte Icons, App-Namen und Favoriten direkt aus `.novabackup`-Archiven.
 - **Eigenes JSON Backup & Restore (in den Einstellungen):** Exportiert und importiert sämtliche Launcher-Einstellungen, Favoriten, Pop-up-Ordner, App-Namen, Icons und Statistiken als portierbare `.json`-Datei.
@@ -59,7 +59,7 @@ Minimalist, ergonomic Android launcher with a strict **black-and-white / AMOLED 
 - **Recently Used Apps (Optional):** Collapsible vertical list of up to 5 recently launched non-favorite apps below Favorites (automatically collapses on app launch or when returning to the launcher).
 - **Lines Icon Pack & Monochrome Engine:** Loads white outline icons from *Lines* (`com.natewren.lines`, `linesfree`, `linesdark`) with native icon picker integration and converts all remaining app icons into high-contrast monochrome bitmaps.
 - **Pop-up Menu, Folders & Renaming:** Swipe right or long-press an app to access sub-apps (pop-up folders), app shortcuts, custom display names, and per-app icon overrides.
-- **Notification Previews:** Displays active notification text directly beneath app names via `NotificationListenerService`.
+- **Notification Previews & Active Notification List:** Displays active notification text directly beneath app names via `NotificationListenerService` and optionally highlights non-favorite apps with active notifications between the date and Favorites (ideal when hiding the system status bar).
 - **Usage Statistics in Settings:** Tracks left vs. right wave usage and most-launched apps with a quick `+ Favorite` toggle.
 - **Nova Backup Importer (in Settings):** Imports custom icons, app names, and favorites directly from `.novabackup` archives.
 - **JSON Backup & Restore (in Settings):** Exports and restores all launcher settings, favorites, pop-up folders, custom names, icons, and statistics as a portable `.json` file.

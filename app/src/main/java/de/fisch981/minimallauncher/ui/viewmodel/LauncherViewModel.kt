@@ -110,6 +110,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val showBottomActions: StateFlow<Boolean> = favoritesRepository.showBottomActionsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
+    val showNotificationApps: StateFlow<Boolean> = favoritesRepository.showNotificationAppsFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     val showNotificationPreview: StateFlow<Boolean> = favoritesRepository.showNotificationPreviewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
@@ -657,6 +660,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun toggleShowBottomActions(show: Boolean) {
         viewModelScope.launch {
             favoritesRepository.setShowBottomActions(show)
+        }
+    }
+
+    fun toggleShowNotificationApps(show: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setShowNotificationApps(show)
         }
     }
 
