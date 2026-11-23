@@ -70,6 +70,9 @@ import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 import de.fisch981.minimallauncher.ui.viewmodel.LauncherViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
@@ -121,6 +124,36 @@ fun SettingsScreen(
                         Toast.LENGTH_LONG
                     ).show()
                 }
+            }
+        }
+    }
+
+    val exportBackupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.exportLauncherBackup(uri) { success, error ->
+                val message = if (success) {
+                    strings.backupExportSuccessToast
+                } else {
+                    strings.backupExportErrorToast(error ?: "Unknown error")
+                }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    val importBackupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.importLauncherBackup(uri) { success, error ->
+                val message = if (success) {
+                    strings.backupImportSuccessToast
+                } else {
+                    strings.backupImportErrorToast(error ?: "Unknown error")
+                }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -217,6 +250,33 @@ fun SettingsScreen(
                         }
                     }
                 }
+            }
+
+            // Backup & Restore (MinimalLauncher JSON)
+            item {
+                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+                SectionHeader(strings.sectionBackupRestore)
+
+                SettingItem(
+                    title = strings.exportBackupTitle,
+                    subtitle = strings.exportBackupSubtitle,
+                    onClick = {
+                        try {
+                            val dateStamp = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+                            exportBackupLauncher.launch("minimallauncher-backup-$dateStamp.json")
+                        } catch (_: Exception) {}
+                    }
+                )
+
+                SettingItem(
+                    title = strings.importBackupTitle,
+                    subtitle = strings.importBackupSubtitle,
+                    onClick = {
+                        try {
+                            importBackupLauncher.launch(arrayOf("application/json", "*/*"))
+                        } catch (_: Exception) {}
+                    }
+                )
             }
 
             // Nova Backup Import
@@ -760,7 +820,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "MinimalLauncher v1.0.22",
+                    text = "MinimalLauncher v1.0.23",
                     color = GrayMedium,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 32.dp)

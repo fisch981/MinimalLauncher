@@ -89,6 +89,15 @@ data class AppStrings(
     val defaultLauncherInactive: String,
     val changeButton: String,
     val setButton: String,
+    val sectionBackupRestore: String,
+    val exportBackupTitle: String,
+    val exportBackupSubtitle: String,
+    val importBackupTitle: String,
+    val importBackupSubtitle: String,
+    val backupExportSuccessToast: String,
+    val backupExportErrorFormat: String,
+    val backupImportSuccessToast: String,
+    val backupImportErrorFormat: String,
     val sectionNovaImporter: String,
     val selectNovaBackupTitle: String,
     val novaCustomMappingsActiveFormat: String,
@@ -154,6 +163,8 @@ data class AppStrings(
     fun waveUsageRightMore(percent: Int): String = String.format(dateLocale, waveUsageRightMoreFormat, percent)
     fun launchedCountSubtitle(count: Int): String = String.format(dateLocale, launchedCountFormat, count)
     fun sectionHiddenApps(count: Int): String = String.format(dateLocale, sectionHiddenAppsFormat, count)
+    fun backupExportErrorToast(error: String): String = String.format(dateLocale, backupExportErrorFormat, error)
+    fun backupImportErrorToast(error: String): String = String.format(dateLocale, backupImportErrorFormat, error)
 }
 
 val GermanStrings = AppStrings(
@@ -216,6 +227,15 @@ val GermanStrings = AppStrings(
     defaultLauncherInactive = "Tippen zum Aktivieren",
     changeButton = "Ändern",
     setButton = "Festlegen",
+    sectionBackupRestore = "Sicherung & Wiederherstellung",
+    exportBackupTitle = "Einstellungen sichern (.json)",
+    exportBackupSubtitle = "Speichert Favoriten, Ordner, eigene Namen, Icons und Einstellungen",
+    importBackupTitle = "Sicherung wiederherstellen (.json)",
+    importBackupSubtitle = "Lädt eine zuvor gespeicherte MinimalLauncher-Sicherungsdatei",
+    backupExportSuccessToast = "Sicherung erfolgreich gespeichert",
+    backupExportErrorFormat = "Sicherung fehlgeschlagen: %s",
+    backupImportSuccessToast = "Sicherung erfolgreich wiederhergestellt",
+    backupImportErrorFormat = "Wiederherstellung fehlgeschlagen: %s",
     sectionNovaImporter = "Nova Launcher Backup Importer",
     selectNovaBackupTitle = "Backup-Datei auswählen (.novabackup)",
     novaCustomMappingsActiveFormat = "%d benutzerdefinierte Zuordnungen aktiv (tippen zum erneuten Import)",
@@ -331,6 +351,15 @@ val EnglishStrings = AppStrings(
     defaultLauncherInactive = "Tap to activate",
     changeButton = "Change",
     setButton = "Set",
+    sectionBackupRestore = "Backup & Restore",
+    exportBackupTitle = "Export backup (.json)",
+    exportBackupSubtitle = "Saves favorites, folders, custom names, icons, and settings",
+    importBackupTitle = "Restore backup (.json)",
+    importBackupSubtitle = "Loads a previously saved MinimalLauncher backup file",
+    backupExportSuccessToast = "Backup saved successfully",
+    backupExportErrorFormat = "Backup export failed: %s",
+    backupImportSuccessToast = "Backup restored successfully",
+    backupImportErrorFormat = "Backup restore failed: %s",
     sectionNovaImporter = "Nova Launcher Backup Importer",
     selectNovaBackupTitle = "Select backup file (.novabackup)",
     novaCustomMappingsActiveFormat = "%d custom mappings active (tap to re-import)",

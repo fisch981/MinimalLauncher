@@ -21,6 +21,7 @@ Minimalistischer, ergonomischer Android-Launcher in kompromissloser **Schwarz-We
 - **Benachrichtigungsvorschau:** Zeigt aktive Benachrichtigungstexte direkt unter dem jeweiligen App-Namen über den `NotificationListenerService`.
 - **Nutzungsstatistik in den Einstellungen:** Zeigt, welche Wellen-Seite (Links/Rechts) häufiger genutzt wird, sowie die meistgestarteten Apps mit direkter `+ Favorit`-Schaltfläche.
 - **Nova-Backup-Import (in den Einstellungen):** Übernimmt benutzerdefinierte Icons, App-Namen und Favoriten direkt aus `.novabackup`-Archiven.
+- **Eigenes JSON Backup & Restore (in den Einstellungen):** Exportiert und importiert sämtliche Launcher-Einstellungen, Favoriten, Pop-up-Ordner, App-Namen, Icons und Statistiken als portierbare `.json`-Datei.
 - **Zweisprachig (Deutsch & Englisch):** Übernimmt standardmäßig die Systemsprache (mit englischem Fallback) oder lässt sich in den Einstellungen manuell umschalten.
 - **Pure AMOLED Black Design:** Tiefschwarzer Hintergrund (`#000000`) mit monochromer Typografie und sofortigem Favoriten-Startup-Cache.
 
@@ -59,6 +60,7 @@ Minimalist, ergonomic Android launcher with a strict **black-and-white / AMOLED 
 - **Notification Previews:** Displays active notification text directly beneath app names via `NotificationListenerService`.
 - **Usage Statistics in Settings:** Tracks left vs. right wave usage and most-launched apps with a quick `+ Favorite` toggle.
 - **Nova Backup Importer (in Settings):** Imports custom icons, app names, and favorites directly from `.novabackup` archives.
+- **JSON Backup & Restore (in Settings):** Exports and restores all launcher settings, favorites, pop-up folders, custom names, icons, and statistics as a portable `.json` file.
 - **Bilingual UI (English & German):** Defaults to the system language (with English fallback) and includes a manual language switcher in Settings.
 - **Pure AMOLED Black Design:** Pitch-black background (`#000000`), monochrome typography, and an instant-start favorites cache.
 

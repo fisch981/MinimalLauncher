@@ -8,9 +8,11 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import de.fisch981.minimallauncher.data.backup.LauncherBackupData
 import de.fisch981.minimallauncher.data.model.ScrollerSide
 import de.fisch981.minimallauncher.ui.theme.AppLanguage
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "minimal_launcher_prefs")
@@ -363,6 +365,61 @@ class FavoritesRepository(private val context: Context) {
 
     private fun serializeFolders(map: Map<String, List<String>>): String {
         return map.entries.joinToString(";") { "${it.key}:${it.value.joinToString(",")}" }
+    }
+
+    suspend fun exportBackupData(importedIconFiles: Map<String, String>): LauncherBackupData {
+        val prefs = context.dataStore.data.first()
+        val favsRaw = prefs[KEY_FAVORITES] ?: ""
+        val recentsRaw = prefs[KEY_RECENT_APPS] ?: ""
+        val launchCounts = parseCustomIcons(prefs[KEY_APP_LAUNCH_COUNTS] ?: "")
+            .mapNotNull { (k, v) -> v.toIntOrNull()?.takeIf { it > 0 }?.let { k to it } }
+            .toMap()
+        val side = ScrollerSide.fromStored(prefs[KEY_SCROLLER_SIDE], prefs[KEY_RIGHT_HANDED] ?: true)
+
+        return LauncherBackupData(
+            favorites = if (favsRaw.isBlank()) emptyList() else favsRaw.split(",").filter { it.isNotBlank() },
+            hiddenApps = prefs[KEY_HIDDEN_APPS] ?: emptySet(),
+            popupFolders = parseFolders(prefs[KEY_POPUP_FOLDERS] ?: ""),
+            scrollerSide = side.name,
+            waveIdleAlphaPercent = (prefs[KEY_WAVE_IDLE_ALPHA] ?: 40).coerceIn(0, 100),
+            appLanguage = AppLanguage.fromCode(prefs[KEY_APP_LANGUAGE]).code,
+            showMedia = prefs[KEY_SHOW_MEDIA] ?: true,
+            showBattery = prefs[KEY_SHOW_BATTERY] ?: true,
+            showRecentApps = prefs[KEY_SHOW_RECENT_APPS] ?: true,
+            recentApps = if (recentsRaw.isBlank()) emptyList() else recentsRaw.split(",").filter { it.isNotBlank() },
+            leftWaveCount = (prefs[KEY_LEFT_WAVE_COUNT] ?: 0).coerceAtLeast(0),
+            rightWaveCount = (prefs[KEY_RIGHT_WAVE_COUNT] ?: 0).coerceAtLeast(0),
+            appLaunchCounts = launchCounts,
+            customIcons = parseCustomIcons(prefs[KEY_CUSTOM_ICONS] ?: ""),
+            customNames = parseCustomIcons(prefs[KEY_CUSTOM_NAMES] ?: ""),
+            importedIconFiles = importedIconFiles
+        )
+    }
+
+    suspend fun restoreBackupData(data: LauncherBackupData) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_FAVORITES] = data.favorites.filter { it.isNotBlank() }.joinToString(",")
+            prefs[KEY_HIDDEN_APPS] = data.hiddenApps.filter { it.isNotBlank() }.toSet()
+            prefs[KEY_POPUP_FOLDERS] = serializeFolders(data.popupFolders.filter { it.key.isNotBlank() && it.value.isNotEmpty() })
+
+            val side = ScrollerSide.fromStored(data.scrollerSide, true)
+            prefs[KEY_SCROLLER_SIDE] = side.name
+            prefs[KEY_RIGHT_HANDED] = (side != ScrollerSide.LEFT)
+
+            prefs[KEY_WAVE_IDLE_ALPHA] = data.waveIdleAlphaPercent.coerceIn(0, 100)
+            prefs[KEY_APP_LANGUAGE] = AppLanguage.fromCode(data.appLanguage).code
+            prefs[KEY_SHOW_MEDIA] = data.showMedia
+            prefs[KEY_SHOW_BATTERY] = data.showBattery
+            prefs[KEY_SHOW_RECENT_APPS] = data.showRecentApps
+            prefs[KEY_RECENT_APPS] = data.recentApps.filter { it.isNotBlank() }.take(15).joinToString(",")
+            prefs[KEY_LEFT_WAVE_COUNT] = data.leftWaveCount.coerceAtLeast(0)
+            prefs[KEY_RIGHT_WAVE_COUNT] = data.rightWaveCount.coerceAtLeast(0)
+            prefs[KEY_APP_LAUNCH_COUNTS] = serializeCustomIcons(
+                data.appLaunchCounts.filter { it.key.isNotBlank() && it.value > 0 }.mapValues { it.value.toString() }
+            )
+            prefs[KEY_CUSTOM_ICONS] = serializeCustomIcons(data.customIcons.filter { it.key.isNotBlank() && it.value.isNotBlank() })
+            prefs[KEY_CUSTOM_NAMES] = serializeCustomIcons(data.customNames.filter { it.key.isNotBlank() && it.value.isNotBlank() })
+        }
     }
 }
 

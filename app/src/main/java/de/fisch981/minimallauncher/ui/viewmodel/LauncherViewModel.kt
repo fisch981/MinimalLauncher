@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import de.fisch981.minimallauncher.data.backup.LauncherBackupCodec
 import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.data.model.AppNotificationItem
 import de.fisch981.minimallauncher.data.model.MediaState
@@ -139,6 +140,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         favoritesRepository.customNamesFlow
     ) { allApps, (favoriteKeys, recentKeys, launchCounts), foldersMap, hiddenKeys, customNames ->
 
+        fun isHiddenApp(app: AppItem): Boolean {
+            val componentKey = "${app.packageName}/${app.activityName}"
+            return hiddenKeys.contains(app.key) ||
+                hiddenKeys.contains(componentKey) ||
+                hiddenKeys.any { it.substringBefore('#') == componentKey }
+        }
+
+        val appsByComponentKey = allApps.associateBy { "${it.packageName}/${it.activityName}" }
+
         val renamedByKey = allApps.associate { app ->
             val componentKey = "${app.packageName}/${app.activityName}"
             val customName = customNames[app.key] ?: customNames[componentKey] ?: customNames[app.packageName]
@@ -147,11 +157,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
 
         val processedApps = allApps
-            .filter { !hiddenKeys.contains(it.key) }
+            .filter { !isHiddenApp(it) }
             .mapNotNull { rawApp ->
                 val app = renamedByKey[rawApp.key] ?: return@mapNotNull null
-                val subAppKeys = foldersMap[app.key] ?: emptyList()
-                val subApps = subAppKeys.mapNotNull { renamedByKey[it] }
+                val componentKey = "${app.packageName}/${app.activityName}"
+                val subAppKeys = foldersMap[app.key]
+                    ?: foldersMap[componentKey]
+                    ?: foldersMap.entries.firstOrNull { it.key.substringBefore('#') == componentKey }?.value
+                    ?: emptyList()
+                val subApps = subAppKeys.mapNotNull { subKey ->
+                    renamedByKey[subKey]
+                        ?: appsByComponentKey[subKey.substringBefore('#')]?.let { renamedByKey[it.key] }
+                }.distinctBy { it.key }
                 val isFav = favoriteKeys.contains(app.key)
                 app.copy(
                     isFavorite = isFav,
@@ -221,7 +238,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             mostUsedApps = mostUsedApps,
             allApps = alphabeticalApps,
             availableLetters = availableLetters,
-            hiddenApps = allApps.filter { hiddenKeys.contains(it.key) }.mapNotNull { renamedByKey[it.key] }
+            hiddenApps = allApps.filter { isHiddenApp(it) }.mapNotNull { renamedByKey[it.key] }
         )
     }.stateIn(
         viewModelScope,
@@ -310,6 +327,55 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             _customIconsCount.value = 0
             iconPackManager.clearIconCache()
             appRepository.refreshApps()
+        }
+    }
+
+    /** Exportiert sämtliche Einstellungen, Favoriten, Ordner, Statistik und Custom-Icons als JSON. */
+    fun exportLauncherBackup(uri: Uri, onComplete: (success: Boolean, error: String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val json = withContext(Dispatchers.IO) {
+                    val iconFiles = importedIcons.exportAllAsBase64()
+                    val data = favoritesRepository.exportBackupData(iconFiles)
+                    val encoded = LauncherBackupCodec.encodeToJson(data)
+                    val out = getApplication<Application>().contentResolver.openOutputStream(uri, "wt")
+                        ?: error("Output stream unavailable")
+                    out.bufferedWriter(Charsets.UTF_8).use { writer ->
+                        writer.write(encoded)
+                    }
+                    encoded
+                }
+                if (json.isNotEmpty()) {
+                    onComplete(true, null)
+                } else {
+                    onComplete(false, "Empty backup")
+                }
+            } catch (e: Exception) {
+                onComplete(false, e.localizedMessage ?: e.javaClass.simpleName)
+            }
+        }
+    }
+
+    /** Stellt Einstellungen, Favoriten, Ordner, Statistik und Custom-Icons aus einer JSON-Sicherung wieder her. */
+    fun importLauncherBackup(uri: Uri, onComplete: (success: Boolean, error: String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val input = getApplication<Application>().contentResolver.openInputStream(uri)
+                        ?: error("Input stream unavailable")
+                    val json = input.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val data = LauncherBackupCodec.decodeFromJson(json)
+                    importedIcons.importAllFromBase64(data.importedIconFiles)
+                    favoritesRepository.restoreBackupData(data)
+                    iconPackManager.setCustomOverrides(data.customIcons)
+                }
+                _customIconsCount.value = importedIcons.count()
+                iconPackManager.clearIconCache()
+                appRepository.refreshApps()
+                onComplete(true, null)
+            } catch (e: Exception) {
+                onComplete(false, e.localizedMessage ?: e.javaClass.simpleName)
+            }
         }
     }
 

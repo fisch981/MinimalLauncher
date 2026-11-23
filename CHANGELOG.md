@@ -6,6 +6,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.23] - 2026-11-23
+
+### Deutsch
+- **Eigenes MinimalLauncher Backup & Restore (.json):**
+  - Neuer Bereich „Sicherung & Wiederherstellung“ in den Einstellungen zum vollständigen Exportieren und Wiederherstellen aller Launcher-Daten über Androids System-Dateiauswahl (`CreateDocument` / `OpenDocument`).
+  - Sichert Favoriten, Pop-up-Ordner (Unter-Apps), umbenannte App-Namen, ausgeblendete Apps, manuell gewählte/importierte Icons (inkl. Base64-PNGs), Wave-Scroller-Position & Ruhehelligkeit, Sprache, Header-Schalter, Zuletzt-benutzt-Historie sowie Nutzungsstatistiken in einer einzigen `.json`-Datei.
+  - Neuer reiner Kotlin-Codec (`LauncherBackupCodec`) inklusive Round-Trip-Unit-Tests (`LauncherBackupCodecTest`).
+
+### English
+- **MinimalLauncher JSON Backup & Restore:**
+  - Added a “Backup & Restore” section in Settings to export and restore the complete launcher configuration using Android’s Storage Access Framework (`CreateDocument` / `OpenDocument`).
+  - Persists favorites, pop-up folders (sub-apps), custom app names, hidden apps, custom/imported icons (including Base64 PNG payloads), wave scroller side & idle brightness, app language, header toggles, recent app history, and usage statistics in a single `.json` file.
+  - Added pure-Kotlin `LauncherBackupCodec` with unit test coverage (`LauncherBackupCodecTest`).
+
+---
+
 ## [1.0.22] - 2026-11-23
 
 ### Deutsch

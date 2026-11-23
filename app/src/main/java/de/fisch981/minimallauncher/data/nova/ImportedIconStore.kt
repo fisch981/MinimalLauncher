@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.security.MessageDigest
+import java.util.Base64
 
 /**
  * Speichert die aus Nova importierten Icon-PNGs im App-Speicher.
@@ -78,6 +79,39 @@ class ImportedIconStore(context: Context) {
     }
 
     fun count(): Int = dir.listFiles { f -> f.name.startsWith("c_") }?.size ?: 0
+
+    fun exportAllAsBase64(): Map<String, String> {
+        val files = dir.listFiles { f -> f.isFile && f.name.endsWith(".png") } ?: return emptyMap()
+        val encoder = Base64.getEncoder()
+        val result = LinkedHashMap<String, String>(files.size)
+        for (file in files.sortedBy { it.name }) {
+            runCatching {
+                val bytes = file.readBytes()
+                if (bytes.isNotEmpty()) {
+                    result[file.name] = encoder.encodeToString(bytes)
+                }
+            }
+        }
+        return result
+    }
+
+    fun importAllFromBase64(files: Map<String, String>) {
+        dir.deleteRecursively()
+        if (files.isEmpty()) return
+        dir.mkdirs()
+        val decoder = Base64.getDecoder()
+        for ((name, encoded) in files) {
+            if (!name.endsWith(".png") || name.contains('/') || name.contains('\\') || name.contains("..")) {
+                continue
+            }
+            runCatching {
+                val bytes = decoder.decode(encoded)
+                if (bytes.isNotEmpty()) {
+                    File(dir, name).writeBytes(bytes)
+                }
+            }
+        }
+    }
 
     fun clear() {
         dir.deleteRecursively()
