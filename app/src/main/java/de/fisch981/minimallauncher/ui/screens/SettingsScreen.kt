@@ -891,7 +891,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "MinimalLauncher v1.0.26",
+                    text = "MinimalLauncher v1.0.27",
                     color = GrayMedium,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 32.dp)
@@ -966,71 +966,77 @@ private fun TypographySubScreen(
                 )
             }
 
-            LazyColumn(
+            // Fixed Live Preview Card above scrollable controls
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(horizontal = 24.dp)
             ) {
-                // Live Preview Card
-                item {
-                    SectionHeader(strings.previewHeader)
-                    Card(
+                SectionHeader(strings.previewHeader)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-                        shape = RoundedCornerShape(10.dp)
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "12:45",
+                                fontSize = clockSizeSp.coerceIn(28, 84).sp,
+                                fontWeight = FontWeight.Light,
+                                fontFamily = clockDateFontFamily,
+                                color = PureWhite
+                            )
+                            Text(
+                                text = "${strings.previewSampleDate} • 85%",
+                                fontSize = dateSizeSp.coerceIn(11, 24).sp,
+                                fontFamily = clockDateFontFamily,
+                                color = GrayLight
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = strings.previewSampleApp,
+                                fontSize = appFontSizeSp.coerceIn(13, 24).sp,
+                                fontFamily = appFontFamily,
+                                color = PureWhite
+                            )
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
+                            listOf("★", "A", "B", "C").forEach { glyph ->
                                 Text(
-                                    text = "12:45",
-                                    fontSize = clockSizeSp.coerceIn(28, 84).sp,
-                                    fontWeight = FontWeight.Light,
-                                    fontFamily = clockDateFontFamily,
+                                    text = glyph,
+                                    fontSize = waveFontSizeSp.coerceIn(9, 16).sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = waveFontFamily,
                                     color = PureWhite
                                 )
-                                Text(
-                                    text = "${strings.previewSampleDate} • 85%",
-                                    fontSize = dateSizeSp.coerceIn(11, 24).sp,
-                                    fontFamily = clockDateFontFamily,
-                                    color = GrayLight
-                                )
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Text(
-                                    text = strings.previewSampleApp,
-                                    fontSize = appFontSizeSp.coerceIn(13, 24).sp,
-                                    fontFamily = appFontFamily,
-                                    color = PureWhite
-                                )
-                            }
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                listOf("★", "A", "B", "C").forEach { glyph ->
-                                    Text(
-                                        text = glyph,
-                                        fontSize = waveFontSizeSp.coerceIn(9, 16).sp,
-                                        fontWeight = FontWeight.Medium,
-                                        fontFamily = waveFontFamily,
-                                        color = PureWhite
-                                    )
-                                }
                             }
                         }
                     }
                 }
+                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(top = 8.dp))
+            }
 
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+            ) {
                 // App Names Font & Size
                 item {
-                    HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     SectionHeader(strings.typographyAppSection)
                     FontFamilySelector(
                         label = strings.fontFamilyLabel,

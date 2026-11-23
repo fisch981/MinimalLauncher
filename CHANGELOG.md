@@ -6,6 +6,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.27] - 2026-11-23
+
+### Deutsch
+- **Fixierte Schriftarten-Vorschau:** Der Vorschau-Bereich in „Schriftarten & Größen“ (`TypographySubScreen`) bleibt nun fest am oberen Rand unter der Titelleiste stehen, während die Einstellungen darunter gescrollt werden können.
+
+### English
+- **Pinned Font Live Preview:** Fixed the live preview card at the top of Settings → “Fonts & sizes” (`TypographySubScreen`) so it remains visible while scrolling through the controls below.
+
+---
+
 ## [1.0.26] - 2026-11-23
 
 ### Deutsch
