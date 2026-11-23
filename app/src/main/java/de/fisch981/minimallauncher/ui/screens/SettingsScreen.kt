@@ -102,7 +102,7 @@ fun SettingsScreen(
     val showNotificationPreview by viewModel.showNotificationPreview.collectAsState()
     val isHiddenAppsOpen by viewModel.isHiddenAppsOpen.collectAsState()
     val isTypographyOpen by viewModel.isTypographyOpen.collectAsState()
-    val waveUsageStats by viewModel.waveUsageStats.collectAsState()
+    val isUsageStatsOpen by viewModel.isUsageStatsOpen.collectAsState()
     val uiState by viewModel.launcherState.collectAsState()
     val customIconsCount by viewModel.customIconsCountState.collectAsState()
     val isDefaultLauncher by viewModel.isDefaultLauncher.collectAsState()
@@ -265,68 +265,10 @@ fun SettingsScreen(
                 }
             }
 
-            // Backup & Restore (MinimalLauncher JSON)
+            // 2. Home Screen & Apps
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionBackupRestore)
-
-                SettingItem(
-                    title = strings.exportBackupTitle,
-                    subtitle = strings.exportBackupSubtitle,
-                    onClick = {
-                        try {
-                            val dateStamp = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-                            exportBackupLauncher.launch("minimallauncher-backup-$dateStamp.json")
-                        } catch (_: Exception) {}
-                    }
-                )
-
-                SettingItem(
-                    title = strings.importBackupTitle,
-                    subtitle = strings.importBackupSubtitle,
-                    onClick = {
-                        try {
-                            importBackupLauncher.launch(arrayOf("application/json", "*/*"))
-                        } catch (_: Exception) {}
-                    }
-                )
-            }
-
-            // Nova Backup Import
-            item {
-                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionNovaImporter)
-
-                SettingItem(
-                    title = strings.selectNovaBackupTitle,
-                    subtitle = if (customIconsCount > 0) {
-                        strings.novaCustomMappingsActive(customIconsCount)
-                    } else {
-                        strings.novaBackupSubtitleDefault
-                    },
-                    onClick = {
-                        try {
-                            filePickerLauncher.launch(arrayOf("*/*"))
-                        } catch (_: Exception) {}
-                    }
-                )
-
-                if (customIconsCount > 0) {
-                    SettingItem(
-                        title = strings.resetNovaMappingsTitle,
-                        subtitle = strings.resetNovaMappingsSubtitle(customIconsCount),
-                        onClick = {
-                            viewModel.clearCustomIcons()
-                            Toast.makeText(context, strings.novaMappingsResetToast, Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                }
-            }
-
-            // Favorites
-            item {
-                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionFavorites)
+                SectionHeader(strings.sectionHomeApps)
 
                 SettingItem(
                     title = strings.manageFavoritesTitle,
@@ -334,88 +276,121 @@ fun SettingsScreen(
                     onClick = { viewModel.setManageFavoritesOpen(true) }
                 )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(strings.showRecentAppsTitle, color = PureWhite, fontSize = 15.sp)
-                        Text(
-                            strings.showRecentAppsSubtitle,
-                            color = GrayMedium,
-                            fontSize = 12.sp
-                        )
-                    }
-                    Switch(
-                        checked = showRecentApps,
-                        onCheckedChange = { viewModel.toggleShowRecentApps(it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = PureBlack,
-                            checkedTrackColor = PureWhite,
-                            uncheckedThumbColor = GrayMedium,
-                            uncheckedTrackColor = DarkSurfaceVariant
-                        )
-                    )
-                }
+                SettingSwitchItem(
+                    title = strings.showRecentAppsTitle,
+                    subtitle = strings.showRecentAppsSubtitle,
+                    checked = showRecentApps,
+                    onCheckedChange = { viewModel.toggleShowRecentApps(it) }
+                )
+
+                SettingSwitchItem(
+                    title = strings.showNotificationAppsTitle,
+                    subtitle = strings.showNotificationAppsSubtitle,
+                    checked = showNotificationApps,
+                    onCheckedChange = { viewModel.toggleShowNotificationApps(it) }
+                )
+
+                SettingItem(
+                    title = strings.hiddenAppsTitle,
+                    subtitle = if (uiState.hiddenApps.isEmpty()) {
+                        strings.noHiddenApps
+                    } else {
+                        strings.hiddenAppsManageSubtitle(uiState.hiddenApps.size)
+                    },
+                    onClick = { viewModel.setHiddenAppsOpen(true) }
+                )
             }
 
-            // Appearance & Wave Scroller
+            // 3. Header & Notifications
+            item {
+                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+                SectionHeader(strings.sectionHeaderNotifications)
+
+                SettingSwitchItem(
+                    title = strings.showClockTitle,
+                    subtitle = strings.showClockSubtitle,
+                    checked = showClock,
+                    onCheckedChange = { viewModel.toggleShowClock(it) }
+                )
+
+                SettingSwitchItem(
+                    title = strings.showDateTitle,
+                    subtitle = strings.showDateSubtitle,
+                    checked = showDate,
+                    onCheckedChange = { viewModel.toggleShowDate(it) }
+                )
+
+                SettingSwitchItem(
+                    title = strings.showBatteryTitle,
+                    subtitle = strings.showBatterySubtitle,
+                    checked = showBattery,
+                    onCheckedChange = { viewModel.toggleShowBattery(it) }
+                )
+
+                SettingSwitchItem(
+                    title = strings.showMediaTitle,
+                    subtitle = strings.showMediaSubtitle,
+                    checked = showMedia,
+                    onCheckedChange = { viewModel.toggleShowMedia(it) }
+                )
+
+                SettingSwitchItem(
+                    title = strings.showNotificationPreviewTitle,
+                    subtitle = strings.showNotificationPreviewSubtitle,
+                    checked = showNotificationPreview,
+                    onCheckedChange = { viewModel.toggleShowNotificationPreview(it) }
+                )
+
+                SettingItem(
+                    title = strings.notificationAccessTitle,
+                    subtitle = if (isNotificationGranted) strings.notificationAccessGranted else strings.notificationAccessDenied,
+                    onClick = {
+                        try {
+                            context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            })
+                        } catch (_: Exception) {}
+                    }
+                )
+            }
+
+            // 4. Appearance & Wave Scroller
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
                 SectionHeader(strings.sectionAppearanceWave)
 
-                // App Language: System / Deutsch / English
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Text(strings.languageTitle, color = PureWhite, fontSize = 15.sp)
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        strings.languageSubtitle,
-                        color = GrayMedium,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val languageOptions = listOf(
-                            AppLanguage.SYSTEM to strings.languageSystem,
-                            AppLanguage.DE to strings.languageGerman,
-                            AppLanguage.EN to strings.languageEnglish
-                        )
-                        for ((option, label) in languageOptions) {
-                            val selected = appLanguage == option
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (selected) PureWhite else DarkSurfaceVariant)
-                                    .border(
-                                        1.dp,
-                                        if (selected) PureWhite else BorderDark,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable { viewModel.setAppLanguage(option) }
-                                    .padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = label,
-                                    color = if (selected) PureBlack else GrayLight,
-                                    fontSize = 13.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        }
-                    }
-                }
+                SettingItem(
+                    title = strings.typographyTitle,
+                    subtitle = strings.typographySubtitle,
+                    onClick = { viewModel.setTypographyOpen(true) }
+                )
+
+                SettingSwitchItem(
+                    title = strings.showAppIconsTitle,
+                    subtitle = strings.showAppIconsSubtitle,
+                    checked = showAppIcons,
+                    onCheckedChange = { viewModel.toggleShowAppIcons(it) }
+                )
+
+                SettingItem(
+                    title = strings.linesPackStatusTitle,
+                    subtitle = if (isLinesInstalled) strings.linesPackActiveSubtitle else strings.linesPackInactiveSubtitle,
+                    onClick = { viewModel.reloadIcons() }
+                )
+
+                SettingSwitchItem(
+                    title = strings.hideStatusBarTitle,
+                    subtitle = strings.hideStatusBarSubtitle,
+                    checked = hideStatusBar,
+                    onCheckedChange = { viewModel.toggleHideStatusBar(it) }
+                )
+
+                SettingSwitchItem(
+                    title = strings.showBottomActionsTitle,
+                    subtitle = strings.showBottomActionsSubtitle,
+                    checked = showBottomActions,
+                    onCheckedChange = { viewModel.toggleShowBottomActions(it) }
+                )
 
                 // Alphabet Wave Position: Left / Right / Both
                 Column(
@@ -510,396 +485,126 @@ fun SettingsScreen(
                         )
                     )
                 }
-
-                SettingItem(
-                    title = strings.linesPackStatusTitle,
-                    subtitle = if (isLinesInstalled) strings.linesPackActiveSubtitle else strings.linesPackInactiveSubtitle,
-                    onClick = { viewModel.reloadIcons() }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showAppIconsTitle,
-                    subtitle = strings.showAppIconsSubtitle,
-                    checked = showAppIcons,
-                    onCheckedChange = { viewModel.toggleShowAppIcons(it) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.hideStatusBarTitle,
-                    subtitle = strings.hideStatusBarSubtitle,
-                    checked = hideStatusBar,
-                    onCheckedChange = { viewModel.toggleHideStatusBar(it) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showBottomActionsTitle,
-                    subtitle = strings.showBottomActionsSubtitle,
-                    checked = showBottomActions,
-                    onCheckedChange = { viewModel.toggleShowBottomActions(it) }
-                )
-
-                SettingItem(
-                    title = strings.typographyTitle,
-                    subtitle = strings.typographySubtitle,
-                    onClick = { viewModel.setTypographyOpen(true) }
-                )
             }
 
-            // Usage Statistics
+            // 5. Statistics & Language
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionUsageStats)
+                SectionHeader(strings.sectionStatsLanguage)
 
-                val waveSummary = when {
-                    waveUsageStats.totalCount == 0 -> strings.waveUsageNone
-                    waveUsageStats.leftCount > waveUsageStats.rightCount ->
-                        strings.waveUsageLeftMore(waveUsageStats.leftPercent)
-                    waveUsageStats.rightCount > waveUsageStats.leftCount ->
-                        strings.waveUsageRightMore(waveUsageStats.rightPercent)
-                    else -> strings.waveUsageEqual
-                }
+                SettingItem(
+                    title = strings.sectionUsageStats,
+                    subtitle = strings.usageStatsSubtitle,
+                    onClick = { viewModel.setUsageStatsOpen(true) }
+                )
 
+                // App Language: System / Deutsch / English
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 ) {
-                    Text(strings.waveSideUsageTitle, color = PureWhite, fontSize = 15.sp)
+                    Text(strings.languageTitle, color = PureWhite, fontSize = 15.sp)
                     Spacer(modifier = Modifier.height(2.dp))
-                    Text(waveSummary, color = GrayMedium, fontSize = 12.sp)
+                    Text(
+                        strings.languageSubtitle,
+                        color = GrayMedium,
+                        fontSize = 12.sp
+                    )
                     Spacer(modifier = Modifier.height(10.dp))
-
-                    val leftLeads = waveUsageStats.totalCount > 0 && waveUsageStats.leftCount > waveUsageStats.rightCount
-                    val rightLeads = waveUsageStats.totalCount > 0 && waveUsageStats.rightCount > waveUsageStats.leftCount
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(DarkSurfaceVariant)
-                                .border(
-                                    1.dp,
-                                    if (leftLeads) PureWhite else BorderDark,
-                                    RoundedCornerShape(8.dp)
-                                )
-                                .padding(horizontal = 12.dp, vertical = 10.dp)
-                        ) {
-                            Text(strings.sideLeft, color = GrayMedium, fontSize = 11.sp)
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${waveUsageStats.leftCount}× (${waveUsageStats.leftPercent}%)",
-                                color = PureWhite,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(DarkSurfaceVariant)
-                                .border(
-                                    1.dp,
-                                    if (rightLeads) PureWhite else BorderDark,
-                                    RoundedCornerShape(8.dp)
-                                )
-                                .padding(horizontal = 12.dp, vertical = 10.dp)
-                        ) {
-                            Text(strings.sideRight, color = GrayMedium, fontSize = 11.sp)
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${waveUsageStats.rightCount}× (${waveUsageStats.rightPercent}%)",
-                                color = PureWhite,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    if (waveUsageStats.totalCount > 0) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(DarkSurfaceVariant)
-                        ) {
-                            if (waveUsageStats.leftCount > 0) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(waveUsageStats.leftCount.toFloat())
-                                        .height(6.dp)
-                                        .background(PureWhite)
-                                )
-                            }
-                            if (waveUsageStats.rightCount > 0) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(waveUsageStats.rightCount.toFloat())
-                                        .height(6.dp)
-                                        .background(GrayMedium)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(strings.mostLaunchedAppsTitle, color = PureWhite, fontSize = 15.sp)
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    strings.mostLaunchedAppsSubtitle,
-                    color = GrayMedium,
-                    fontSize = 12.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (uiState.mostUsedApps.isEmpty()) {
-                    Text(
-                        text = strings.noAppLaunchesRecorded,
-                        color = GrayMedium,
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(vertical = 6.dp)
-                    )
-                } else {
-                    uiState.mostUsedApps.take(8).forEach { stat ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            val iconBitmap = stat.app.icon
-                            if (iconBitmap != null) {
-                                Image(
-                                    bitmap = iconBitmap.asImageBitmap(),
-                                    contentDescription = stat.app.label,
-                                    modifier = Modifier.size(28.dp)
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(DarkSurfaceVariant),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = stat.app.initialChar.toString(),
-                                        color = PureWhite,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stat.app.label,
-                                    color = PureWhite,
-                                    fontSize = 14.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = strings.launchedCountSubtitle(stat.launchCount),
-                                    color = GrayMedium,
-                                    fontSize = 11.sp
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
+                        val languageOptions = listOf(
+                            AppLanguage.SYSTEM to strings.languageSystem,
+                            AppLanguage.DE to strings.languageGerman,
+                            AppLanguage.EN to strings.languageEnglish
+                        )
+                        for ((option, label) in languageOptions) {
+                            val selected = appLanguage == option
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (stat.app.isFavorite) DarkSurfaceVariant else PureWhite)
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (selected) PureWhite else DarkSurfaceVariant)
                                     .border(
                                         1.dp,
-                                        if (stat.app.isFavorite) BorderDark else PureWhite,
-                                        RoundedCornerShape(6.dp)
+                                        if (selected) PureWhite else BorderDark,
+                                        RoundedCornerShape(8.dp)
                                     )
-                                    .clickable { viewModel.toggleFavorite(stat.app) }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    .clickable { viewModel.setAppLanguage(option) }
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = if (stat.app.isFavorite) strings.favoriteBadgeActive else strings.favoriteBadgeAdd,
-                                    color = if (stat.app.isFavorite) GrayLight else PureBlack,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (stat.app.isFavorite) FontWeight.Normal else FontWeight.Medium
+                                    text = label,
+                                    color = if (selected) PureBlack else GrayLight,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
                         }
-                    }
-                }
-
-                if (waveUsageStats.totalCount > 0 || uiState.mostUsedApps.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(DarkSurfaceVariant)
-                            .border(1.dp, BorderDark, RoundedCornerShape(8.dp))
-                            .clickable { viewModel.resetUsageStats() }
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = strings.resetStatsButton,
-                            color = GrayLight,
-                            fontSize = 12.sp
-                        )
                     }
                 }
             }
 
-            // Widgets & Notifications
+            // 6. Backup & Import
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionWidgetsNotifications)
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(strings.showClockTitle, color = PureWhite, fontSize = 15.sp)
-                        Text(strings.showClockSubtitle, color = GrayMedium, fontSize = 12.sp)
-                    }
-                    Switch(
-                        checked = showClock,
-                        onCheckedChange = { viewModel.toggleShowClock(it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = PureBlack,
-                            checkedTrackColor = PureWhite,
-                            uncheckedThumbColor = GrayMedium,
-                            uncheckedTrackColor = DarkSurfaceVariant
-                        )
-                    )
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(strings.showDateTitle, color = PureWhite, fontSize = 15.sp)
-                        Text(strings.showDateSubtitle, color = GrayMedium, fontSize = 12.sp)
-                    }
-                    Switch(
-                        checked = showDate,
-                        onCheckedChange = { viewModel.toggleShowDate(it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = PureBlack,
-                            checkedTrackColor = PureWhite,
-                            uncheckedThumbColor = GrayMedium,
-                            uncheckedTrackColor = DarkSurfaceVariant
-                        )
-                    )
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(strings.showBatteryTitle, color = PureWhite, fontSize = 15.sp)
-                        Text(strings.showBatterySubtitle, color = GrayMedium, fontSize = 12.sp)
-                    }
-                    Switch(
-                        checked = showBattery,
-                        onCheckedChange = { viewModel.toggleShowBattery(it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = PureBlack,
-                            checkedTrackColor = PureWhite,
-                            uncheckedThumbColor = GrayMedium,
-                            uncheckedTrackColor = DarkSurfaceVariant
-                        )
-                    )
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(strings.showMediaTitle, color = PureWhite, fontSize = 15.sp)
-                        Text(strings.showMediaSubtitle, color = GrayMedium, fontSize = 12.sp)
-                    }
-                    Switch(
-                        checked = showMedia,
-                        onCheckedChange = { viewModel.toggleShowMedia(it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = PureBlack,
-                            checkedTrackColor = PureWhite,
-                            uncheckedThumbColor = GrayMedium,
-                            uncheckedTrackColor = DarkSurfaceVariant
-                        )
-                    )
-                }
-
-                SettingSwitchItem(
-                    title = strings.showNotificationAppsTitle,
-                    subtitle = strings.showNotificationAppsSubtitle,
-                    checked = showNotificationApps,
-                    onCheckedChange = { viewModel.toggleShowNotificationApps(it) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showNotificationPreviewTitle,
-                    subtitle = strings.showNotificationPreviewSubtitle,
-                    checked = showNotificationPreview,
-                    onCheckedChange = { viewModel.toggleShowNotificationPreview(it) }
-                )
+                SectionHeader(strings.sectionBackupImport)
 
                 SettingItem(
-                    title = strings.notificationAccessTitle,
-                    subtitle = if (isNotificationGranted) strings.notificationAccessGranted else strings.notificationAccessDenied,
+                    title = strings.exportBackupTitle,
+                    subtitle = strings.exportBackupSubtitle,
                     onClick = {
                         try {
-                            context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            })
+                            val dateStamp = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+                            exportBackupLauncher.launch("minimallauncher-backup-$dateStamp.json")
                         } catch (_: Exception) {}
                     }
                 )
-            }
 
-            // Hidden Apps (Subpage entry)
-            item {
-                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.hiddenAppsTitle)
                 SettingItem(
-                    title = strings.hiddenAppsTitle,
-                    subtitle = if (uiState.hiddenApps.isEmpty()) {
-                        strings.noHiddenApps
-                    } else {
-                        strings.hiddenAppsManageSubtitle(uiState.hiddenApps.size)
-                    },
-                    onClick = { viewModel.setHiddenAppsOpen(true) }
+                    title = strings.importBackupTitle,
+                    subtitle = strings.importBackupSubtitle,
+                    onClick = {
+                        try {
+                            importBackupLauncher.launch(arrayOf("application/json", "*/*"))
+                        } catch (_: Exception) {}
+                    }
                 )
+
+                SettingItem(
+                    title = strings.selectNovaBackupTitle,
+                    subtitle = if (customIconsCount > 0) {
+                        strings.novaCustomMappingsActive(customIconsCount)
+                    } else {
+                        strings.novaBackupSubtitleDefault
+                    },
+                    onClick = {
+                        try {
+                            filePickerLauncher.launch(arrayOf("*/*"))
+                        } catch (_: Exception) {}
+                    }
+                )
+
+                if (customIconsCount > 0) {
+                    SettingItem(
+                        title = strings.resetNovaMappingsTitle,
+                        subtitle = strings.resetNovaMappingsSubtitle(customIconsCount),
+                        onClick = {
+                            viewModel.clearCustomIcons()
+                            Toast.makeText(context, strings.novaMappingsResetToast, Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
             }
 
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "MinimalLauncher v1.0.29",
+                    text = "MinimalLauncher v1.0.30",
                     color = GrayMedium,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 32.dp)
@@ -912,6 +617,13 @@ fun SettingsScreen(
         TypographySubScreen(
             viewModel = viewModel,
             onBack = { viewModel.setTypographyOpen(false) }
+        )
+    }
+
+    if (isUsageStatsOpen) {
+        UsageStatsSubScreen(
+            viewModel = viewModel,
+            onBack = { viewModel.setUsageStatsOpen(false) }
         )
     }
 
@@ -1239,6 +951,264 @@ private fun TypographySliderItem(
                 inactiveTrackColor = DarkSurfaceVariant
             )
         )
+    }
+}
+
+@Composable
+private fun UsageStatsSubScreen(
+    viewModel: LauncherViewModel,
+    onBack: () -> Unit
+) {
+    val strings = LocalAppStrings.current
+    val waveUsageStats by viewModel.waveUsageStats.collectAsState()
+    val uiState by viewModel.launcherState.collectAsState()
+
+    val waveSummary = when {
+        waveUsageStats.totalCount == 0 -> strings.waveUsageNone
+        waveUsageStats.leftCount > waveUsageStats.rightCount ->
+            strings.waveUsageLeftMore(waveUsageStats.leftPercent)
+        waveUsageStats.rightCount > waveUsageStats.leftCount ->
+            strings.waveUsageRightMore(waveUsageStats.rightPercent)
+        else -> strings.waveUsageEqual
+    }
+
+    val leftLeads = waveUsageStats.totalCount > 0 && waveUsageStats.leftCount > waveUsageStats.rightCount
+    val rightLeads = waveUsageStats.totalCount > 0 && waveUsageStats.rightCount > waveUsageStats.leftCount
+
+    Surface(
+        color = PureBlack,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = strings.back,
+                        tint = PureWhite
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = strings.sectionUsageStats,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PureWhite
+                )
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(strings.waveSideUsageTitle, color = PureWhite, fontSize = 15.sp)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(waveSummary, color = GrayMedium, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(DarkSurfaceVariant)
+                                .border(
+                                    1.dp,
+                                    if (leftLeads) PureWhite else BorderDark,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                        ) {
+                            Text(strings.sideLeft, color = GrayMedium, fontSize = 11.sp)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "${waveUsageStats.leftCount}× (${waveUsageStats.leftPercent}%)",
+                                color = PureWhite,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(DarkSurfaceVariant)
+                                .border(
+                                    1.dp,
+                                    if (rightLeads) PureWhite else BorderDark,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                        ) {
+                            Text(strings.sideRight, color = GrayMedium, fontSize = 11.sp)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "${waveUsageStats.rightCount}× (${waveUsageStats.rightPercent}%)",
+                                color = PureWhite,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    if (waveUsageStats.totalCount > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(DarkSurfaceVariant)
+                        ) {
+                            if (waveUsageStats.leftCount > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(waveUsageStats.leftCount.toFloat())
+                                        .height(6.dp)
+                                        .background(PureWhite)
+                                )
+                            }
+                            if (waveUsageStats.rightCount > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(waveUsageStats.rightCount.toFloat())
+                                        .height(6.dp)
+                                        .background(GrayMedium)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 16.dp))
+                    Text(strings.mostLaunchedAppsTitle, color = PureWhite, fontSize = 15.sp)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        strings.mostLaunchedAppsSubtitle,
+                        color = GrayMedium,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                if (uiState.mostUsedApps.isEmpty()) {
+                    item {
+                        Text(
+                            text = strings.noAppLaunchesRecorded,
+                            color = GrayMedium,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(vertical = 6.dp)
+                        )
+                    }
+                } else {
+                    items(uiState.mostUsedApps.take(8), key = { it.app.key }) { stat ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val iconBitmap = stat.app.icon
+                            if (iconBitmap != null) {
+                                Image(
+                                    bitmap = iconBitmap.asImageBitmap(),
+                                    contentDescription = stat.app.label,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(DarkSurfaceVariant),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = stat.app.initialChar.toString(),
+                                        color = PureWhite,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stat.app.label,
+                                    color = PureWhite,
+                                    fontSize = 14.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = strings.launchedCountSubtitle(stat.launchCount),
+                                    color = GrayMedium,
+                                    fontSize = 11.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(if (stat.app.isFavorite) DarkSurfaceVariant else PureWhite)
+                                    .border(
+                                        1.dp,
+                                        if (stat.app.isFavorite) BorderDark else PureWhite,
+                                        RoundedCornerShape(6.dp)
+                                    )
+                                    .clickable { viewModel.toggleFavorite(stat.app) }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = if (stat.app.isFavorite) strings.favoriteBadgeActive else strings.favoriteBadgeAdd,
+                                    color = if (stat.app.isFavorite) GrayLight else PureBlack,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (stat.app.isFavorite) FontWeight.Normal else FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (waveUsageStats.totalCount > 0 || uiState.mostUsedApps.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(DarkSurfaceVariant)
+                                .border(1.dp, BorderDark, RoundedCornerShape(8.dp))
+                                .clickable { viewModel.resetUsageStats() }
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = strings.resetStatsButton,
+                                color = GrayLight,
+                                fontSize = 12.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
+            }
+        }
     }
 }
 

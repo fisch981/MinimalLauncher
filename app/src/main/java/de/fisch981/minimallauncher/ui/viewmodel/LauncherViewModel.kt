@@ -65,6 +65,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _isTypographyOpen = MutableStateFlow(false)
     val isTypographyOpen: StateFlow<Boolean> = _isTypographyOpen.asStateFlow()
 
+    private val _isUsageStatsOpen = MutableStateFlow(false)
+    val isUsageStatsOpen: StateFlow<Boolean> = _isUsageStatsOpen.asStateFlow()
+
     private val _isManageFavoritesOpen = MutableStateFlow(false)
     val isManageFavoritesOpen: StateFlow<Boolean> = _isManageFavoritesOpen.asStateFlow()
 
@@ -163,6 +166,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             _isSettingsOpen.value = false
             _isHiddenAppsOpen.value = false
             _isTypographyOpen.value = false
+            _isUsageStatsOpen.value = false
             _isManageFavoritesOpen.value = false
             _appForIconEditing.value = null
             _appForFolderEditing.value = null
@@ -600,6 +604,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         if (!open) {
             _isHiddenAppsOpen.value = false
             _isTypographyOpen.value = false
+            _isUsageStatsOpen.value = false
         }
     }
 
@@ -609,6 +614,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun setTypographyOpen(open: Boolean) {
         _isTypographyOpen.value = open
+    }
+
+    fun setUsageStatsOpen(open: Boolean) {
+        _isUsageStatsOpen.value = open
     }
 
     fun setManageFavoritesOpen(open: Boolean) {

@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.30] - 2026-11-23
+
+### Deutsch
+- **Nutzungsstatistik als eigene Unterseite (`UsageStatsSubScreen`):** Die Wellen-Statistik (Links/Rechts), die meistgenutzten Apps inkl. `+ Favorit`-Schaltfläche und „Statistik zurücksetzen“ liegen nun übersichtlich auf einer eigenen Unterseite.
+- **Einstellungen sinnvoll neu strukturiert:** Die Hauptseite ist klar nach Themen geordnet (*Standard-App*, *Homescreen & Apps*, *Header & Benachrichtigungen*, *Erscheinungsbild & Wave Scroller*, *Statistik & Sprache*, *Sicherung & Import*).
+
+### English
+- **Dedicated Usage Statistics Subpage (`UsageStatsSubScreen`):** Moved wave side usage analytics, top launched apps with `+ Favorite` toggles, and “Reset statistics” to their own full-screen subpage.
+- **Reorganized Main Settings Screen:** Grouped main Settings logically by category (*Default App*, *Home Screen & Apps*, *Header & Notifications*, *Appearance & Wave Scroller*, *Statistics & Language*, *Backup & Import*).
+
+---
+
 ## [1.0.29] - 2026-11-23
 
 ### Deutsch
