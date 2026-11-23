@@ -26,12 +26,22 @@ class LauncherBackupCodecTest {
             scrollerSide = "BOTH",
             waveIdleAlphaPercent = 25,
             appLanguage = "de",
+            appFont = "serif",
+            clockDateFont = "condensed",
+            waveFont = "monospace",
+            appFontSizeSp = 19,
+            dateSizeSp = 13,
+            waveFontSizeSp = 12,
             showClock = false,
             clockSizeSp = 68,
             showDate = false,
             showMedia = false,
             showBattery = true,
             showRecentApps = false,
+            showAppIcons = false,
+            hideStatusBar = true,
+            showBottomActions = false,
+            showNotificationPreview = false,
             recentApps = listOf("com.example.browser/com.example.browser.Main#0"),
             leftWaveCount = 14,
             rightWaveCount = 29,
@@ -61,12 +71,22 @@ class LauncherBackupCodecTest {
         assertEquals("BOTH", decoded.scrollerSide)
         assertEquals(25, decoded.waveIdleAlphaPercent)
         assertEquals("de", decoded.appLanguage)
+        assertEquals("serif", decoded.appFont)
+        assertEquals("condensed", decoded.clockDateFont)
+        assertEquals("monospace", decoded.waveFont)
+        assertEquals(19, decoded.appFontSizeSp)
+        assertEquals(13, decoded.dateSizeSp)
+        assertEquals(12, decoded.waveFontSizeSp)
         assertFalse(decoded.showClock)
         assertEquals(68, decoded.clockSizeSp)
         assertFalse(decoded.showDate)
         assertFalse(decoded.showMedia)
         assertTrue(decoded.showBattery)
         assertFalse(decoded.showRecentApps)
+        assertFalse(decoded.showAppIcons)
+        assertTrue(decoded.hideStatusBar)
+        assertFalse(decoded.showBottomActions)
+        assertFalse(decoded.showNotificationPreview)
         assertEquals(original.recentApps, decoded.recentApps)
         assertEquals(14, decoded.leftWaveCount)
         assertEquals(29, decoded.rightWaveCount)

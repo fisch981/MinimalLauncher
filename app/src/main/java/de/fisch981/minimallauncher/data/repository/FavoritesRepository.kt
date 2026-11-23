@@ -11,6 +11,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import de.fisch981.minimallauncher.data.backup.LauncherBackupData
 import de.fisch981.minimallauncher.data.model.ScrollerSide
 import de.fisch981.minimallauncher.ui.theme.AppLanguage
+import de.fisch981.minimallauncher.ui.theme.LauncherFont
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -39,6 +40,16 @@ class FavoritesRepository(private val context: Context) {
         private val KEY_SHOW_CLOCK = booleanPreferencesKey("show_clock")
         private val KEY_CLOCK_SIZE_SP = intPreferencesKey("clock_size_sp")
         private val KEY_SHOW_DATE = booleanPreferencesKey("show_date")
+        private val KEY_SHOW_APP_ICONS = booleanPreferencesKey("show_app_icons")
+        private val KEY_HIDE_STATUS_BAR = booleanPreferencesKey("hide_status_bar")
+        private val KEY_SHOW_BOTTOM_ACTIONS = booleanPreferencesKey("show_bottom_actions")
+        private val KEY_SHOW_NOTIFICATION_PREVIEW = booleanPreferencesKey("show_notification_preview")
+        private val KEY_APP_FONT = stringPreferencesKey("app_font")
+        private val KEY_CLOCK_DATE_FONT = stringPreferencesKey("clock_date_font")
+        private val KEY_WAVE_FONT = stringPreferencesKey("wave_font")
+        private val KEY_APP_FONT_SIZE_SP = intPreferencesKey("app_font_size_sp")
+        private val KEY_DATE_SIZE_SP = intPreferencesKey("date_size_sp")
+        private val KEY_WAVE_FONT_SIZE_SP = intPreferencesKey("wave_font_size_sp")
     }
 
     val customIconsFlow: Flow<Map<String, String>> = context.dataStore.data.map { prefs ->
@@ -86,6 +97,46 @@ class FavoritesRepository(private val context: Context) {
 
     val showDateFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[KEY_SHOW_DATE] ?: true
+    }
+
+    val showAppIconsFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SHOW_APP_ICONS] ?: true
+    }
+
+    val hideStatusBarFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_HIDE_STATUS_BAR] ?: false
+    }
+
+    val showBottomActionsFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SHOW_BOTTOM_ACTIONS] ?: true
+    }
+
+    val showNotificationPreviewFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SHOW_NOTIFICATION_PREVIEW] ?: true
+    }
+
+    val appFontFlow: Flow<LauncherFont> = context.dataStore.data.map { prefs ->
+        LauncherFont.fromCode(prefs[KEY_APP_FONT])
+    }
+
+    val clockDateFontFlow: Flow<LauncherFont> = context.dataStore.data.map { prefs ->
+        LauncherFont.fromCode(prefs[KEY_CLOCK_DATE_FONT])
+    }
+
+    val waveFontFlow: Flow<LauncherFont> = context.dataStore.data.map { prefs ->
+        LauncherFont.fromCode(prefs[KEY_WAVE_FONT])
+    }
+
+    val appFontSizeSpFlow: Flow<Int> = context.dataStore.data.map { prefs ->
+        (prefs[KEY_APP_FONT_SIZE_SP] ?: 17).coerceIn(13, 24)
+    }
+
+    val dateSizeSpFlow: Flow<Int> = context.dataStore.data.map { prefs ->
+        (prefs[KEY_DATE_SIZE_SP] ?: 15).coerceIn(11, 24)
+    }
+
+    val waveFontSizeSpFlow: Flow<Int> = context.dataStore.data.map { prefs ->
+        (prefs[KEY_WAVE_FONT_SIZE_SP] ?: 11).coerceIn(9, 16)
     }
 
     val recentAppsFlow: Flow<List<String>> = context.dataStore.data.map { prefs ->
@@ -246,6 +297,66 @@ class FavoritesRepository(private val context: Context) {
     suspend fun setShowDate(show: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[KEY_SHOW_DATE] = show
+        }
+    }
+
+    suspend fun setShowAppIcons(show: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SHOW_APP_ICONS] = show
+        }
+    }
+
+    suspend fun setHideStatusBar(hide: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_HIDE_STATUS_BAR] = hide
+        }
+    }
+
+    suspend fun setShowBottomActions(show: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SHOW_BOTTOM_ACTIONS] = show
+        }
+    }
+
+    suspend fun setShowNotificationPreview(show: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SHOW_NOTIFICATION_PREVIEW] = show
+        }
+    }
+
+    suspend fun setAppFont(font: LauncherFont) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_APP_FONT] = font.code
+        }
+    }
+
+    suspend fun setClockDateFont(font: LauncherFont) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_CLOCK_DATE_FONT] = font.code
+        }
+    }
+
+    suspend fun setWaveFont(font: LauncherFont) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_WAVE_FONT] = font.code
+        }
+    }
+
+    suspend fun setAppFontSizeSp(sizeSp: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_APP_FONT_SIZE_SP] = sizeSp.coerceIn(13, 24)
+        }
+    }
+
+    suspend fun setDateSizeSp(sizeSp: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_DATE_SIZE_SP] = sizeSp.coerceIn(11, 24)
+        }
+    }
+
+    suspend fun setWaveFontSizeSp(sizeSp: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_WAVE_FONT_SIZE_SP] = sizeSp.coerceIn(9, 16)
         }
     }
 
@@ -416,12 +527,22 @@ class FavoritesRepository(private val context: Context) {
             scrollerSide = side.name,
             waveIdleAlphaPercent = (prefs[KEY_WAVE_IDLE_ALPHA] ?: 40).coerceIn(0, 100),
             appLanguage = AppLanguage.fromCode(prefs[KEY_APP_LANGUAGE]).code,
+            appFont = LauncherFont.fromCode(prefs[KEY_APP_FONT]).code,
+            clockDateFont = LauncherFont.fromCode(prefs[KEY_CLOCK_DATE_FONT]).code,
+            waveFont = LauncherFont.fromCode(prefs[KEY_WAVE_FONT]).code,
+            appFontSizeSp = (prefs[KEY_APP_FONT_SIZE_SP] ?: 17).coerceIn(13, 24),
+            dateSizeSp = (prefs[KEY_DATE_SIZE_SP] ?: 15).coerceIn(11, 24),
+            waveFontSizeSp = (prefs[KEY_WAVE_FONT_SIZE_SP] ?: 11).coerceIn(9, 16),
             showClock = prefs[KEY_SHOW_CLOCK] ?: true,
             clockSizeSp = (prefs[KEY_CLOCK_SIZE_SP] ?: 52).coerceIn(28, 84),
             showDate = prefs[KEY_SHOW_DATE] ?: true,
             showMedia = prefs[KEY_SHOW_MEDIA] ?: true,
             showBattery = prefs[KEY_SHOW_BATTERY] ?: true,
             showRecentApps = prefs[KEY_SHOW_RECENT_APPS] ?: true,
+            showAppIcons = prefs[KEY_SHOW_APP_ICONS] ?: true,
+            hideStatusBar = prefs[KEY_HIDE_STATUS_BAR] ?: false,
+            showBottomActions = prefs[KEY_SHOW_BOTTOM_ACTIONS] ?: true,
+            showNotificationPreview = prefs[KEY_SHOW_NOTIFICATION_PREVIEW] ?: true,
             recentApps = if (recentsRaw.isBlank()) emptyList() else recentsRaw.split(",").filter { it.isNotBlank() },
             leftWaveCount = (prefs[KEY_LEFT_WAVE_COUNT] ?: 0).coerceAtLeast(0),
             rightWaveCount = (prefs[KEY_RIGHT_WAVE_COUNT] ?: 0).coerceAtLeast(0),
@@ -444,12 +565,22 @@ class FavoritesRepository(private val context: Context) {
 
             prefs[KEY_WAVE_IDLE_ALPHA] = data.waveIdleAlphaPercent.coerceIn(0, 100)
             prefs[KEY_APP_LANGUAGE] = AppLanguage.fromCode(data.appLanguage).code
+            prefs[KEY_APP_FONT] = LauncherFont.fromCode(data.appFont).code
+            prefs[KEY_CLOCK_DATE_FONT] = LauncherFont.fromCode(data.clockDateFont).code
+            prefs[KEY_WAVE_FONT] = LauncherFont.fromCode(data.waveFont).code
+            prefs[KEY_APP_FONT_SIZE_SP] = data.appFontSizeSp.coerceIn(13, 24)
+            prefs[KEY_DATE_SIZE_SP] = data.dateSizeSp.coerceIn(11, 24)
+            prefs[KEY_WAVE_FONT_SIZE_SP] = data.waveFontSizeSp.coerceIn(9, 16)
             prefs[KEY_SHOW_CLOCK] = data.showClock
             prefs[KEY_CLOCK_SIZE_SP] = data.clockSizeSp.coerceIn(28, 84)
             prefs[KEY_SHOW_DATE] = data.showDate
             prefs[KEY_SHOW_MEDIA] = data.showMedia
             prefs[KEY_SHOW_BATTERY] = data.showBattery
             prefs[KEY_SHOW_RECENT_APPS] = data.showRecentApps
+            prefs[KEY_SHOW_APP_ICONS] = data.showAppIcons
+            prefs[KEY_HIDE_STATUS_BAR] = data.hideStatusBar
+            prefs[KEY_SHOW_BOTTOM_ACTIONS] = data.showBottomActions
+            prefs[KEY_SHOW_NOTIFICATION_PREVIEW] = data.showNotificationPreview
             prefs[KEY_RECENT_APPS] = data.recentApps.filter { it.isNotBlank() }.take(15).joinToString(",")
             prefs[KEY_LEFT_WAVE_COUNT] = data.leftWaveCount.coerceAtLeast(0)
             prefs[KEY_RIGHT_WAVE_COUNT] = data.rightWaveCount.coerceAtLeast(0)

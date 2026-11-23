@@ -40,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -58,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.data.model.ScrollerSide
 import de.fisch981.minimallauncher.data.repository.LauncherUtils
 import de.fisch981.minimallauncher.data.service.LauncherNotificationService
@@ -66,6 +68,7 @@ import de.fisch981.minimallauncher.ui.theme.BorderDark
 import de.fisch981.minimallauncher.ui.theme.DarkSurfaceVariant
 import de.fisch981.minimallauncher.ui.theme.GrayLight
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
+import de.fisch981.minimallauncher.ui.theme.LauncherFont
 import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
@@ -88,11 +91,16 @@ fun SettingsScreen(
     val scrollerSide by viewModel.scrollerSide.collectAsState()
     val waveIdleAlphaPercent by viewModel.waveIdleAlphaPercent.collectAsState()
     val showClock by viewModel.showClock.collectAsState()
-    val clockSizeSp by viewModel.clockSizeSp.collectAsState()
     val showDate by viewModel.showDate.collectAsState()
     val showBattery by viewModel.showBattery.collectAsState()
     val showMedia by viewModel.showMedia.collectAsState()
     val showRecentApps by viewModel.showRecentApps.collectAsState()
+    val showAppIcons by viewModel.showAppIcons.collectAsState()
+    val hideStatusBar by viewModel.hideStatusBar.collectAsState()
+    val showBottomActions by viewModel.showBottomActions.collectAsState()
+    val showNotificationPreview by viewModel.showNotificationPreview.collectAsState()
+    val isHiddenAppsOpen by viewModel.isHiddenAppsOpen.collectAsState()
+    val isTypographyOpen by viewModel.isTypographyOpen.collectAsState()
     val waveUsageStats by viewModel.waveUsageStats.collectAsState()
     val uiState by viewModel.launcherState.collectAsState()
     val customIconsCount by viewModel.customIconsCountState.collectAsState()
@@ -161,8 +169,9 @@ fun SettingsScreen(
         }
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(PureBlack)
             .padding(top = 16.dp)
@@ -506,6 +515,33 @@ fun SettingsScreen(
                     subtitle = if (isLinesInstalled) strings.linesPackActiveSubtitle else strings.linesPackInactiveSubtitle,
                     onClick = { viewModel.reloadIcons() }
                 )
+
+                SettingSwitchItem(
+                    title = strings.showAppIconsTitle,
+                    subtitle = strings.showAppIconsSubtitle,
+                    checked = showAppIcons,
+                    onCheckedChange = { viewModel.toggleShowAppIcons(it) }
+                )
+
+                SettingSwitchItem(
+                    title = strings.hideStatusBarTitle,
+                    subtitle = strings.hideStatusBarSubtitle,
+                    checked = hideStatusBar,
+                    onCheckedChange = { viewModel.toggleHideStatusBar(it) }
+                )
+
+                SettingSwitchItem(
+                    title = strings.showBottomActionsTitle,
+                    subtitle = strings.showBottomActionsSubtitle,
+                    checked = showBottomActions,
+                    onCheckedChange = { viewModel.toggleShowBottomActions(it) }
+                )
+
+                SettingItem(
+                    title = strings.typographyTitle,
+                    subtitle = strings.typographySubtitle,
+                    onClick = { viewModel.setTypographyOpen(true) }
+                )
             }
 
             // Usage Statistics
@@ -748,49 +784,6 @@ fun SettingsScreen(
                     )
                 }
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            strings.clockSizeTitle,
-                            color = PureWhite,
-                            fontSize = 15.sp,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "${clockSizeSp} sp",
-                            color = PureWhite,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        strings.clockSizeSubtitle,
-                        color = GrayMedium,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Slider(
-                        value = clockSizeSp.toFloat(),
-                        onValueChange = { viewModel.setClockSizeSp(it.roundToInt()) },
-                        valueRange = 28f..84f,
-                        colors = SliderDefaults.colors(
-                            thumbColor = PureWhite,
-                            activeTrackColor = PureWhite,
-                            inactiveTrackColor = DarkSurfaceVariant
-                        )
-                    )
-                }
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -860,6 +853,13 @@ fun SettingsScreen(
                     )
                 }
 
+                SettingSwitchItem(
+                    title = strings.showNotificationPreviewTitle,
+                    subtitle = strings.showNotificationPreviewSubtitle,
+                    checked = showNotificationPreview,
+                    onCheckedChange = { viewModel.toggleShowNotificationPreview(it) }
+                )
+
                 SettingItem(
                     title = strings.notificationAccessTitle,
                     subtitle = if (isNotificationGranted) strings.notificationAccessGranted else strings.notificationAccessDenied,
@@ -873,23 +873,399 @@ fun SettingsScreen(
                 )
             }
 
-            // Hidden Apps
+            // Hidden Apps (Subpage entry)
             item {
                 HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionHiddenApps(uiState.hiddenApps.size))
+                SectionHeader(strings.hiddenAppsTitle)
+                SettingItem(
+                    title = strings.hiddenAppsTitle,
+                    subtitle = if (uiState.hiddenApps.isEmpty()) {
+                        strings.noHiddenApps
+                    } else {
+                        strings.hiddenAppsManageSubtitle(uiState.hiddenApps.size)
+                    },
+                    onClick = { viewModel.setHiddenAppsOpen(true) }
+                )
             }
 
-            if (uiState.hiddenApps.isEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
+                Text(
+                    text = "MinimalLauncher v1.0.26",
+                    color = GrayMedium,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(bottom = 32.dp)
+                )
+            }
+        }
+    }
+
+    if (isTypographyOpen) {
+        TypographySubScreen(
+            viewModel = viewModel,
+            onBack = { viewModel.setTypographyOpen(false) }
+        )
+    }
+
+    if (isHiddenAppsOpen) {
+        HiddenAppsSubScreen(
+            hiddenApps = uiState.hiddenApps,
+            onUnhideApp = { viewModel.unhideApp(it) },
+            onBack = { viewModel.setHiddenAppsOpen(false) }
+        )
+    }
+    }
+}
+
+@Composable
+private fun TypographySubScreen(
+    viewModel: LauncherViewModel,
+    onBack: () -> Unit
+) {
+    val strings = LocalAppStrings.current
+    val appFont by viewModel.appFont.collectAsState()
+    val clockDateFont by viewModel.clockDateFont.collectAsState()
+    val waveFont by viewModel.waveFont.collectAsState()
+    val appFontSizeSp by viewModel.appFontSizeSp.collectAsState()
+    val clockSizeSp by viewModel.clockSizeSp.collectAsState()
+    val dateSizeSp by viewModel.dateSizeSp.collectAsState()
+    val waveFontSizeSp by viewModel.waveFontSizeSp.collectAsState()
+
+    val appFontFamily = remember(appFont) { appFont.toFontFamily() }
+    val clockDateFontFamily = remember(clockDateFont) { clockDateFont.toFontFamily() }
+    val waveFontFamily = remember(waveFont) { waveFont.toFontFamily() }
+
+    Surface(
+        color = PureBlack,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = strings.back,
+                        tint = PureWhite
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = strings.typographyTitle,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PureWhite
+                )
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+            ) {
+                // Live Preview Card
+                item {
+                    SectionHeader(strings.previewHeader)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "12:45",
+                                    fontSize = clockSizeSp.coerceIn(28, 84).sp,
+                                    fontWeight = FontWeight.Light,
+                                    fontFamily = clockDateFontFamily,
+                                    color = PureWhite
+                                )
+                                Text(
+                                    text = "${strings.previewSampleDate} • 85%",
+                                    fontSize = dateSizeSp.coerceIn(11, 24).sp,
+                                    fontFamily = clockDateFontFamily,
+                                    color = GrayLight
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = strings.previewSampleApp,
+                                    fontSize = appFontSizeSp.coerceIn(13, 24).sp,
+                                    fontFamily = appFontFamily,
+                                    color = PureWhite
+                                )
+                            }
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                listOf("★", "A", "B", "C").forEach { glyph ->
+                                    Text(
+                                        text = glyph,
+                                        fontSize = waveFontSizeSp.coerceIn(9, 16).sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = waveFontFamily,
+                                        color = PureWhite
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // App Names Font & Size
+                item {
+                    HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+                    SectionHeader(strings.typographyAppSection)
+                    FontFamilySelector(
+                        label = strings.fontFamilyLabel,
+                        selectedFont = appFont,
+                        onSelectFont = { viewModel.setAppFont(it) }
+                    )
+                    TypographySliderItem(
+                        title = strings.appFontSizeTitle,
+                        subtitle = strings.appFontSizeSubtitle,
+                        value = appFontSizeSp,
+                        valueRange = 13f..24f,
+                        onValueChange = { viewModel.setAppFontSizeSp(it) }
+                    )
+                }
+
+                // Clock & Date Font & Sizes
+                item {
+                    HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+                    SectionHeader(strings.typographyClockDateSection)
+                    FontFamilySelector(
+                        label = strings.fontFamilyLabel,
+                        selectedFont = clockDateFont,
+                        onSelectFont = { viewModel.setClockDateFont(it) }
+                    )
+                    TypographySliderItem(
+                        title = strings.clockSizeTitle,
+                        subtitle = strings.clockSizeSubtitle,
+                        value = clockSizeSp,
+                        valueRange = 28f..84f,
+                        onValueChange = { viewModel.setClockSizeSp(it) }
+                    )
+                    TypographySliderItem(
+                        title = strings.dateSizeTitle,
+                        subtitle = strings.dateSizeSubtitle,
+                        value = dateSizeSp,
+                        valueRange = 11f..24f,
+                        onValueChange = { viewModel.setDateSizeSp(it) }
+                    )
+                }
+
+                // Wave Letters Font & Size
+                item {
+                    HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+                    SectionHeader(strings.typographyWaveSection)
+                    FontFamilySelector(
+                        label = strings.fontFamilyLabel,
+                        selectedFont = waveFont,
+                        onSelectFont = { viewModel.setWaveFont(it) }
+                    )
+                    TypographySliderItem(
+                        title = strings.waveFontSizeTitle,
+                        subtitle = strings.waveFontSizeSubtitle,
+                        value = waveFontSizeSp,
+                        valueRange = 9f..16f,
+                        onValueChange = { viewModel.setWaveFontSizeSp(it) }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FontFamilySelector(
+    label: String,
+    selectedFont: LauncherFont,
+    onSelectFont: (LauncherFont) -> Unit
+) {
+    val strings = LocalAppStrings.current
+    val options = remember(strings) {
+        listOf(
+            LauncherFont.SYSTEM to strings.fontNameSystem,
+            LauncherFont.CONDENSED to strings.fontNameCondensed,
+            LauncherFont.THIN to strings.fontNameThin,
+            LauncherFont.SERIF to strings.fontNameSerif,
+            LauncherFont.MONOSPACE to strings.fontNameMonospace,
+            LauncherFont.CURSIVE to strings.fontNameCursive
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(label, color = PureWhite, fontSize = 15.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.chunked(3).forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rowItems.forEach { (fontOption, fontLabel) ->
+                        val selected = selectedFont == fontOption
+                        val previewFamily = remember(fontOption) { fontOption.toFontFamily() }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (selected) PureWhite else DarkSurfaceVariant)
+                                .border(
+                                    1.dp,
+                                    if (selected) PureWhite else BorderDark,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { onSelectFont(fontOption) }
+                                .padding(vertical = 10.dp, horizontal = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = fontLabel,
+                                color = if (selected) PureBlack else GrayLight,
+                                fontSize = 13.sp,
+                                fontFamily = previewFamily,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TypographySliderItem(
+    title: String,
+    subtitle: String,
+    value: Int,
+    valueRange: ClosedFloatingPointRange<Float>,
+    onValueChange: (Int) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                color = PureWhite,
+                fontSize = 15.sp,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "$value sp",
+                color = PureWhite,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = subtitle,
+            color = GrayMedium,
+            fontSize = 12.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Slider(
+            value = value.toFloat(),
+            onValueChange = { onValueChange(it.roundToInt()) },
+            valueRange = valueRange,
+            colors = SliderDefaults.colors(
+                thumbColor = PureWhite,
+                activeTrackColor = PureWhite,
+                inactiveTrackColor = DarkSurfaceVariant
+            )
+        )
+    }
+}
+
+@Composable
+private fun HiddenAppsSubScreen(
+    hiddenApps: List<AppItem>,
+    onUnhideApp: (AppItem) -> Unit,
+    onBack: () -> Unit
+) {
+    val strings = LocalAppStrings.current
+
+    Surface(
+        color = PureBlack,
+        modifier = Modifier.fillMaxSize()
+    ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = strings.back,
+                    tint = PureWhite
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = strings.sectionHiddenApps(hiddenApps.size),
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                color = PureWhite
+            )
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+        ) {
+            if (hiddenApps.isEmpty()) {
                 item {
                     Text(
                         text = strings.noHiddenApps,
                         color = GrayMedium,
                         fontSize = 13.sp,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        modifier = Modifier.padding(vertical = 12.dp)
                     )
                 }
             } else {
-                items(uiState.hiddenApps, key = { it.key }) { app ->
+                items(hiddenApps, key = { it.key }) { app ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -898,7 +1274,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(app.label, color = PureWhite, fontSize = 15.sp)
-                        IconButton(onClick = { viewModel.unhideApp(app) }) {
+                        IconButton(onClick = { onUnhideApp(app) }) {
                             Icon(
                                 imageVector = Icons.Default.Visibility,
                                 contentDescription = strings.unhideAppContentDesc,
@@ -908,17 +1284,39 @@ fun SettingsScreen(
                     }
                 }
             }
-
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
-                Text(
-                    text = "MinimalLauncher v1.0.25",
-                    color = GrayMedium,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(bottom = 32.dp)
-                )
-            }
         }
+    }
+    }
+}
+
+@Composable
+private fun SettingSwitchItem(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, color = PureWhite, fontSize = 15.sp)
+            Text(subtitle, color = GrayMedium, fontSize = 12.sp)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = PureBlack,
+                checkedTrackColor = PureWhite,
+                uncheckedThumbColor = GrayMedium,
+                uncheckedTrackColor = DarkSurfaceVariant
+            )
+        )
     }
 }
 

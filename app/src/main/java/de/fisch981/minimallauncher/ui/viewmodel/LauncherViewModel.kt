@@ -22,6 +22,7 @@ import de.fisch981.minimallauncher.data.repository.WaveUsageStats
 import de.fisch981.minimallauncher.data.service.LauncherNotificationService
 import de.fisch981.minimallauncher.data.service.MediaSessionHelper
 import de.fisch981.minimallauncher.ui.theme.AppLanguage
+import de.fisch981.minimallauncher.ui.theme.LauncherFont
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -57,6 +58,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private val _isSettingsOpen = MutableStateFlow(false)
     val isSettingsOpen: StateFlow<Boolean> = _isSettingsOpen.asStateFlow()
+
+    private val _isHiddenAppsOpen = MutableStateFlow(false)
+    val isHiddenAppsOpen: StateFlow<Boolean> = _isHiddenAppsOpen.asStateFlow()
+
+    private val _isTypographyOpen = MutableStateFlow(false)
+    val isTypographyOpen: StateFlow<Boolean> = _isTypographyOpen.asStateFlow()
 
     private val _isManageFavoritesOpen = MutableStateFlow(false)
     val isManageFavoritesOpen: StateFlow<Boolean> = _isManageFavoritesOpen.asStateFlow()
@@ -94,6 +101,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val showRecentApps: StateFlow<Boolean> = favoritesRepository.showRecentAppsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
+    val showAppIcons: StateFlow<Boolean> = favoritesRepository.showAppIconsFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val hideStatusBar: StateFlow<Boolean> = favoritesRepository.hideStatusBarFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val showBottomActions: StateFlow<Boolean> = favoritesRepository.showBottomActionsFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val showNotificationPreview: StateFlow<Boolean> = favoritesRepository.showNotificationPreviewFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     val waveUsageStats: StateFlow<WaveUsageStats> = favoritesRepository.waveUsageStatsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, WaveUsageStats())
 
@@ -102,6 +121,24 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     val appLanguage: StateFlow<AppLanguage> = favoritesRepository.appLanguageFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, AppLanguage.SYSTEM)
+
+    val appFont: StateFlow<LauncherFont> = favoritesRepository.appFontFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LauncherFont.SYSTEM)
+
+    val clockDateFont: StateFlow<LauncherFont> = favoritesRepository.clockDateFontFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LauncherFont.SYSTEM)
+
+    val waveFont: StateFlow<LauncherFont> = favoritesRepository.waveFontFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LauncherFont.SYSTEM)
+
+    val appFontSizeSp: StateFlow<Int> = favoritesRepository.appFontSizeSpFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 17)
+
+    val dateSizeSp: StateFlow<Int> = favoritesRepository.dateSizeSpFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 15)
+
+    val waveFontSizeSp: StateFlow<Int> = favoritesRepository.waveFontSizeSpFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 11)
 
     private val _scrollToTopEvent = MutableStateFlow(0)
     val scrollToTopEvent: StateFlow<Int> = _scrollToTopEvent.asStateFlow()
@@ -118,6 +155,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         _isSearchOpen.value = false
         if (closeSettings) {
             _isSettingsOpen.value = false
+            _isHiddenAppsOpen.value = false
+            _isTypographyOpen.value = false
             _isManageFavoritesOpen.value = false
             _appForIconEditing.value = null
             _appForFolderEditing.value = null
@@ -552,6 +591,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun setSettingsOpen(open: Boolean) {
         _isSettingsOpen.value = open
+        if (!open) {
+            _isHiddenAppsOpen.value = false
+            _isTypographyOpen.value = false
+        }
+    }
+
+    fun setHiddenAppsOpen(open: Boolean) {
+        _isHiddenAppsOpen.value = open
+    }
+
+    fun setTypographyOpen(open: Boolean) {
+        _isTypographyOpen.value = open
     }
 
     fun setManageFavoritesOpen(open: Boolean) {
@@ -585,6 +636,30 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun toggleShowRecentApps(show: Boolean) {
         viewModelScope.launch {
             favoritesRepository.setShowRecentApps(show)
+        }
+    }
+
+    fun toggleShowAppIcons(show: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setShowAppIcons(show)
+        }
+    }
+
+    fun toggleHideStatusBar(hide: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setHideStatusBar(hide)
+        }
+    }
+
+    fun toggleShowBottomActions(show: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setShowBottomActions(show)
+        }
+    }
+
+    fun toggleShowNotificationPreview(show: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setShowNotificationPreview(show)
         }
     }
 
@@ -630,6 +705,42 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun setAppFont(font: LauncherFont) {
+        viewModelScope.launch {
+            favoritesRepository.setAppFont(font)
+        }
+    }
+
+    fun setClockDateFont(font: LauncherFont) {
+        viewModelScope.launch {
+            favoritesRepository.setClockDateFont(font)
+        }
+    }
+
+    fun setWaveFont(font: LauncherFont) {
+        viewModelScope.launch {
+            favoritesRepository.setWaveFont(font)
+        }
+    }
+
+    fun setAppFontSizeSp(sizeSp: Int) {
+        viewModelScope.launch {
+            favoritesRepository.setAppFontSizeSp(sizeSp)
+        }
+    }
+
+    fun setDateSizeSp(sizeSp: Int) {
+        viewModelScope.launch {
+            favoritesRepository.setDateSizeSp(sizeSp)
+        }
+    }
+
+    fun setWaveFontSizeSp(sizeSp: Int) {
+        viewModelScope.launch {
+            favoritesRepository.setWaveFontSizeSp(sizeSp)
+        }
+    }
+
     fun reloadIcons() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -643,6 +754,24 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun mediaPlayPause() = mediaHelper.togglePlayPause()
     fun mediaNext() = mediaHelper.skipToNext()
     fun mediaPrevious() = mediaHelper.skipToPrevious()
+    fun refreshMediaListener() = mediaHelper.startListening()
+
+    fun openActiveMediaApp() {
+        val pkg = mediaState.value.packageName ?: return
+        val matchedApp = launcherState.value.allApps.firstOrNull { it.packageName == pkg }
+        if (matchedApp != null) {
+            launchApp(matchedApp)
+            return
+        }
+        try {
+            val intent = getApplication<Application>().packageManager.getLaunchIntentForPackage(pkg)
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                onReturnToLauncher()
+                getApplication<Application>().startActivity(intent)
+            }
+        } catch (_: Exception) {}
+    }
 }
 
 data class AppLaunchStat(

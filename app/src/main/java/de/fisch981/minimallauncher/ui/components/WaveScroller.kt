@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,8 @@ fun WaveScroller(
     onScrubFinished: () -> Unit = {},
     onTouchStateChanged: (Boolean) -> Unit = {},
     idleAlphaPercent: Int = 40,
+    fontFamily: FontFamily = FontFamily.SansSerif,
+    letterFontSizeSp: Int = 11,
     modifier: Modifier = Modifier
 ) {
     val alphabet = remember {
@@ -200,8 +203,9 @@ fun WaveScroller(
                 ) {
                     Text(
                         text = letter.toString(),
-                        fontSize = 11.sp,
+                        fontSize = letterFontSizeSp.coerceIn(9, 16).sp,
                         fontWeight = if (isTouching && scaleFactor > 1.25f) FontWeight.Bold else FontWeight.Medium,
+                        fontFamily = fontFamily,
                         color = textColor
                     )
                 }
@@ -234,6 +238,7 @@ fun WaveScroller(
                         text = currentLetter.toString(),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = fontFamily,
                         color = PureWhite
                     )
                 }

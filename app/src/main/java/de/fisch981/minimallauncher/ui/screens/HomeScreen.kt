@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -99,6 +100,19 @@ fun HomeScreen(
     val showBattery by viewModel.showBattery.collectAsState()
     val showMedia by viewModel.showMedia.collectAsState()
     val showRecentApps by viewModel.showRecentApps.collectAsState()
+    val showAppIcons by viewModel.showAppIcons.collectAsState()
+    val showBottomActions by viewModel.showBottomActions.collectAsState()
+    val showNotificationPreview by viewModel.showNotificationPreview.collectAsState()
+    val appFont by viewModel.appFont.collectAsState()
+    val clockDateFont by viewModel.clockDateFont.collectAsState()
+    val waveFont by viewModel.waveFont.collectAsState()
+    val appFontSizeSp by viewModel.appFontSizeSp.collectAsState()
+    val dateSizeSp by viewModel.dateSizeSp.collectAsState()
+    val waveFontSizeSp by viewModel.waveFontSizeSp.collectAsState()
+
+    val appFontFamily = remember(appFont) { appFont.toFontFamily() }
+    val clockDateFontFamily = remember(clockDateFont) { clockDateFont.toFontFamily() }
+    val waveFontFamily = remember(waveFont) { waveFont.toFontFamily() }
 
     val selectedAppForPopup by viewModel.selectedAppForPopup.collectAsState()
     val selectedShortcuts by viewModel.selectedAppShortcuts.collectAsState()
@@ -236,9 +250,12 @@ fun HomeScreen(
                             onMediaPlayPause = { viewModel.mediaPlayPause() },
                             onMediaNext = { viewModel.mediaNext() },
                             onMediaPrevious = { viewModel.mediaPrevious() },
+                            onMediaOpenApp = { viewModel.openActiveMediaApp() },
                             showClock = showClock,
                             clockSizeSp = clockSizeSp,
                             showDate = showDate,
+                            dateSizeSp = dateSizeSp,
+                            fontFamily = clockDateFontFamily,
                             showBattery = showBattery,
                             showMedia = showMedia,
                             hasLeftWave = hasLeftWave,
@@ -256,6 +273,10 @@ fun HomeScreen(
                             onClick = { viewModel.launchApp(app) },
                             onLongClick = { viewModel.openPopup(app) },
                             onSwipeRight = { viewModel.openPopup(app) },
+                            showIcon = showAppIcons,
+                            showNotificationPreview = showNotificationPreview,
+                            fontFamily = appFontFamily,
+                            fontSizeSp = appFontSizeSp,
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave
                         )
@@ -273,6 +294,10 @@ fun HomeScreen(
                                     viewModel.launchApp(it)
                                 },
                                 onLongClickApp = { viewModel.openPopup(it) },
+                                showIcon = showAppIcons,
+                                showNotificationPreview = showNotificationPreview,
+                                appFontFamily = appFontFamily,
+                                appFontSizeSp = appFontSizeSp,
                                 hasLeftWave = hasLeftWave,
                                 hasRightWave = hasRightWave
                             )
@@ -281,45 +306,47 @@ fun HomeScreen(
                 }
 
                 // Dezente Schnellaktionen unten links (fester Fußbereich ohne Überlagerung)
-                Row(
-                    modifier = Modifier
-                        .padding(
-                            start = if (hasLeftWave) 72.dp else 28.dp,
-                            top = 0.dp,
-                            bottom = 8.dp
-                        )
-                        .alpha(0.65f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                if (showBottomActions) {
                     Row(
                         modifier = Modifier
-                            .clickable { viewModel.setSearchOpen(true) }
-                            .padding(end = 18.dp, top = 4.dp, bottom = 4.dp),
+                            .padding(
+                                start = if (hasLeftWave) 72.dp else 28.dp,
+                                top = 0.dp,
+                                bottom = 8.dp
+                            )
+                            .alpha(0.65f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Row(
+                            modifier = Modifier
+                                .clickable { viewModel.setSearchOpen(true) }
+                                .padding(end = 18.dp, top = 4.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = strings.searchAppsButton,
+                                tint = GrayMedium,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = strings.searchAppsButton,
+                                fontSize = 12.sp,
+                                color = GrayMedium
+                            )
+                        }
+
                         Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = strings.searchAppsButton,
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = strings.settingsContentDesc,
                             tint = GrayMedium,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = strings.searchAppsButton,
-                            fontSize = 12.sp,
-                            color = GrayMedium
+                            modifier = Modifier
+                                .clickable { viewModel.setSettingsOpen(true) }
+                                .padding(4.dp)
+                                .size(16.dp)
                         )
                     }
-
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = strings.settingsContentDesc,
-                        tint = GrayMedium,
-                        modifier = Modifier
-                            .clickable { viewModel.setSettingsOpen(true) }
-                            .padding(4.dp)
-                            .size(16.dp)
-                    )
                 }
             }
         } else {
@@ -346,6 +373,7 @@ fun HomeScreen(
                                 text = char.toString(),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
+                                fontFamily = appFontFamily,
                                 color = GrayMedium,
                                 modifier = Modifier.padding(
                                     start = if (hasLeftWave) 72.dp else 28.dp,
@@ -363,6 +391,10 @@ fun HomeScreen(
                             onClick = { viewModel.launchApp(app) },
                             onLongClick = { viewModel.openPopup(app) },
                             onSwipeRight = { viewModel.openPopup(app) },
+                            showIcon = showAppIcons,
+                            showNotificationPreview = showNotificationPreview,
+                            fontFamily = appFontFamily,
+                            fontSizeSp = appFontSizeSp,
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave
                         )
@@ -414,6 +446,8 @@ fun HomeScreen(
                     if (touching) viewModel.recordWaveUsage(isRightSide = false)
                 },
                 idleAlphaPercent = waveIdleAlphaPercent,
+                fontFamily = waveFontFamily,
+                letterFontSizeSp = waveFontSizeSp,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .graphicsLayer { clip = false }
@@ -430,6 +464,8 @@ fun HomeScreen(
                     if (touching) viewModel.recordWaveUsage(isRightSide = true)
                 },
                 idleAlphaPercent = waveIdleAlphaPercent,
+                fontFamily = waveFontFamily,
+                letterFontSizeSp = waveFontSizeSp,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .graphicsLayer { clip = false }
@@ -530,7 +566,10 @@ fun HomeScreen(
                     viewModel.setSearchOpen(false)
                     viewModel.setSettingsOpen(true)
                 },
-                onClose = { viewModel.setSearchOpen(false) }
+                onClose = { viewModel.setSearchOpen(false) },
+                showAppIcons = showAppIcons,
+                appFontFamily = appFontFamily,
+                appFontSizeSp = appFontSizeSp
             )
         }
 
@@ -582,6 +621,10 @@ private fun RecentAppsEntry(
     onToggleExpand: () -> Unit,
     onLaunchApp: (AppItem) -> Unit,
     onLongClickApp: (AppItem) -> Unit,
+    showIcon: Boolean,
+    showNotificationPreview: Boolean,
+    appFontFamily: FontFamily,
+    appFontSizeSp: Int,
     hasLeftWave: Boolean,
     hasRightWave: Boolean,
     modifier: Modifier = Modifier
@@ -613,6 +656,7 @@ private fun RecentAppsEntry(
                 text = strings.recentlyUsed,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
+                fontFamily = appFontFamily,
                 color = GrayLight
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -632,6 +676,10 @@ private fun RecentAppsEntry(
                     onClick = { onLaunchApp(recentApp) },
                     onLongClick = { onLongClickApp(recentApp) },
                     onSwipeRight = { onLongClickApp(recentApp) },
+                    showIcon = showIcon,
+                    showNotificationPreview = showNotificationPreview,
+                    fontFamily = appFontFamily,
+                    fontSizeSp = appFontSizeSp,
                     hasLeftWave = hasLeftWave,
                     hasRightWave = hasRightWave
                 )

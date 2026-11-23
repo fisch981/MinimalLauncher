@@ -33,6 +33,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +50,9 @@ fun SearchOverlay(
     onAppClick: (AppItem) -> Unit,
     onOpenSettings: () -> Unit = {},
     onClose: () -> Unit,
+    showAppIcons: Boolean = true,
+    appFontFamily: FontFamily = FontFamily.SansSerif,
+    appFontSizeSp: Int = 17,
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
@@ -181,7 +185,10 @@ fun SearchOverlay(
                     app = app,
                     notifications = emptyList(),
                     onClick = { onAppClick(app) },
-                    onLongClick = { onAppClick(app) }
+                    onLongClick = { onAppClick(app) },
+                    showIcon = showAppIcons,
+                    fontFamily = appFontFamily,
+                    fontSizeSp = appFontSizeSp
                 )
             }
         }

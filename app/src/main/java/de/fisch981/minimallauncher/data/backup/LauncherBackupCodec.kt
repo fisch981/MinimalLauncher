@@ -9,12 +9,22 @@ data class LauncherBackupData(
     val scrollerSide: String = "RIGHT",
     val waveIdleAlphaPercent: Int = 40,
     val appLanguage: String = "system",
+    val appFont: String = "system",
+    val clockDateFont: String = "system",
+    val waveFont: String = "system",
+    val appFontSizeSp: Int = 17,
+    val dateSizeSp: Int = 15,
+    val waveFontSizeSp: Int = 11,
     val showClock: Boolean = true,
     val clockSizeSp: Int = 52,
     val showDate: Boolean = true,
     val showMedia: Boolean = true,
     val showBattery: Boolean = true,
     val showRecentApps: Boolean = true,
+    val showAppIcons: Boolean = true,
+    val hideStatusBar: Boolean = false,
+    val showBottomActions: Boolean = true,
+    val showNotificationPreview: Boolean = true,
     val recentApps: List<String> = emptyList(),
     val leftWaveCount: Int = 0,
     val rightWaveCount: Int = 0,
@@ -40,12 +50,22 @@ object LauncherBackupCodec {
         appendField(sb, "scrollerSide", data.scrollerSide, indent = 2, trailingComma = true)
         appendIntField(sb, "waveIdleAlphaPercent", data.waveIdleAlphaPercent, indent = 2, trailingComma = true)
         appendField(sb, "appLanguage", data.appLanguage, indent = 2, trailingComma = true)
+        appendField(sb, "appFont", data.appFont, indent = 2, trailingComma = true)
+        appendField(sb, "clockDateFont", data.clockDateFont, indent = 2, trailingComma = true)
+        appendField(sb, "waveFont", data.waveFont, indent = 2, trailingComma = true)
+        appendIntField(sb, "appFontSizeSp", data.appFontSizeSp, indent = 2, trailingComma = true)
+        appendIntField(sb, "dateSizeSp", data.dateSizeSp, indent = 2, trailingComma = true)
+        appendIntField(sb, "waveFontSizeSp", data.waveFontSizeSp, indent = 2, trailingComma = true)
         appendBoolField(sb, "showClock", data.showClock, indent = 2, trailingComma = true)
         appendIntField(sb, "clockSizeSp", data.clockSizeSp, indent = 2, trailingComma = true)
         appendBoolField(sb, "showDate", data.showDate, indent = 2, trailingComma = true)
         appendBoolField(sb, "showMedia", data.showMedia, indent = 2, trailingComma = true)
         appendBoolField(sb, "showBattery", data.showBattery, indent = 2, trailingComma = true)
         appendBoolField(sb, "showRecentApps", data.showRecentApps, indent = 2, trailingComma = true)
+        appendBoolField(sb, "showAppIcons", data.showAppIcons, indent = 2, trailingComma = true)
+        appendBoolField(sb, "hideStatusBar", data.hideStatusBar, indent = 2, trailingComma = true)
+        appendBoolField(sb, "showBottomActions", data.showBottomActions, indent = 2, trailingComma = true)
+        appendBoolField(sb, "showNotificationPreview", data.showNotificationPreview, indent = 2, trailingComma = true)
         appendStringListField(sb, "recentApps", data.recentApps, indent = 2, trailingComma = true)
         appendIntField(sb, "leftWaveCount", data.leftWaveCount, indent = 2, trailingComma = true)
         appendIntField(sb, "rightWaveCount", data.rightWaveCount, indent = 2, trailingComma = true)
@@ -77,12 +97,22 @@ object LauncherBackupCodec {
             scrollerSide = (root["scrollerSide"] as? String)?.takeIf { it.isNotBlank() } ?: "RIGHT",
             waveIdleAlphaPercent = ((root["waveIdleAlphaPercent"] as? Number)?.toInt() ?: 40).coerceIn(0, 100),
             appLanguage = (root["appLanguage"] as? String)?.takeIf { it.isNotBlank() } ?: "system",
+            appFont = (root["appFont"] as? String)?.takeIf { it.isNotBlank() } ?: "system",
+            clockDateFont = (root["clockDateFont"] as? String)?.takeIf { it.isNotBlank() } ?: "system",
+            waveFont = (root["waveFont"] as? String)?.takeIf { it.isNotBlank() } ?: "system",
+            appFontSizeSp = ((root["appFontSizeSp"] as? Number)?.toInt() ?: 17).coerceIn(13, 24),
+            dateSizeSp = ((root["dateSizeSp"] as? Number)?.toInt() ?: 15).coerceIn(11, 24),
+            waveFontSizeSp = ((root["waveFontSizeSp"] as? Number)?.toInt() ?: 11).coerceIn(9, 16),
             showClock = (root["showClock"] as? Boolean) ?: true,
             clockSizeSp = ((root["clockSizeSp"] as? Number)?.toInt() ?: 52).coerceIn(28, 84),
             showDate = (root["showDate"] as? Boolean) ?: true,
             showMedia = (root["showMedia"] as? Boolean) ?: true,
             showBattery = (root["showBattery"] as? Boolean) ?: true,
             showRecentApps = (root["showRecentApps"] as? Boolean) ?: true,
+            showAppIcons = (root["showAppIcons"] as? Boolean) ?: true,
+            hideStatusBar = (root["hideStatusBar"] as? Boolean) ?: false,
+            showBottomActions = (root["showBottomActions"] as? Boolean) ?: true,
+            showNotificationPreview = (root["showNotificationPreview"] as? Boolean) ?: true,
             recentApps = asStringList(root["recentApps"]),
             leftWaveCount = ((root["leftWaveCount"] as? Number)?.toInt() ?: 0).coerceAtLeast(0),
             rightWaveCount = ((root["rightWaveCount"] as? Number)?.toInt() ?: 0).coerceAtLeast(0),

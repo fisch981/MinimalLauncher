@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,10 @@ fun AppListItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onSwipeRight: () -> Unit = onLongClick,
+    showIcon: Boolean = true,
+    showNotificationPreview: Boolean = true,
+    fontFamily: FontFamily = FontFamily.SansSerif,
+    fontSizeSp: Int = 17,
     hasLeftWave: Boolean = false,
     hasRightWave: Boolean = true,
     modifier: Modifier = Modifier
@@ -96,60 +101,75 @@ fun AppListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // App Icon (Lines outline or Monochrome converted)
-        Box(
-            modifier = Modifier.size(36.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            if (app.icon != null) {
-                Image(
-                    bitmap = app.icon.asImageBitmap(),
-                    contentDescription = app.label,
-                    modifier = Modifier.size(34.dp)
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(34.dp)
-                        .clip(CircleShape)
-                        .background(DarkSurfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = app.label.take(1).uppercase(),
-                        color = PureWhite,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
+        if (showIcon) {
+            Box(
+                modifier = Modifier.size(36.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (app.icon != null) {
+                    Image(
+                        bitmap = app.icon.asImageBitmap(),
+                        contentDescription = app.label,
+                        modifier = Modifier.size(34.dp)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(DarkSurfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = app.label.take(1).uppercase(),
+                            color = PureWhite,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                // Notification Dot
+                if (notifications.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(PureWhite)
+                            .align(Alignment.TopEnd)
                     )
                 }
             }
 
-            // Notification Dot
-            if (notifications.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .size(7.dp)
-                        .clip(CircleShape)
-                        .background(PureWhite)
-                        .align(Alignment.TopEnd)
-                )
-            }
+            Spacer(modifier = Modifier.width(18.dp))
         }
-
-        Spacer(modifier = Modifier.width(18.dp))
 
         // App Label + Notification Snippet
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = app.label,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Normal,
-                color = PureWhite,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = app.label,
+                    fontSize = fontSizeSp.coerceIn(13, 24).sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = fontFamily,
+                    color = PureWhite,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (!showIcon && notifications.isNotEmpty()) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(PureWhite)
+                    )
+                }
+            }
 
             // Notification Preview directly under the app name
-            if (activeNotification != null) {
+            if (showNotificationPreview && activeNotification != null) {
                 val previewText = buildString {
                     if (!activeNotification.title.isNullOrBlank()) {
                         append(activeNotification.title)
@@ -164,6 +184,7 @@ fun AppListItem(
                         text = previewText,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily,
                         color = GrayMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -178,6 +199,7 @@ fun AppListItem(
                 text = "+${app.subApps.size}",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
+                fontFamily = fontFamily,
                 color = GrayMuted,
                 modifier = Modifier.padding(start = 8.dp)
             )

@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,9 +56,12 @@ fun HeaderWidget(
     onMediaPlayPause: () -> Unit,
     onMediaNext: () -> Unit,
     onMediaPrevious: () -> Unit,
+    onMediaOpenApp: () -> Unit = {},
     showClock: Boolean = true,
     clockSizeSp: Int = 52,
     showDate: Boolean = true,
+    dateSizeSp: Int = 15,
+    fontFamily: FontFamily = FontFamily.SansSerif,
     showBattery: Boolean = true,
     showMedia: Boolean = true,
     hasLeftWave: Boolean = false,
@@ -111,6 +115,7 @@ fun HeaderWidget(
                 text = currentTime,
                 fontSize = clockSizeSp.coerceIn(28, 84).sp,
                 fontWeight = FontWeight.Light,
+                fontFamily = fontFamily,
                 letterSpacing = (-1).sp,
                 color = PureWhite,
                 modifier = Modifier.clickable {
@@ -145,16 +150,18 @@ fun HeaderWidget(
                 if (showDate) {
                     Text(
                         text = currentDate,
-                        fontSize = 15.sp,
+                        fontSize = dateSizeSp.coerceIn(11, 24).sp,
                         fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily,
                         color = GrayLight
                     )
                 }
                 if (showBattery) {
                     Text(
                         text = if (showDate) " • $batteryPercent%" else "$batteryPercent%",
-                        fontSize = 14.sp,
+                        fontSize = (dateSizeSp.coerceIn(11, 24) - 1).coerceIn(10, 23).sp,
                         fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily,
                         color = GrayMedium
                     )
                 }
@@ -173,7 +180,13 @@ fun HeaderWidget(
                     .padding(top = if (showClock || showDate || showBattery) 16.dp else 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(enabled = !mediaState.packageName.isNullOrBlank()) {
+                            onMediaOpenApp()
+                        }
+                ) {
                     Text(
                         text = mediaState.title ?: strings.unknownTitle,
                         fontSize = 14.sp,

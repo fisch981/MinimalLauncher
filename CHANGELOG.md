@@ -6,6 +6,42 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.26] - 2026-11-23
+
+### Deutsch
+- **Schriftarten & Schriftgrößen auf eigener Unterseite (`TypographySubScreen`):**
+  - Neuer Menüpunkt *„Schriftarten & Größen“* in den Einstellungen (unter „Erscheinungsbild & Wave Scroller“) mit Live-Vorschau.
+  - Separate Auswahl der Schriftart (`Standard`, `Schmal`, `Dünn`, `Serif`, `Monospace`, `Handschrift`) für **App-Namen**, **Uhrzeit & Datum** sowie die **Buchstaben der Alphabet-Welle** (`LauncherFont`).
+  - Alle Schriftgrößen gebündelt auf dieser Unterseite einstellbar: App-Namen (`13`–`24 sp`), Uhrzeit (`28`–`84 sp`), Datum & Akku (`11`–`24 sp`) und Wellen-Buchstaben (`9`–`16 sp`) – inklusive `.json`-Backup-Unterstützung.
+- **Minimalismus-Erweiterungen auf dem Homescreen:**
+  - **Reiner Text-Modus (`showAppIcons`):** App-Icons lassen sich in den Einstellungen unter *„Erscheinungsbild & Wave Scroller“* komplett ausblenden (bei aktiven Benachrichtigungen erscheint ein dezenter weißer Punkt direkt neben dem App-Namen).
+  - **System-Statusleiste ausblendbar (`hideStatusBar`):** Blendet Uhrzeit und System-Icons oben am Bildschirmrand über `WindowInsetsControllerCompat` aus (durch Herunterwischen vom oberen Rand kurzzeitig einblendbar).
+  - **Untere Aktionsleiste ausblendbar (`showBottomActions`):** Suche & Zahnrad unten auf der Favoriten-Seite lassen sich optional ausblenden (weiterhin am Ende der App-Liste erreichbar).
+  - **Benachrichtigungs-Ruhemodus (`showNotificationPreview`):** Blendet Nachrichtentexte unter den App-Namen aus und belässt nur den weißen Benachrichtigungspunkt.
+- **Medienplayer-Verbesserungen:**
+  - **Direktklick auf den Titel/Interpreten:** Antippen im Header öffnet direkt die abspielende Medien-App.
+  - **Sofortige Aktivierung nach Berechtigung:** `MediaSessionHelper` aktualisiert die aktive Session automatisch in `onResume()`, sobald der Benachrichtigungszugriff erteilt wurde.
+- **Einstellungen:**
+  - **Ausgeblendete Apps als eigene Unterseite:** Statt einer langen Liste direkt am Ende der Einstellungen führt dort nun ein einzelner Menüpunkt *„Ausgeblendete Apps“* auf eine eigene Unterseite.
+
+### English
+- **Dedicated Fonts & Sizes Subpage (`TypographySubScreen`):**
+  - Added a single *“Fonts & sizes”* entry under Settings → “Appearance & Wave Scroller” with a live monochrome preview.
+  - Independent font family selection (`Default`, `Condensed`, `Thin`, `Serif`, `Monospace`, `Cursive`) for **App names**, **Clock & Date**, and **Alphabet wave letters** (`LauncherFont`).
+  - Consolidated all font size sliders onto this subpage: app names (`13`–`24 sp`), clock (`28`–`84 sp`), date & battery (`11`–`24 sp`), and wave letters (`9`–`16 sp`), all persisted in `.json` backups.
+- **Minimalist Home Screen Controls:**
+  - **Text-only mode (`showAppIcons`):** Toggle hiding app icons under Settings → “Appearance & Wave Scroller” (apps with active notifications display a subtle white dot next to their label).
+  - **Hide system status bar (`hideStatusBar`):** Optionally hide top clock and system icons via `WindowInsetsControllerCompat` (transiently swipeable from top edge).
+  - **Hide bottom action bar (`showBottomActions`):** Toggle the bottom-left Search & Settings controls on the Favorites home screen (always still available in the App Drawer footer).
+  - **Quiet notification mode (`showNotificationPreview`):** Hide notification snippet text under app names while keeping the white indicator dot and full pop-up details.
+- **Media Player Improvements:**
+  - **Direct app launch on tap:** Tapping the track title or artist in the header opens the active media app directly.
+  - **Instant activation after permission grant:** `MediaSessionHelper` automatically refreshes listeners on `onResume()` without requiring an app restart.
+- **Settings:**
+  - **Dedicated Hidden Apps subpage:** Replaced the inline hidden apps list at the bottom of Settings with a compact entry opening a dedicated full-screen subpage.
+
+---
+
 ## [1.0.25] - 2026-11-23
 
 ### Deutsch

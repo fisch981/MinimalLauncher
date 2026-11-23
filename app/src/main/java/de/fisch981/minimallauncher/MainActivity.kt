@@ -10,9 +10,12 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import de.fisch981.minimallauncher.ui.screens.HomeScreen
 import de.fisch981.minimallauncher.ui.theme.MinimalLauncherTheme
 import de.fisch981.minimallauncher.ui.theme.PureBlack
@@ -30,16 +33,25 @@ class MainActivity : ComponentActivity() {
             MinimalLauncherTheme {
                 val isSearchOpen by viewModel.isSearchOpen.collectAsState()
                 val isSettingsOpen by viewModel.isSettingsOpen.collectAsState()
+                val isHiddenAppsOpen by viewModel.isHiddenAppsOpen.collectAsState()
+                val isTypographyOpen by viewModel.isTypographyOpen.collectAsState()
                 val isManageFavoritesOpen by viewModel.isManageFavoritesOpen.collectAsState()
                 val appForIconEditing by viewModel.appForIconEditing.collectAsState()
                 val appForFolderEditing by viewModel.appForFolderEditing.collectAsState()
                 val appForRenaming by viewModel.appForRenaming.collectAsState()
                 val selectedPopup by viewModel.selectedAppForPopup.collectAsState()
+                val hideStatusBar by viewModel.hideStatusBar.collectAsState()
+
+                LaunchedEffect(hideStatusBar) {
+                    applyStatusBarVisibility(hideStatusBar)
+                }
 
                 // Crucial Launcher Rule: The Back button must NEVER exit the Launcher!
                 BackHandler(enabled = true) {
                     when {
                         isSearchOpen -> viewModel.setSearchOpen(false)
+                        isHiddenAppsOpen -> viewModel.setHiddenAppsOpen(false)
+                        isTypographyOpen -> viewModel.setTypographyOpen(false)
                         isSettingsOpen -> viewModel.setSettingsOpen(false)
                         isManageFavoritesOpen -> viewModel.setManageFavoritesOpen(false)
                         appForIconEditing != null -> viewModel.closeIconEditor()
@@ -65,6 +77,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            applyStatusBarVisibility(viewModel.hideStatusBar.value)
+        }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         viewModel.onReturnToLauncher(closeSettings = true)
@@ -73,6 +92,18 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.checkDefaultLauncher()
+        viewModel.refreshMediaListener()
         viewModel.onReturnToLauncher(closeSettings = false)
+    }
+
+    private fun applyStatusBarVisibility(hide: Boolean) {
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (hide) {
+            controller.hide(WindowInsetsCompat.Type.statusBars())
+        } else {
+            controller.show(WindowInsetsCompat.Type.statusBars())
+        }
     }
 }

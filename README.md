@@ -14,7 +14,8 @@ Minimalistischer, ergonomischer Android-Launcher in kompromissloser **Schwarz-We
 ### ⚡ Funktionen
 
 - **Alphabetischer Wave Scroller:** Vertikale Alphabet-Leiste (`★`, `A`–`Z`, `#`) mit Gaußscher Auswölbung, Buchstaben-Indikator und haptischem Feedback – konfigurierbar **links**, **rechts** oder **beidseitig** sowie mit **einstellbarer Ruhehelligkeit** (leuchtet beim Berühren sofort 100 % hell auf und fadet nach 1 Sekunde Verzögerung sanft aus).
-- **Minimalistischer Homescreen:** Linksbündige Uhrzeit (Wecker-Shortcut, Größe 28–84 sp einstellbar & ausblendbar), optionales Datum & Akkustand (Kalender-Shortcut), optionales Medienplayer-Widget und alphabetisch sortierte **Favoriten**.
+- **Minimalistischer Homescreen:** Linksbündige Uhrzeit (Wecker-Shortcut, Größe 28–84 sp einstellbar & ausblendbar), optionales Datum & Akkustand (Kalender-Shortcut), optionales Medienplayer-Widget (inkl. Direktklick zur Musik-App) und alphabetisch sortierte **Favoriten**.
+- **Kompromissloses Minimalkonzept:** App-Icons (reiner Text-Modus), System-Statusleiste, untere Aktionsleiste und Benachrichtigungstexte lassen sich einzeln ausblenden; Schriftarten und Schriftgrößen sind in den Einstellungen getrennt für Apps, Uhrzeit/Datum und die Alphabet-Welle wählbar.
 - **Zuletzt benutzte Apps (optional):** Einklappbare vertikale Liste der bis zu 5 zuletzt geöffneten Nicht-Favoriten-Apps unterhalb der Favoriten (schließt sich nach App-Start und Rückkehr automatisch wieder).
 - **Lines Icon-Pack & Monochrom-Engine:** Lädt weiße Kontur-Icons aus *Lines* (`com.natewren.lines`, `linesfree`, `linesdark`) inkl. nativem Icon-Picker und wandelt alle übrigen App-Icons automatisch in kontraststarke Schwarz-Weiß-Icons um.
 - **Pop-up-Menü, Ordner & Umbenennen:** Rechtswisch oder Gedrückthalten auf einer App öffnet Unter-Apps (Pop-up-Ordner), App-Shortcuts, eigene Namen und individuelle Icon-Auswahl.
@@ -53,7 +54,8 @@ Minimalist, ergonomic Android launcher with a strict **black-and-white / AMOLED 
 ### ⚡ Features
 
 - **Alphabetical Wave Scroller:** Vertical alphabet bar (`★`, `A`–`Z`, `#`) with Gaussian wave displacement, floating letter indicator, and haptic feedback — configurable on the **left**, **right**, or **both sides**, with **adjustable idle brightness** (snaps to 100% brightness immediately on touch and smoothly fades out after a 1-second hold).
-- **Minimalist Home Screen:** Left-aligned clock (alarm shortcut, adjustable size 28–84 sp & optional), optional date & battery indicator (calendar shortcut), optional inline media controls, and alphabetically sorted **Favorites**.
+- **Minimalist Home Screen:** Left-aligned clock (alarm shortcut, adjustable size 28–84 sp & optional), optional date & battery indicator (calendar shortcut), optional inline media controls (with tap-to-open player app), and alphabetically sorted **Favorites**.
+- **Ultra-Minimalist Options:** App icons (pure text-only mode), system status bar, bottom action bar, and notification text previews can each be hidden individually; font families and sizes can be customized separately for apps, clock/date, and the alphabet wave in Settings.
 - **Recently Used Apps (Optional):** Collapsible vertical list of up to 5 recently launched non-favorite apps below Favorites (automatically collapses on app launch or when returning to the launcher).
 - **Lines Icon Pack & Monochrome Engine:** Loads white outline icons from *Lines* (`com.natewren.lines`, `linesfree`, `linesdark`) with native icon picker integration and converts all remaining app icons into high-contrast monochrome bitmaps.
 - **Pop-up Menu, Folders & Renaming:** Swipe right or long-press an app to access sub-apps (pop-up folders), app shortcuts, custom display names, and per-app icon overrides.

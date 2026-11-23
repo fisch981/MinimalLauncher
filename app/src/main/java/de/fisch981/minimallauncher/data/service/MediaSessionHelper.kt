@@ -20,6 +20,8 @@ class MediaSessionHelper(private val context: Context) {
     val mediaState: StateFlow<MediaState> = _mediaState.asStateFlow()
 
     private var activeController: MediaController? = null
+    @Volatile
+    private var isListening = false
 
     private val controllerCallback = object : MediaController.Callback() {
         override fun onPlaybackStateChanged(state: PlaybackState?) {
@@ -41,16 +43,27 @@ class MediaSessionHelper(private val context: Context) {
     }
 
     fun startListening() {
-        if (!LauncherNotificationService.isPermissionGranted(context) || mediaSessionManager == null) return
+        if (!LauncherNotificationService.isPermissionGranted(context) || mediaSessionManager == null) {
+            if (isListening) {
+                stopListening()
+            }
+            return
+        }
         try {
+            if (isListening) {
+                val controllers = mediaSessionManager.getActiveSessions(notificationListenerComponent)
+                updateActiveController(controllers)
+                return
+            }
             mediaSessionManager.addOnActiveSessionsChangedListener(
                 sessionsChangedListener,
                 notificationListenerComponent
             )
+            isListening = true
             val controllers = mediaSessionManager.getActiveSessions(notificationListenerComponent)
             updateActiveController(controllers)
         } catch (_: Exception) {
-            // Permission or system limitation
+            isListening = false
         }
     }
 
@@ -59,7 +72,11 @@ class MediaSessionHelper(private val context: Context) {
             mediaSessionManager?.removeOnActiveSessionsChangedListener(sessionsChangedListener)
             activeController?.unregisterCallback(controllerCallback)
             activeController = null
-        } catch (_: Exception) {}
+            _mediaState.value = MediaState()
+        } catch (_: Exception) {
+        } finally {
+            isListening = false
+        }
     }
 
     private fun updateActiveController(controllers: List<MediaController>?) {
