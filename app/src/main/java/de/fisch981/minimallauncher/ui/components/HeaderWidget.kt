@@ -55,6 +55,9 @@ fun HeaderWidget(
     onMediaPlayPause: () -> Unit,
     onMediaNext: () -> Unit,
     onMediaPrevious: () -> Unit,
+    showClock: Boolean = true,
+    clockSizeSp: Int = 52,
+    showDate: Boolean = true,
     showBattery: Boolean = true,
     showMedia: Boolean = true,
     hasLeftWave: Boolean = false,
@@ -67,22 +70,30 @@ fun HeaderWidget(
     var currentDate by remember { mutableStateOf("") }
     var batteryPercent by remember { mutableIntStateOf(100) }
 
-    LaunchedEffect(strings.isGerman) {
+    LaunchedEffect(strings.isGerman, showClock, showDate, showBattery) {
+        if (!showClock && !showDate && !showBattery) return@LaunchedEffect
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val dateFormat = SimpleDateFormat(strings.dateFormatPattern, strings.dateLocale)
         val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
 
         while (true) {
             val now = Date()
-            currentTime = timeFormat.format(now)
-            currentDate = dateFormat.format(now)
+            if (showClock) {
+                currentTime = timeFormat.format(now)
+            }
+            if (showDate) {
+                currentDate = dateFormat.format(now)
+            }
 
-            if (batteryManager != null) {
+            if (showBattery && batteryManager != null) {
                 batteryPercent = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
             }
             delay(1000)
         }
     }
+
+    val hasAnyHeaderContent = showClock || showDate || showBattery || (showMedia && mediaState.hasActiveMedia)
+    if (!hasAnyHeaderContent) return
 
     Column(
         modifier = modifier
@@ -95,50 +106,58 @@ fun HeaderWidget(
             )
     ) {
         // Clock - click opens default clock/alarm
-        Text(
-            text = currentTime,
-            fontSize = 52.sp,
-            fontWeight = FontWeight.Light,
-            letterSpacing = (-1).sp,
-            color = PureWhite,
-            modifier = Modifier.clickable {
-                try {
-                    val intent = Intent(AlarmClock.ACTION_SHOW_ALARMS).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    context.startActivity(intent)
-                } catch (_: Exception) {}
-            }
-        )
+        if (showClock) {
+            Text(
+                text = currentTime,
+                fontSize = clockSizeSp.coerceIn(28, 84).sp,
+                fontWeight = FontWeight.Light,
+                letterSpacing = (-1).sp,
+                color = PureWhite,
+                modifier = Modifier.clickable {
+                    try {
+                        val intent = Intent(AlarmClock.ACTION_SHOW_ALARMS).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intent)
+                    } catch (_: Exception) {}
+                }
+            )
+        }
 
-        Spacer(modifier = Modifier.height(2.dp))
+        if (showClock && (showDate || showBattery)) {
+            Spacer(modifier = Modifier.height(2.dp))
+        }
 
         // Date and optional Battery - click opens calendar
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable {
-                try {
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        data = CalendarContract.CONTENT_URI.buildUpon().appendPath("time").build()
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    context.startActivity(intent)
-                } catch (_: Exception) {}
-            }
-        ) {
-            Text(
-                text = currentDate,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Normal,
-                color = GrayLight
-            )
-            if (showBattery) {
-                Text(
-                    text = " • $batteryPercent%",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = GrayMedium
-                )
+        if (showDate || showBattery) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            data = CalendarContract.CONTENT_URI.buildUpon().appendPath("time").build()
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intent)
+                    } catch (_: Exception) {}
+                }
+            ) {
+                if (showDate) {
+                    Text(
+                        text = currentDate,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = GrayLight
+                    )
+                }
+                if (showBattery) {
+                    Text(
+                        text = if (showDate) " • $batteryPercent%" else "$batteryPercent%",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = GrayMedium
+                    )
+                }
             }
         }
 
@@ -151,7 +170,7 @@ fun HeaderWidget(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = if (showClock || showDate || showBattery) 16.dp else 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {

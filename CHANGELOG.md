@@ -6,6 +6,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.24] - 2026-11-23
+
+### Deutsch
+- **Datum & Uhrzeit optional ausblendbar:**
+  - Neue Schalter *„Uhrzeit im Header anzeigen“* und *„Datum im Header anzeigen“* in den Einstellungen unter „Widgets & Benachrichtigungen“.
+  - Ist das Datum ausgeblendet, erscheint der Akkustand sauber ohne führenden Trennpunkt (`XX%`); sind alle Header-Elemente ausgeblendet, entsteht oben kein unnötiger Leerraum.
+- **Einstellbare Uhrzeit-Größe:**
+  - Neuer Schieberegler *„Größe der Uhrzeit“* (`28`–`84 sp`, Standard: `52 sp`) in den Einstellungen – inklusive automatischer Sicherung im `.json`-Backup (`LauncherBackupData`).
+
+### English
+- **Optional Clock & Date Visibility:**
+  - Added *“Show clock in header”* and *“Show date in header”* switches under Settings → “Widgets & Notifications”.
+  - When the date is hidden, battery level renders cleanly without a leading separator bullet; when all header widgets are hidden/inactive, no empty header padding is reserved.
+- **Adjustable Clock Size:**
+  - Added a *“Clock size”* slider (`28`–`84 sp`, default: `52 sp`) in Settings, also persisted in the `.json` backup format (`LauncherBackupData`).
+
+---
+
 ## [1.0.23] - 2026-11-23
 
 ### Deutsch

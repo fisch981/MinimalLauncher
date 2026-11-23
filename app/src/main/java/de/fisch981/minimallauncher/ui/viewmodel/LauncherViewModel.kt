@@ -79,6 +79,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val showBattery: StateFlow<Boolean> = favoritesRepository.showBatteryFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
+    val showClock: StateFlow<Boolean> = favoritesRepository.showClockFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val clockSizeSp: StateFlow<Int> = favoritesRepository.clockSizeSpFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 52)
+
+    val showDate: StateFlow<Boolean> = favoritesRepository.showDateFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     val showMedia: StateFlow<Boolean> = favoritesRepository.showMediaFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
@@ -552,6 +561,24 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun toggleShowBattery(show: Boolean) {
         viewModelScope.launch {
             favoritesRepository.setShowBattery(show)
+        }
+    }
+
+    fun toggleShowClock(show: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setShowClock(show)
+        }
+    }
+
+    fun setClockSizeSp(sizeSp: Int) {
+        viewModelScope.launch {
+            favoritesRepository.setClockSizeSp(sizeSp)
+        }
+    }
+
+    fun toggleShowDate(show: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setShowDate(show)
         }
     }
 

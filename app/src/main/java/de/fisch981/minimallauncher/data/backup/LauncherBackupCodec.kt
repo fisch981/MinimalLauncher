@@ -9,6 +9,9 @@ data class LauncherBackupData(
     val scrollerSide: String = "RIGHT",
     val waveIdleAlphaPercent: Int = 40,
     val appLanguage: String = "system",
+    val showClock: Boolean = true,
+    val clockSizeSp: Int = 52,
+    val showDate: Boolean = true,
     val showMedia: Boolean = true,
     val showBattery: Boolean = true,
     val showRecentApps: Boolean = true,
@@ -37,6 +40,9 @@ object LauncherBackupCodec {
         appendField(sb, "scrollerSide", data.scrollerSide, indent = 2, trailingComma = true)
         appendIntField(sb, "waveIdleAlphaPercent", data.waveIdleAlphaPercent, indent = 2, trailingComma = true)
         appendField(sb, "appLanguage", data.appLanguage, indent = 2, trailingComma = true)
+        appendBoolField(sb, "showClock", data.showClock, indent = 2, trailingComma = true)
+        appendIntField(sb, "clockSizeSp", data.clockSizeSp, indent = 2, trailingComma = true)
+        appendBoolField(sb, "showDate", data.showDate, indent = 2, trailingComma = true)
         appendBoolField(sb, "showMedia", data.showMedia, indent = 2, trailingComma = true)
         appendBoolField(sb, "showBattery", data.showBattery, indent = 2, trailingComma = true)
         appendBoolField(sb, "showRecentApps", data.showRecentApps, indent = 2, trailingComma = true)
@@ -71,6 +77,9 @@ object LauncherBackupCodec {
             scrollerSide = (root["scrollerSide"] as? String)?.takeIf { it.isNotBlank() } ?: "RIGHT",
             waveIdleAlphaPercent = ((root["waveIdleAlphaPercent"] as? Number)?.toInt() ?: 40).coerceIn(0, 100),
             appLanguage = (root["appLanguage"] as? String)?.takeIf { it.isNotBlank() } ?: "system",
+            showClock = (root["showClock"] as? Boolean) ?: true,
+            clockSizeSp = ((root["clockSizeSp"] as? Number)?.toInt() ?: 52).coerceIn(28, 84),
+            showDate = (root["showDate"] as? Boolean) ?: true,
             showMedia = (root["showMedia"] as? Boolean) ?: true,
             showBattery = (root["showBattery"] as? Boolean) ?: true,
             showRecentApps = (root["showRecentApps"] as? Boolean) ?: true,

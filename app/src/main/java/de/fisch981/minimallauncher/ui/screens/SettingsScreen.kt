@@ -87,6 +87,9 @@ fun SettingsScreen(
     val appLanguage by viewModel.appLanguage.collectAsState()
     val scrollerSide by viewModel.scrollerSide.collectAsState()
     val waveIdleAlphaPercent by viewModel.waveIdleAlphaPercent.collectAsState()
+    val showClock by viewModel.showClock.collectAsState()
+    val clockSizeSp by viewModel.clockSizeSp.collectAsState()
+    val showDate by viewModel.showDate.collectAsState()
     val showBattery by viewModel.showBattery.collectAsState()
     val showMedia by viewModel.showMedia.collectAsState()
     val showRecentApps by viewModel.showRecentApps.collectAsState()
@@ -730,6 +733,95 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
+                        Text(strings.showClockTitle, color = PureWhite, fontSize = 15.sp)
+                        Text(strings.showClockSubtitle, color = GrayMedium, fontSize = 12.sp)
+                    }
+                    Switch(
+                        checked = showClock,
+                        onCheckedChange = { viewModel.toggleShowClock(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = PureBlack,
+                            checkedTrackColor = PureWhite,
+                            uncheckedThumbColor = GrayMedium,
+                            uncheckedTrackColor = DarkSurfaceVariant
+                        )
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            strings.clockSizeTitle,
+                            color = PureWhite,
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "${clockSizeSp} sp",
+                            color = PureWhite,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        strings.clockSizeSubtitle,
+                        color = GrayMedium,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Slider(
+                        value = clockSizeSp.toFloat(),
+                        onValueChange = { viewModel.setClockSizeSp(it.roundToInt()) },
+                        valueRange = 28f..84f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = PureWhite,
+                            activeTrackColor = PureWhite,
+                            inactiveTrackColor = DarkSurfaceVariant
+                        )
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(strings.showDateTitle, color = PureWhite, fontSize = 15.sp)
+                        Text(strings.showDateSubtitle, color = GrayMedium, fontSize = 12.sp)
+                    }
+                    Switch(
+                        checked = showDate,
+                        onCheckedChange = { viewModel.toggleShowDate(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = PureBlack,
+                            checkedTrackColor = PureWhite,
+                            uncheckedThumbColor = GrayMedium,
+                            uncheckedTrackColor = DarkSurfaceVariant
+                        )
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(strings.showBatteryTitle, color = PureWhite, fontSize = 15.sp)
                         Text(strings.showBatterySubtitle, color = GrayMedium, fontSize = 12.sp)
                     }
@@ -820,7 +912,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "MinimalLauncher v1.0.23",
+                    text = "MinimalLauncher v1.0.24",
                     color = GrayMedium,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 32.dp)

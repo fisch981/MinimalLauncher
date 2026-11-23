@@ -36,8 +36,8 @@ android {
         applicationId = "de.fisch981.minimallauncher"
         minSdk = 26
         targetSdk = 35
-        versionCode = 24
-        versionName = "1.0.23"
+        versionCode = 25
+        versionName = "1.0.24"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

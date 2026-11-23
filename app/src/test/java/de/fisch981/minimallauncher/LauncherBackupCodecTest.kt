@@ -26,6 +26,9 @@ class LauncherBackupCodecTest {
             scrollerSide = "BOTH",
             waveIdleAlphaPercent = 25,
             appLanguage = "de",
+            showClock = false,
+            clockSizeSp = 68,
+            showDate = false,
             showMedia = false,
             showBattery = true,
             showRecentApps = false,
@@ -58,6 +61,9 @@ class LauncherBackupCodecTest {
         assertEquals("BOTH", decoded.scrollerSide)
         assertEquals(25, decoded.waveIdleAlphaPercent)
         assertEquals("de", decoded.appLanguage)
+        assertFalse(decoded.showClock)
+        assertEquals(68, decoded.clockSizeSp)
+        assertFalse(decoded.showDate)
         assertFalse(decoded.showMedia)
         assertTrue(decoded.showBattery)
         assertFalse(decoded.showRecentApps)

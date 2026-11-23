@@ -36,6 +36,9 @@ class FavoritesRepository(private val context: Context) {
         private val KEY_APP_LAUNCH_COUNTS = stringPreferencesKey("app_launch_counts")
         private val KEY_WAVE_IDLE_ALPHA = intPreferencesKey("wave_idle_alpha_percent")
         private val KEY_APP_LANGUAGE = stringPreferencesKey("app_language")
+        private val KEY_SHOW_CLOCK = booleanPreferencesKey("show_clock")
+        private val KEY_CLOCK_SIZE_SP = intPreferencesKey("clock_size_sp")
+        private val KEY_SHOW_DATE = booleanPreferencesKey("show_date")
     }
 
     val customIconsFlow: Flow<Map<String, String>> = context.dataStore.data.map { prefs ->
@@ -71,6 +74,18 @@ class FavoritesRepository(private val context: Context) {
 
     val showBatteryFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[KEY_SHOW_BATTERY] ?: true
+    }
+
+    val showClockFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SHOW_CLOCK] ?: true
+    }
+
+    val clockSizeSpFlow: Flow<Int> = context.dataStore.data.map { prefs ->
+        (prefs[KEY_CLOCK_SIZE_SP] ?: 52).coerceIn(28, 84)
+    }
+
+    val showDateFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SHOW_DATE] ?: true
     }
 
     val recentAppsFlow: Flow<List<String>> = context.dataStore.data.map { prefs ->
@@ -213,6 +228,24 @@ class FavoritesRepository(private val context: Context) {
     suspend fun setShowBattery(show: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[KEY_SHOW_BATTERY] = show
+        }
+    }
+
+    suspend fun setShowClock(show: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SHOW_CLOCK] = show
+        }
+    }
+
+    suspend fun setClockSizeSp(sizeSp: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_CLOCK_SIZE_SP] = sizeSp.coerceIn(28, 84)
+        }
+    }
+
+    suspend fun setShowDate(show: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SHOW_DATE] = show
         }
     }
 
@@ -383,6 +416,9 @@ class FavoritesRepository(private val context: Context) {
             scrollerSide = side.name,
             waveIdleAlphaPercent = (prefs[KEY_WAVE_IDLE_ALPHA] ?: 40).coerceIn(0, 100),
             appLanguage = AppLanguage.fromCode(prefs[KEY_APP_LANGUAGE]).code,
+            showClock = prefs[KEY_SHOW_CLOCK] ?: true,
+            clockSizeSp = (prefs[KEY_CLOCK_SIZE_SP] ?: 52).coerceIn(28, 84),
+            showDate = prefs[KEY_SHOW_DATE] ?: true,
             showMedia = prefs[KEY_SHOW_MEDIA] ?: true,
             showBattery = prefs[KEY_SHOW_BATTERY] ?: true,
             showRecentApps = prefs[KEY_SHOW_RECENT_APPS] ?: true,
@@ -408,6 +444,9 @@ class FavoritesRepository(private val context: Context) {
 
             prefs[KEY_WAVE_IDLE_ALPHA] = data.waveIdleAlphaPercent.coerceIn(0, 100)
             prefs[KEY_APP_LANGUAGE] = AppLanguage.fromCode(data.appLanguage).code
+            prefs[KEY_SHOW_CLOCK] = data.showClock
+            prefs[KEY_CLOCK_SIZE_SP] = data.clockSizeSp.coerceIn(28, 84)
+            prefs[KEY_SHOW_DATE] = data.showDate
             prefs[KEY_SHOW_MEDIA] = data.showMedia
             prefs[KEY_SHOW_BATTERY] = data.showBattery
             prefs[KEY_SHOW_RECENT_APPS] = data.showRecentApps

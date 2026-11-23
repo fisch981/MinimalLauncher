@@ -93,6 +93,9 @@ fun HomeScreen(
     val hasLeftWave = scrollerSide.hasLeft
     val hasRightWave = scrollerSide.hasRight
     val waveIdleAlphaPercent by viewModel.waveIdleAlphaPercent.collectAsState()
+    val showClock by viewModel.showClock.collectAsState()
+    val clockSizeSp by viewModel.clockSizeSp.collectAsState()
+    val showDate by viewModel.showDate.collectAsState()
     val showBattery by viewModel.showBattery.collectAsState()
     val showMedia by viewModel.showMedia.collectAsState()
     val showRecentApps by viewModel.showRecentApps.collectAsState()
@@ -233,6 +236,9 @@ fun HomeScreen(
                             onMediaPlayPause = { viewModel.mediaPlayPause() },
                             onMediaNext = { viewModel.mediaNext() },
                             onMediaPrevious = { viewModel.mediaPrevious() },
+                            showClock = showClock,
+                            clockSizeSp = clockSizeSp,
+                            showDate = showDate,
                             showBattery = showBattery,
                             showMedia = showMedia,
                             hasLeftWave = hasLeftWave,
