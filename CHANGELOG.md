@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.33] - 2026-11-23
+
+### Deutsch
+- **„Geister“- & Medien-Benachrichtigungen behoben:** Android-Mediensteuerungen (`MediaStyle`, `CATEGORY_TRANSPORT`, `EXTRA_MEDIA_SESSION` wie z. B. Podcast- oder Musik-Player nach dem Wegwischen aus der Systemleiste) sowie nicht-löschbare Service-Benachrichtigungen (`FLAG_NO_CLEAR` / `isClearable == false`) werden in der Launcher-Benachrichtigungsliste herausgefiltert, da Medien bereits direkt im Header gesteuert werden.
+- **Zuverlässiges Synchronisieren & Verwerfen:** Beim Zurückkehren zum Launcher wird der `NotificationListenerService` aktiv abgeglichen (bzw. per `requestRebind` neu verbunden), und per Wischgeste verworfene Benachrichtigungen verschwinden sofort auch lokal, selbst wenn das System eine Entfernung verzögert.
+
+### English
+- **Filtered Ghost Media & Non-Clearable Notifications:** Excluded Android `MediaStyle` / `CATEGORY_TRANSPORT` / `EXTRA_MEDIA_SESSION` media-resumption controls (such as podcast or music players lingering after shade dismissal) as well as non-clearable service notifications (`FLAG_NO_CLEAR` / `!isClearable`), since media controls already live in the header widget.
+- **Reliable Resume Sync & Immediate Dismissal:** Returning to the launcher now re-syncs active notifications (or calls `requestRebind` if unbound), and any displayed notification row can be swiped left or right with immediate local suppression until superseded by a newer notification.
+
+---
+
 ## [1.0.32] - 2026-11-23
 
 ### Deutsch

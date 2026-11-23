@@ -59,4 +59,88 @@ class NotificationStateUtilsTest {
         val updated = NotificationStateUtils.removeDismissedKeys(initial, "com.chat", setOf("clearable"))
         assertEquals(listOf("pinned"), updated["com.chat"]?.map { it.key })
     }
+
+    @Test
+    fun testShouldTrackNotificationFiltersMediaAndNonClearable() {
+        assertTrue(
+            NotificationStateUtils.shouldTrackNotification(
+                isOngoing = false,
+                isClearable = true,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = "msg",
+                template = null
+            )
+        )
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                isOngoing = false,
+                isClearable = false,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = null,
+                template = null
+            )
+        )
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                isOngoing = false,
+                isClearable = true,
+                isNoClear = true,
+                hasMediaSession = false,
+                category = null,
+                template = null
+            )
+        )
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                isOngoing = false,
+                isClearable = true,
+                isNoClear = false,
+                hasMediaSession = true,
+                category = null,
+                template = null
+            )
+        )
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                isOngoing = false,
+                isClearable = true,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = "transport",
+                template = null
+            )
+        )
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                isOngoing = false,
+                isClearable = true,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = null,
+                template = "android.app.Notification\$MediaStyle"
+            )
+        )
+    }
+
+    @Test
+    fun testLocalDismissalSuppressionAndNewerReappearance() {
+        val dismissed = mapOf("k1" to 1000L, "k2" to 2000L)
+
+        // Same or older postTime stays suppressed; newer postTime reappears
+        val activeItems = listOf(
+            RankedNotification(AppNotificationItem("k1", "pkg", "Title", "Old", 1000L), false),
+            RankedNotification(AppNotificationItem("k2", "pkg", "Title", "Updated", 2500L), false)
+        )
+        val filtered = NotificationStateUtils.filterLocallyDismissed(activeItems, dismissed)
+        assertEquals(listOf("k2"), filtered.map { it.item.key })
+
+        // Prune drops keys no longer active or overwritten by newer postTime
+        val pruned = NotificationStateUtils.pruneDismissedKeys(
+            dismissedKeyPostTimes = dismissed,
+            liveActiveKeysWithPostTime = mapOf("k1" to 1000L, "k2" to 2500L)
+        )
+        assertEquals(mapOf("k1" to 1000L), pruned)
+    }
 }

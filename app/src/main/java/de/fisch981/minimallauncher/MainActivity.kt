@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         viewModel.checkDefaultLauncher()
         viewModel.refreshMediaListener()
+        viewModel.refreshNotifications()
         viewModel.onReturnToLauncher(closeSettings = false)
     }
 

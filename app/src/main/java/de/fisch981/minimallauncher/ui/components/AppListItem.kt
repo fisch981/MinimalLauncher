@@ -75,7 +75,7 @@ fun AppListItem(
     modifier: Modifier = Modifier
 ) {
     val activeNotification = notifications.firstOrNull()
-    val canDismissNotifications = onDismissNotifications != null && notifications.any { it.isClearable }
+    val canDismissNotifications = onDismissNotifications != null && notifications.isNotEmpty()
     val view = LocalView.current
     val density = LocalDensity.current
     val popupSwipeThresholdPx = with(density) { 48.dp.toPx() }

@@ -782,6 +782,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun mediaNext() = mediaHelper.skipToNext()
     fun mediaPrevious() = mediaHelper.skipToPrevious()
     fun refreshMediaListener() = mediaHelper.startListening()
+    fun refreshNotifications() = LauncherNotificationService.syncOrRebind(getApplication())
 
     fun dismissNotificationsForApp(packageName: String) {
         LauncherNotificationService.dismissNotificationsForPackage(packageName)

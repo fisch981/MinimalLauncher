@@ -23,6 +23,9 @@ class LauncherNotificationService : NotificationListenerService() {
         @Volatile
         private var activeService: LauncherNotificationService? = null
 
+        private val locallyDismissedLock = Any()
+        private var locallyDismissedKeyPostTimes: Map<String, Long> = emptyMap()
+
         fun isPermissionGranted(context: Context): Boolean {
             val enabledListeners = Settings.Secure.getString(
                 context.contentResolver,
@@ -32,8 +35,52 @@ class LauncherNotificationService : NotificationListenerService() {
             return enabledListeners.contains(myComponent)
         }
 
+        fun syncOrRebind(context: Context) {
+            if (!isPermissionGranted(context)) {
+                synchronized(locallyDismissedLock) {
+                    locallyDismissedKeyPostTimes = emptyMap()
+                }
+                _notifications.value = emptyMap()
+                return
+            }
+
+            val service = activeService
+            if (service != null) {
+                service.refreshAllNotifications()
+            } else {
+                try {
+                    requestRebind(ComponentName(context, LauncherNotificationService::class.java))
+                } catch (_: Exception) {
+                    // System may restrict rebind if process or listener state is transitioning
+                }
+            }
+        }
+
         fun dismissNotificationsForPackage(packageName: String): Boolean {
-            return activeService?.cancelPackageNotifications(packageName) ?: false
+            val service = activeService
+            if (service != null) {
+                return service.cancelPackageNotifications(packageName)
+            }
+
+            val currentItems = _notifications.value[packageName].orEmpty()
+            if (currentItems.isEmpty()) return false
+
+            val dismissedUpdates = currentItems.associate { it.key to it.postTime }
+            synchronized(locallyDismissedLock) {
+                val merged = locallyDismissedKeyPostTimes.toMutableMap()
+                for ((key, postTime) in dismissedUpdates) {
+                    val existing = merged[key] ?: Long.MIN_VALUE
+                    if (postTime > existing) merged[key] = postTime
+                }
+                locallyDismissedKeyPostTimes = merged
+            }
+
+            _notifications.value = NotificationStateUtils.removeDismissedKeys(
+                current = _notifications.value,
+                packageName = packageName,
+                dismissedKeys = dismissedUpdates.keys
+            )
+            return true
         }
     }
 
@@ -72,37 +119,60 @@ class LauncherNotificationService : NotificationListenerService() {
 
     private fun cancelPackageNotifications(packageName: String): Boolean {
         val keysToCancel = linkedSetOf<String>()
+        val dismissedUpdates = linkedMapOf<String, Long>()
         try {
             val active = activeNotifications
             if (active != null) {
                 for (sbn in active) {
-                    if (
-                        sbn.packageName == packageName &&
-                        sbn.isClearable &&
-                        (sbn.notification.flags and Notification.FLAG_ONGOING_EVENT) == 0
-                    ) {
-                        keysToCancel.add(sbn.key)
+                    if (sbn.packageName == packageName) {
+                        val isOngoing = sbn.isOngoing || (sbn.notification.flags and Notification.FLAG_ONGOING_EVENT) != 0
+                        if (!isOngoing) {
+                            dismissedUpdates[sbn.key] = sbn.postTime
+                            if (sbn.isClearable) {
+                                keysToCancel.add(sbn.key)
+                            }
+                        }
                     }
                 }
             }
         } catch (_: Exception) {
-            // Fall back to tracked clearable notification keys below
+            // Fall back to tracked notification keys below
         }
 
         _notifications.value[packageName]
             .orEmpty()
-            .filter { it.isClearable }
-            .forEach { keysToCancel.add(it.key) }
+            .forEach { item ->
+                val prev = dismissedUpdates[item.key] ?: Long.MIN_VALUE
+                if (item.postTime > prev) {
+                    dismissedUpdates[item.key] = item.postTime
+                }
+                if (item.isClearable) {
+                    keysToCancel.add(item.key)
+                }
+            }
 
-        if (keysToCancel.isEmpty()) return false
+        if (dismissedUpdates.isEmpty() && keysToCancel.isEmpty()) return false
 
-        try {
-            cancelNotifications(keysToCancel.toTypedArray())
-        } catch (_: Exception) {
-            for (key in keysToCancel) {
-                try {
-                    cancelNotification(key)
-                } catch (_: Exception) {
+        if (dismissedUpdates.isNotEmpty()) {
+            synchronized(locallyDismissedLock) {
+                val merged = locallyDismissedKeyPostTimes.toMutableMap()
+                for ((key, postTime) in dismissedUpdates) {
+                    val existing = merged[key] ?: Long.MIN_VALUE
+                    if (postTime > existing) merged[key] = postTime
+                }
+                locallyDismissedKeyPostTimes = merged
+            }
+        }
+
+        if (keysToCancel.isNotEmpty()) {
+            try {
+                cancelNotifications(keysToCancel.toTypedArray())
+            } catch (_: Exception) {
+                for (key in keysToCancel) {
+                    try {
+                        cancelNotification(key)
+                    } catch (_: Exception) {
+                    }
                 }
             }
         }
@@ -110,7 +180,7 @@ class LauncherNotificationService : NotificationListenerService() {
         _notifications.value = NotificationStateUtils.removeDismissedKeys(
             current = _notifications.value,
             packageName = packageName,
-            dismissedKeys = keysToCancel
+            dismissedKeys = dismissedUpdates.keys
         )
         return true
     }
@@ -119,13 +189,32 @@ class LauncherNotificationService : NotificationListenerService() {
         try {
             val active = activeNotifications ?: return
             val map = mutableMapOf<String, MutableList<RankedNotification>>()
+            val liveActiveKeyPostTimes = mutableMapOf<String, Long>()
 
             for (sbn in active) {
-                // Ignore ongoing system notifications (like charging, persistent foreground service)
-                if ((sbn.notification.flags and Notification.FLAG_ONGOING_EVENT) != 0) continue
+                val flags = sbn.notification.flags
+                val isOngoing = sbn.isOngoing || (flags and Notification.FLAG_ONGOING_EVENT) != 0
+                val isNoClear = (flags and Notification.FLAG_NO_CLEAR) != 0
+                val extras = sbn.notification.extras
+                val hasMediaSession = extras?.containsKey(Notification.EXTRA_MEDIA_SESSION) == true
+                val template = extras?.getString(Notification.EXTRA_TEMPLATE)
+
+                if (
+                    !NotificationStateUtils.shouldTrackNotification(
+                        isOngoing = isOngoing,
+                        isClearable = sbn.isClearable,
+                        isNoClear = isNoClear,
+                        hasMediaSession = hasMediaSession,
+                        category = sbn.notification.category,
+                        template = template
+                    )
+                ) {
+                    continue
+                }
+
+                liveActiveKeyPostTimes[sbn.key] = sbn.postTime
 
                 val pkg = sbn.packageName ?: continue
-                val extras = sbn.notification.extras
                 val title = extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()
                 val text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()
                     ?: extras?.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()
@@ -140,13 +229,28 @@ class LauncherNotificationService : NotificationListenerService() {
                     postTime = sbn.postTime,
                     isClearable = sbn.isClearable
                 )
-                val isGroupSummary = (sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0
+                val isGroupSummary = (flags and Notification.FLAG_GROUP_SUMMARY) != 0
 
                 map.getOrPut(pkg) { mutableListOf() }.add(RankedNotification(item, isGroupSummary))
             }
-            _notifications.value = map.mapValues { (_, items) ->
-                NotificationStateUtils.sortPackageNotifications(items)
+
+            val dismissedSnapshot = synchronized(locallyDismissedLock) {
+                NotificationStateUtils.pruneDismissedKeys(
+                    dismissedKeyPostTimes = locallyDismissedKeyPostTimes,
+                    liveActiveKeysWithPostTime = liveActiveKeyPostTimes
+                ).also { pruned ->
+                    locallyDismissedKeyPostTimes = pruned
+                }
             }
+
+            val filtered = mutableMapOf<String, List<AppNotificationItem>>()
+            for ((pkg, items) in map) {
+                val visible = NotificationStateUtils.filterLocallyDismissed(items, dismissedSnapshot)
+                if (visible.isNotEmpty()) {
+                    filtered[pkg] = NotificationStateUtils.sortPackageNotifications(visible)
+                }
+            }
+            _notifications.value = filtered
         } catch (_: Exception) {
             // Service might not be ready yet
         }
