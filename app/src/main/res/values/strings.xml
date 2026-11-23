@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MinimalLauncher</string>
+    <string name="notification_service_label">MinimalLauncher Benachrichtigungen</string>
+</resources>
