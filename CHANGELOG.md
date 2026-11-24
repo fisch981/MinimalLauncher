@@ -6,6 +6,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.1] - 2026-11-24
+
+### Deutsch
+- **Einheitliche Header-Darstellung für Datum, Akku & Wecker:** Die Prozentanzeige des Akkus sowie die Trennpunkte (`•`) und Wecker-Uhrzeit im Header verwenden jetzt exakt dieselbe Schriftgröße und Helligkeit (`GrayLight`) wie das Datum, sodass nichts mehr blasser oder dünner wirkt.
+
+### English
+- **Consistent Header Styling for Date, Battery & Alarm:** Aligned battery percentage, separator dots (`•`), and next-alarm time in the header to the exact same font size and brightness (`GrayLight`) as the date so the battery indicator no longer appears dimmer or thinner.
+
+---
+
 ## [1.1.0] - 2026-11-24
 
 ### Deutsch

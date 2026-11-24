@@ -185,7 +185,6 @@ fun HeaderWidget(
     }
 
     val clampedDateSize = dateSizeSp.coerceIn(11, 24)
-    val secondaryTextSize = (clampedDateSize - 1).coerceIn(10, 23)
     val hasActiveAlarm = showNextAlarm && !nextAlarmText.isNullOrBlank()
     val hasAnyHeaderContent =
         showClock || showDate || showBattery || hasActiveAlarm || (showMedia && mediaState.hasActiveMedia)
@@ -248,10 +247,10 @@ fun HeaderWidget(
                         if (showBattery) {
                             Text(
                                 text = if (showDate) " • $batteryPercent%" else "$batteryPercent%",
-                                fontSize = secondaryTextSize.sp,
+                                fontSize = clampedDateSize.sp,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = fontFamily,
-                                color = GrayMedium
+                                color = GrayLight
                             )
                         }
                     }
@@ -261,10 +260,10 @@ fun HeaderWidget(
                     if (showDate || showBattery) {
                         Text(
                             text = " • ",
-                            fontSize = secondaryTextSize.sp,
+                            fontSize = clampedDateSize.sp,
                             fontWeight = FontWeight.Normal,
                             fontFamily = fontFamily,
-                            color = GrayMedium
+                            color = GrayLight
                         )
                     }
                     Row(
@@ -282,7 +281,7 @@ fun HeaderWidget(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = nextAlarmText.orEmpty(),
-                            fontSize = secondaryTextSize.sp,
+                            fontSize = clampedDateSize.sp,
                             fontWeight = FontWeight.Normal,
                             fontFamily = fontFamily,
                             color = GrayLight
