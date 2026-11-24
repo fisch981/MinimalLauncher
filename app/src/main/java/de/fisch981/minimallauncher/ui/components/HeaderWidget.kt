@@ -191,6 +191,7 @@ fun HeaderWidget(
                         text = mediaState.title ?: strings.unknownTitle,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
+                        fontFamily = fontFamily,
                         color = PureWhite,
                         maxLines = 1
                     )
@@ -199,6 +200,7 @@ fun HeaderWidget(
                             text = mediaState.artist,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Normal,
+                            fontFamily = fontFamily,
                             color = GrayMedium,
                             maxLines = 1
                         )

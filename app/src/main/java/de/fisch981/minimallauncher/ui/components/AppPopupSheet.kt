@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -77,7 +78,8 @@ fun AppPopupSheet(
     onLaunchShortcut: (ShortcutItem) -> Unit,
     onLaunchSubApp: (AppItem) -> Unit,
     onAddSubAppClick: () -> Unit,
-    onNotificationActionClick: (notificationKey: String, actionIndex: Int) -> Unit = { _, _ -> }
+    onNotificationActionClick: (notificationKey: String, actionIndex: Int) -> Unit = { _, _ -> },
+    fontFamily: FontFamily = FontFamily.SansSerif
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -123,11 +125,13 @@ fun AppPopupSheet(
                         text = app.label,
                         fontSize = 19.sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = fontFamily,
                         color = PureWhite
                     )
                     Text(
                         text = app.packageName,
                         fontSize = 11.sp,
+                        fontFamily = fontFamily,
                         color = GrayMedium
                     )
                 }
@@ -139,6 +143,7 @@ fun AppPopupSheet(
                     text = strings.folderSubAppsHeader,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily,
                     color = GrayMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -165,6 +170,7 @@ fun AppPopupSheet(
                         Text(
                             text = subApp.label,
                             fontSize = 15.sp,
+                            fontFamily = fontFamily,
                             color = PureWhite
                         )
                     }
@@ -178,6 +184,7 @@ fun AppPopupSheet(
                     text = strings.shortcutsHeader,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily,
                     color = GrayMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -211,6 +218,7 @@ fun AppPopupSheet(
                         Text(
                             text = shortcut.shortLabel,
                             fontSize = 15.sp,
+                            fontFamily = fontFamily,
                             color = PureWhite,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -226,6 +234,7 @@ fun AppPopupSheet(
                     text = strings.notificationsHeader,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily,
                     color = GrayMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -250,6 +259,7 @@ fun AppPopupSheet(
                                     text = notif.title,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
+                                    fontFamily = fontFamily,
                                     color = PureWhite
                                 )
                             }
@@ -257,6 +267,7 @@ fun AppPopupSheet(
                                 Text(
                                     text = notif.text,
                                     fontSize = 13.sp,
+                                    fontFamily = fontFamily,
                                     color = GrayLight
                                 )
                             }
@@ -271,6 +282,7 @@ fun AppPopupSheet(
                                             text = action.title,
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Medium,
+                                            fontFamily = fontFamily,
                                             color = GrayLight,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
@@ -298,6 +310,7 @@ fun AppPopupSheet(
             PopupActionItem(
                 icon = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
                 label = if (isFavorite) strings.removeFromFavorites else strings.addToFavorites,
+                fontFamily = fontFamily,
                 onClick = {
                     onToggleFavorite()
                     onDismiss()
@@ -307,6 +320,7 @@ fun AppPopupSheet(
             PopupActionItem(
                 icon = Icons.Default.Edit,
                 label = strings.renameAppAction,
+                fontFamily = fontFamily,
                 onClick = {
                     onRenameAppClick()
                     onDismiss()
@@ -316,6 +330,7 @@ fun AppPopupSheet(
             PopupActionItem(
                 icon = Icons.Default.Edit,
                 label = strings.changeIconAction,
+                fontFamily = fontFamily,
                 onClick = {
                     onEditIconClick()
                     onDismiss()
@@ -325,6 +340,7 @@ fun AppPopupSheet(
             PopupActionItem(
                 icon = Icons.Default.Refresh,
                 label = strings.restoreDefaultIconAction,
+                fontFamily = fontFamily,
                 onClick = {
                     onResetIconClick()
                     onDismiss()
@@ -334,6 +350,7 @@ fun AppPopupSheet(
             PopupActionItem(
                 icon = Icons.Default.Add,
                 label = strings.addSubAppToFolderAction,
+                fontFamily = fontFamily,
                 onClick = {
                     onAddSubAppClick()
                     onDismiss()
@@ -343,6 +360,7 @@ fun AppPopupSheet(
             PopupActionItem(
                 icon = Icons.Default.VisibilityOff,
                 label = strings.hideAppAction,
+                fontFamily = fontFamily,
                 onClick = {
                     onHideApp()
                     onDismiss()
@@ -352,6 +370,7 @@ fun AppPopupSheet(
             PopupActionItem(
                 icon = Icons.Default.Info,
                 label = strings.systemAppDetailsAction,
+                fontFamily = fontFamily,
                 onClick = {
                     try {
                         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -371,6 +390,7 @@ fun AppPopupSheet(
 private fun PopupActionItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
+    fontFamily: FontFamily = FontFamily.SansSerif,
     onClick: () -> Unit
 ) {
     Row(
@@ -390,6 +410,7 @@ private fun PopupActionItem(
         Text(
             text = label,
             fontSize = 15.sp,
+            fontFamily = fontFamily,
             color = PureWhite
         )
     }

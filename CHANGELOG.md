@@ -6,6 +6,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.39] - 2026-11-24
+
+### Deutsch
+- **Einheitliche Schriftart für Suche, Favoriten, Einstellungen & Dialoge:** Die gewählte App-Schriftart (z. B. *Dünn*, *Serif* oder *Monospace*) wird nun auch auf die Aktionen am Ende des App-Drawers (*Suche*, *Favoriten bearbeiten*, *Launcher-Einstellungen*), den *Suche*-Button auf dem Homescreen, das Such-Overlay (Eingabefeld & Ergebnisliste), die Favoriten-Auswahl sowie das App-Pop-up-Menü angewendet. Zudem übernimmt der Medienplayer im Header die gewählte Uhrzeit-/Datums-Schriftart.
+
+### English
+- **Consistent Font Family Across Search, Favorites, Settings Actions & Dialogs:** The selected app font family (e.g., *Thin*, *Serif*, or *Monospace*) is now also applied to the App Drawer footer actions (*Search*, *Edit favorites*, *Launcher settings*), the bottom Home Screen *Search* action, the Search Overlay input/placeholder/settings result, `FavoritesSelectionDialog`, and `AppPopupSheet`. The Header media player now also uses the Clock & Date font family.
+
+---
+
 ## [1.0.38] - 2026-11-24
 
 ### Deutsch

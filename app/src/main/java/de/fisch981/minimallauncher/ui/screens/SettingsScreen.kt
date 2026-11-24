@@ -253,7 +253,7 @@ fun SettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
-                        text = "MinimalLauncher v1.0.38",
+                        text = "MinimalLauncher v1.0.39",
                         color = GrayMedium,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(bottom = 32.dp)

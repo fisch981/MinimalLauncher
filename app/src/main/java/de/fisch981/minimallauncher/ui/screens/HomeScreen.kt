@@ -462,6 +462,7 @@ fun HomeScreen(
                             Text(
                                 text = strings.searchAppsButton,
                                 fontSize = 12.sp,
+                                fontFamily = appFontFamily,
                                 color = GrayMedium
                             )
                         }
@@ -553,16 +554,19 @@ fun HomeScreen(
                         ActionRowButton(
                             icon = Icons.Default.Search,
                             label = strings.searchAppsButton,
+                            fontFamily = appFontFamily,
                             onClick = { viewModel.setSearchOpen(true) }
                         )
                         ActionRowButton(
                             icon = Icons.Default.Star,
                             label = strings.editFavorites,
+                            fontFamily = appFontFamily,
                             onClick = { viewModel.setManageFavoritesOpen(true) }
                         )
                         ActionRowButton(
                             icon = Icons.Default.Settings,
                             label = strings.launcherSettings,
+                            fontFamily = appFontFamily,
                             onClick = { viewModel.setSettingsOpen(true) }
                         )
                     }
@@ -641,7 +645,8 @@ fun HomeScreen(
                 onLaunchShortcut = { viewModel.launchShortcut(it) },
                 onLaunchSubApp = { viewModel.launchApp(it) },
                 onAddSubAppClick = { viewModel.openFolderEditor(currentApp) },
-                onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) }
+                onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) },
+                fontFamily = appFontFamily
             )
         }
 
@@ -670,7 +675,8 @@ fun HomeScreen(
                 favoriteKeys = latestFolderApp.subApps.map { it.key }.toSet(),
                 onToggleFavorite = { child -> viewModel.toggleSubApp(latestFolderApp, child) },
                 onDismiss = { viewModel.closeFolderEditor() },
-                title = strings.folderForTitle(latestFolderApp.label)
+                title = strings.folderForTitle(latestFolderApp.label),
+                fontFamily = appFontFamily
             )
         }
 
@@ -690,7 +696,8 @@ fun HomeScreen(
                 allApps = uiState.allApps,
                 favoriteKeys = uiState.favoriteApps.map { it.key }.toSet(),
                 onToggleFavorite = { viewModel.toggleFavorite(it) },
-                onDismiss = { viewModel.setManageFavoritesOpen(false) }
+                onDismiss = { viewModel.setManageFavoritesOpen(false) },
+                fontFamily = appFontFamily
             )
         }
 
@@ -729,6 +736,7 @@ fun HomeScreen(
 private fun ActionRowButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
+    fontFamily: FontFamily = FontFamily.SansSerif,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -749,6 +757,7 @@ private fun ActionRowButton(
         Text(
             text = label,
             fontSize = 15.sp,
+            fontFamily = fontFamily,
             color = GrayLight
         )
     }

@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,7 +51,8 @@ fun FavoritesSelectionDialog(
     favoriteKeys: Set<String>,
     onToggleFavorite: (AppItem) -> Unit,
     onDismiss: () -> Unit,
-    title: String? = null
+    title: String? = null,
+    fontFamily: FontFamily = FontFamily.SansSerif
 ) {
     val strings = LocalAppStrings.current
     val resolvedTitle = title ?: strings.selectFavoritesTitle
@@ -78,11 +80,13 @@ fun FavoritesSelectionDialog(
                             text = resolvedTitle,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = fontFamily,
                             color = PureWhite
                         )
                         Text(
                             text = strings.appsSelectedSubtitle(favoriteKeys.size),
                             fontSize = 13.sp,
+                            fontFamily = fontFamily,
                             color = GrayMedium
                         )
                     }
@@ -122,6 +126,7 @@ fun FavoritesSelectionDialog(
                             Text(
                                 text = app.label,
                                 fontSize = 16.sp,
+                                fontFamily = fontFamily,
                                 color = PureWhite,
                                 modifier = Modifier.weight(1f)
                             )
@@ -149,7 +154,7 @@ fun FavoritesSelectionDialog(
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(strings.done, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(strings.done, fontWeight = FontWeight.Bold, fontFamily = fontFamily, fontSize = 15.sp)
                 }
             }
         }

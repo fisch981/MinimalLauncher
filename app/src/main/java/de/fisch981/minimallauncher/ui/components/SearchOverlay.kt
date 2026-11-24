@@ -110,7 +110,8 @@ fun SearchOverlay(
                     Text(
                         text = strings.searchAppsPlaceholder,
                         color = GrayMedium,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        fontFamily = appFontFamily
                     )
                 }
                 BasicTextField(
@@ -119,7 +120,8 @@ fun SearchOverlay(
                     singleLine = true,
                     textStyle = TextStyle(
                         color = PureWhite,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        fontFamily = appFontFamily
                     ),
                     cursorBrush = SolidColor(PureWhite),
                     modifier = Modifier
@@ -169,11 +171,13 @@ fun SearchOverlay(
                                 text = strings.settingsTitle,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
+                                fontFamily = appFontFamily,
                                 color = PureWhite
                             )
                             Text(
                                 text = strings.settingsSearchSubtitle,
                                 fontSize = 12.sp,
+                                fontFamily = appFontFamily,
                                 color = GrayMedium
                             )
                         }
