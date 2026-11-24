@@ -3,12 +3,16 @@ package de.fisch981.minimallauncher.ui.components
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -56,7 +61,7 @@ import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppPopupSheet(
     app: AppItem,
@@ -71,9 +76,11 @@ fun AppPopupSheet(
     onHideApp: () -> Unit,
     onLaunchShortcut: (ShortcutItem) -> Unit,
     onLaunchSubApp: (AppItem) -> Unit,
-    onAddSubAppClick: () -> Unit
+    onAddSubAppClick: () -> Unit,
+    onNotificationActionClick: (notificationKey: String, actionIndex: Int) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
     val strings = LocalAppStrings.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -252,6 +259,32 @@ fun AppPopupSheet(
                                     fontSize = 13.sp,
                                     color = GrayLight
                                 )
+                            }
+                            if (notif.actions.isNotEmpty()) {
+                                FlowRow(
+                                    modifier = Modifier.padding(top = 6.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    notif.actions.forEach { action ->
+                                        Text(
+                                            text = action.title,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = GrayLight,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier
+                                                .border(0.75.dp, BorderDark, RoundedCornerShape(4.dp))
+                                                .clickable {
+                                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                                    onNotificationActionClick(notif.key, action.index)
+                                                    onDismiss()
+                                                }
+                                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

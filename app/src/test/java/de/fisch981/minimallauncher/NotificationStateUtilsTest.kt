@@ -3,6 +3,7 @@ package de.fisch981.minimallauncher
 import de.fisch981.minimallauncher.data.model.AppNotificationItem
 import de.fisch981.minimallauncher.data.service.NotificationStateUtils
 import de.fisch981.minimallauncher.data.service.RankedNotification
+import de.fisch981.minimallauncher.data.service.RawNotificationAction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -291,5 +292,76 @@ class NotificationStateUtilsTest {
             liveActiveKeysWithPostTime = mapOf("k1" to 1000L, "k2" to 2500L)
         )
         assertEquals(mapOf("k1" to 1000L), pruned)
+    }
+
+    @Test
+    fun testFilterOneTapActionsExcludesRepliesAndPreservesOriginalIndices() {
+        val raw = listOf(
+            RawNotificationAction(
+                originalIndex = 0,
+                title = "Antworten",
+                hasIntent = true,
+                hasRemoteInput = true,
+                isReplySemanticAction = true
+            ),
+            RawNotificationAction(
+                originalIndex = 1,
+                title = " Als gelesen markieren ",
+                hasIntent = true,
+                hasRemoteInput = false,
+                isReplySemanticAction = false
+            ),
+            RawNotificationAction(
+                originalIndex = 2,
+                title = "als gelesen markieren",
+                hasIntent = true,
+                hasRemoteInput = false,
+                isReplySemanticAction = false
+            ),
+            RawNotificationAction(
+                originalIndex = 3,
+                title = "NoIntent",
+                hasIntent = false,
+                hasRemoteInput = false,
+                isReplySemanticAction = false
+            ),
+            RawNotificationAction(
+                originalIndex = 4,
+                title = "   ",
+                hasIntent = true,
+                hasRemoteInput = false,
+                isReplySemanticAction = false
+            ),
+            RawNotificationAction(
+                originalIndex = 5,
+                title = "Archivieren",
+                hasIntent = true,
+                hasRemoteInput = false,
+                isReplySemanticAction = false
+            ),
+            RawNotificationAction(
+                originalIndex = 6,
+                title = "Löschen",
+                hasIntent = true,
+                hasRemoteInput = false,
+                isReplySemanticAction = false
+            ),
+            RawNotificationAction(
+                originalIndex = 7,
+                title = "Extra",
+                hasIntent = true,
+                hasRemoteInput = false,
+                isReplySemanticAction = false
+            )
+        )
+
+        val filtered = NotificationStateUtils.filterOneTapActions(raw, maxCount = 3)
+        assertEquals(3, filtered.size)
+        assertEquals(1, filtered[0].index)
+        assertEquals("Als gelesen markieren", filtered[0].title)
+        assertEquals(5, filtered[1].index)
+        assertEquals("Archivieren", filtered[1].title)
+        assertEquals(6, filtered[2].index)
+        assertEquals("Löschen", filtered[2].title)
     }
 }

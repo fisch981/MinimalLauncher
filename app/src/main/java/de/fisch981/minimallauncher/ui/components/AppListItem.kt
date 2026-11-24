@@ -8,10 +8,15 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.Icon
@@ -46,7 +52,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.data.model.AppNotificationItem
+import de.fisch981.minimallauncher.ui.theme.BorderDark
 import de.fisch981.minimallauncher.ui.theme.DarkSurfaceVariant
+import de.fisch981.minimallauncher.ui.theme.GrayLight
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
 import de.fisch981.minimallauncher.ui.theme.GrayMuted
 import de.fisch981.minimallauncher.ui.theme.PureBlack
@@ -55,7 +63,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppListItem(
     app: AppItem,
@@ -72,6 +80,7 @@ fun AppListItem(
     hasRightWave: Boolean = true,
     onDismissNotifications: (() -> Unit)? = null,
     slideOutOnDismiss: Boolean = false,
+    onNotificationActionClick: ((notificationKey: String, actionIndex: Int) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val activeNotification = notifications.firstOrNull()
@@ -346,6 +355,34 @@ fun AppListItem(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                    }
+
+                    val inlineActions = activeNotification.actions.take(2)
+                    if (onNotificationActionClick != null && inlineActions.isNotEmpty()) {
+                        FlowRow(
+                            modifier = Modifier.padding(top = 5.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            inlineActions.forEach { action ->
+                                Text(
+                                    text = action.title,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = fontFamily,
+                                    color = GrayLight,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .border(0.75.dp, BorderDark, RoundedCornerShape(4.dp))
+                                        .clickable {
+                                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                            onNotificationActionClick(activeNotification.key, action.index)
+                                        }
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }

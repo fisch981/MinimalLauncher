@@ -89,6 +89,10 @@ class LauncherNotificationService : NotificationListenerService() {
         fun openNotificationForPackage(packageName: String): Boolean {
             return activeService?.launchPackageNotificationIntent(packageName) ?: false
         }
+
+        fun triggerNotificationAction(notificationKey: String, actionIndex: Int): Boolean {
+            return activeService?.executeNotificationAction(notificationKey, actionIndex) ?: false
+        }
     }
 
     override fun onListenerConnected() {
@@ -181,6 +185,35 @@ class LauncherNotificationService : NotificationListenerService() {
                 intent.send(this, 0, null, null, null, null, options)
             } else {
                 intent.send()
+            }
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun executeNotificationAction(notificationKey: String, actionIndex: Int): Boolean {
+        val actionIntent = try {
+            activeNotifications
+                ?.firstOrNull { it.key == notificationKey }
+                ?.notification
+                ?.actions
+                ?.getOrNull(actionIndex)
+                ?.actionIntent
+        } catch (_: Exception) {
+            null
+        } ?: return false
+
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val options = ActivityOptions.makeBasic()
+                    .setPendingIntentBackgroundActivityStartMode(
+                        ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                    )
+                    .toBundle()
+                actionIntent.send(this, 0, null, null, null, null, options)
+            } else {
+                actionIntent.send()
             }
             true
         } catch (_: Exception) {
@@ -295,13 +328,24 @@ class LauncherNotificationService : NotificationListenerService() {
                 if (title.isNullOrBlank() && text.isNullOrBlank()) continue
 
                 val flags = sbn.notification.flags
+                val rawActions = sbn.notification.actions.orEmpty().mapIndexed { idx, action ->
+                    RawNotificationAction(
+                        originalIndex = idx,
+                        title = action.title?.toString(),
+                        hasIntent = action.actionIntent != null,
+                        hasRemoteInput = !action.remoteInputs.isNullOrEmpty(),
+                        isReplySemanticAction = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+                            action.semanticAction == Notification.Action.SEMANTIC_ACTION_REPLY
+                    )
+                }
                 val item = AppNotificationItem(
                     key = sbn.key,
                     packageName = pkg,
                     title = title,
                     text = text,
                     postTime = sbn.postTime,
-                    isClearable = sbn.isClearable
+                    isClearable = sbn.isClearable,
+                    actions = NotificationStateUtils.filterOneTapActions(rawActions, maxCount = 3)
                 )
                 val isGroupSummary = (flags and Notification.FLAG_GROUP_SUMMARY) != 0
 

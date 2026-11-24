@@ -834,6 +834,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         LauncherNotificationService.dismissNotificationsForPackage(packageName)
     }
 
+    fun triggerNotificationAction(notificationKey: String, actionIndex: Int) {
+        LauncherNotificationService.triggerNotificationAction(notificationKey, actionIndex)
+    }
+
     fun openActiveMediaApp() {
         val pkg = mediaState.value.packageName ?: return
         val matchedApp = launcherState.value.allApps.firstOrNull { it.packageName == pkg }

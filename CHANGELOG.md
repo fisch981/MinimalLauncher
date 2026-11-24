@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.36] - 2026-11-24
+
+### Deutsch
+- **Direkte Benachrichtigungs-Aktionen (z. B. *„Weckruf löschen“*):** Echte One-Tap-Aktionen aktiver Benachrichtigungen (wie *„Weckruf löschen“*, *„Als gelesen markieren“*, *„Löschen“* oder *„Archivieren“*) werden nun als dezente monochrome Text-Chips direkt unter der Benachrichtigungsvorschau (sowie im App-Pop-up-Menü) angezeigt.
+- **Saubere Trennung von Wischgeste & Aktion:** Durch Tippen auf einen Aktions-Chip wird das System-`PendingIntent` der jeweiligen App ausgeführt (so wird ein Wecker für diesen Tag wirklich deaktiviert); Wischen nach links oder rechts verwirft weiterhin nur das Benachrichtigungsbanner. Antwort-Aktionen (`RemoteInput`) werden bewusst ausgefiltert.
+
+### English
+- **Inline One-Tap Notification Actions (e.g., *“Dismiss alarm”*):** Non-reply Android notification actions (such as Clock’s *“Dismiss alarm”*, *“Mark as read”*, *“Delete”*, or *“Archive”*) are now shown as subtle monochrome hairline chips directly underneath notification previews (and inside the app pop-up sheet).
+- **Clear Separation from Swipe Dismiss:** Tapping an action chip invokes the app’s actual action `PendingIntent` (so an upcoming alarm is genuinely skipped/dismissed), while swiping left or right continues to dismiss only the notification banner. Inline reply actions (`RemoteInput`) are excluded.
+
+---
+
 ## [1.0.35] - 2026-11-24
 
 ### Deutsch

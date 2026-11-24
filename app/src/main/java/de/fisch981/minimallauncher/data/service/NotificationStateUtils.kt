@@ -1,10 +1,19 @@
 package de.fisch981.minimallauncher.data.service
 
 import de.fisch981.minimallauncher.data.model.AppNotificationItem
+import de.fisch981.minimallauncher.data.model.NotificationActionItem
 
 internal data class RankedNotification(
     val item: AppNotificationItem,
     val isGroupSummary: Boolean
+)
+
+internal data class RawNotificationAction(
+    val originalIndex: Int,
+    val title: String?,
+    val hasIntent: Boolean,
+    val hasRemoteInput: Boolean,
+    val isReplySemanticAction: Boolean
 )
 
 internal object NotificationStateUtils {
@@ -82,6 +91,28 @@ internal object NotificationStateUtils {
             val livePostTime = liveActiveKeysWithPostTime[key] ?: return@filter false
             livePostTime <= dismissedPostTime
         }
+    }
+
+    /**
+     * Filters Android notification actions down to one-tap non-reply actions, preserving each
+     * action's original index in Notification.actions for reliable execution.
+     */
+    fun filterOneTapActions(
+        actions: List<RawNotificationAction>,
+        maxCount: Int = 3
+    ): List<NotificationActionItem> {
+        if (actions.isEmpty() || maxCount <= 0) return emptyList()
+        val seenTitles = HashSet<String>()
+        val result = mutableListOf<NotificationActionItem>()
+        for (raw in actions) {
+            if (!raw.hasIntent || raw.hasRemoteInput || raw.isReplySemanticAction) continue
+            val cleanTitle = raw.title?.trim() ?: continue
+            if (cleanTitle.isEmpty()) continue
+            if (!seenTitles.add(cleanTitle.lowercase())) continue
+            result.add(NotificationActionItem(index = raw.originalIndex, title = cleanTitle))
+            if (result.size >= maxCount) break
+        }
+        return result
     }
 
     /**

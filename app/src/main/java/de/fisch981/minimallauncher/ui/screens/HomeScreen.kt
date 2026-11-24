@@ -364,6 +364,7 @@ fun HomeScreen(
                                 hasRightWave = hasRightWave,
                                 onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) },
                                 slideOutOnDismiss = true,
+                                onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) },
                                 modifier = Modifier.animateItem()
                             )
                         }
@@ -400,7 +401,8 @@ fun HomeScreen(
                             verticalPaddingDp = appRowSpacingDp,
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave,
-                            onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) }
+                            onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) },
+                            onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) }
                         )
                     }
 
@@ -417,6 +419,7 @@ fun HomeScreen(
                                 },
                                 onLongClickApp = { viewModel.openPopup(it) },
                                 onDismissNotifications = { viewModel.dismissNotificationsForApp(it.packageName) },
+                                onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) },
                                 showIcon = showAppIcons,
                                 showNotificationPreview = showNotificationPreview,
                                 appFontFamily = appFontFamily,
@@ -525,7 +528,8 @@ fun HomeScreen(
                             verticalPaddingDp = appRowSpacingDp,
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave,
-                            onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) }
+                            onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) },
+                            onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) }
                         )
                     }
                 }
@@ -634,7 +638,8 @@ fun HomeScreen(
                 onHideApp = { viewModel.hideApp(currentApp) },
                 onLaunchShortcut = { viewModel.launchShortcut(it) },
                 onLaunchSubApp = { viewModel.launchApp(it) },
-                onAddSubAppClick = { viewModel.openFolderEditor(currentApp) }
+                onAddSubAppClick = { viewModel.openFolderEditor(currentApp) },
+                onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) }
             )
         }
 
@@ -756,6 +761,7 @@ private fun RecentAppsEntry(
     onLaunchApp: (AppItem) -> Unit,
     onLongClickApp: (AppItem) -> Unit,
     onDismissNotifications: (AppItem) -> Unit = {},
+    onNotificationActionClick: (String, Int) -> Unit = { _, _ -> },
     showIcon: Boolean,
     showNotificationPreview: Boolean,
     appFontFamily: FontFamily,
@@ -819,7 +825,8 @@ private fun RecentAppsEntry(
                     verticalPaddingDp = appRowSpacingDp,
                     hasLeftWave = hasLeftWave,
                     hasRightWave = hasRightWave,
-                    onDismissNotifications = { onDismissNotifications(recentApp) }
+                    onDismissNotifications = { onDismissNotifications(recentApp) },
+                    onNotificationActionClick = onNotificationActionClick
                 )
             }
         }
