@@ -8,6 +8,10 @@ internal data class RankedNotification(
 )
 
 internal object NotificationStateUtils {
+    private val SYSTEM_NOISE_CATEGORIES = setOf("service", "sys", "status")
+    private val USER_ACTIONABLE_ONGOING_CATEGORIES = setOf("alarm", "reminder", "event", "call")
+    private val SYSTEM_NOISE_PACKAGES = setOf("android", "com.android.systemui")
+
     /**
      * Returns true when a notification represents an active or resumable media playback control,
      * which Android may keep in activeNotifications even after the user swipes it away.
@@ -23,18 +27,31 @@ internal object NotificationStateUtils {
     }
 
     /**
-     * Only tracks user-dismissible, non-ongoing, non-media notifications in the launcher list.
+     * Tracks normal clearable notifications as well as user-actionable or Android 14+ dismissible
+     * non-FGS ongoing app notifications (such as upcoming alarms), while excluding media controls,
+     * foreground services, low-importance ambient items, and system UI chrome.
      */
     fun shouldTrackNotification(
+        packageName: String,
         isOngoing: Boolean,
+        isForegroundService: Boolean,
         isClearable: Boolean,
         isNoClear: Boolean,
         hasMediaSession: Boolean,
         category: String?,
-        template: String?
+        template: String?,
+        isLowImportance: Boolean,
+        allowDismissibleOngoing: Boolean
     ): Boolean {
-        if (isOngoing || !isClearable || isNoClear) return false
-        return !isMediaNotification(hasMediaSession, category, template)
+        if (isMediaNotification(hasMediaSession, category, template)) return false
+        if (isForegroundService) return false
+        if (!isOngoing && isClearable && !isNoClear) return true
+        if (isLowImportance) return false
+        if (packageName in SYSTEM_NOISE_PACKAGES) return false
+        val normalizedCategory = category?.lowercase()
+        if (normalizedCategory in SYSTEM_NOISE_CATEGORIES) return false
+        if (normalizedCategory in USER_ACTIONABLE_ONGOING_CATEGORIES) return true
+        return allowDismissibleOngoing && isOngoing && !isNoClear
     }
 
     /**

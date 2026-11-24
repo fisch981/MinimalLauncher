@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.34] - 2026-11-24
+
+### Deutsch
+- **Anstehende Wecker & verwerfbare laufende Benachrichtigungen unterstützt:** Benachrichtigungen wie *„Uhr – Anstehender Weckruf“* (`CATEGORY_ALARM`) sowie ab Android 14 vom Nutzer wegwischbare App-Benachrichtigungen ohne `FLAG_FOREGROUND_SERVICE` / `FLAG_NO_CLEAR` erscheinen nun in der Launcher-Benachrichtigungsliste und werden beim Wischen nach links oder rechts direkt in der Systemleiste gelöscht.
+- **Geister-Filter bleibt streng:** Mediensteuerungen (`MediaStyle` / `EXTRA_MEDIA_SESSION`), laufende Vordergrunddienste (VPN, Sync usw.), niedrig priorisierte Stumm-Meldungen und reine System-Hinweise werden weiterhin herausgefiltert.
+
+### English
+- **Upcoming Alarms & Android 14+ Dismissible Ongoing Notifications Supported:** Actionable ongoing app notifications such as Clock’s *“Upcoming alarm”* (`CATEGORY_ALARM`) and Android 14+ user-dismissible ongoing app notifications (without `FLAG_FOREGROUND_SERVICE` or `FLAG_NO_CLEAR`) now show up in MinimalLauncher and can be swiped left or right to dismiss them from the system shade.
+- **Strict Ghost Filtering Preserved:** Media playback resumption controls (`MediaStyle` / `EXTRA_MEDIA_SESSION`), persistent foreground services, `IMPORTANCE_MIN` items, and Android/SystemUI ongoing chrome remain excluded.
+
+---
+
 ## [1.0.33] - 2026-11-23
 
 ### Deutsch

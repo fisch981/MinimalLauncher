@@ -1,8 +1,10 @@
 package de.fisch981.minimallauncher.data.service
 
 import android.app.Notification
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
+import android.os.Build
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -117,20 +119,64 @@ class LauncherNotificationService : NotificationListenerService() {
         refreshAllNotifications()
     }
 
+    private fun isLowImportance(
+        rankingMap: RankingMap?,
+        ranking: Ranking,
+        key: String
+    ): Boolean {
+        if (rankingMap == null || !rankingMap.getRanking(key, ranking)) return false
+        return ranking.importance <= NotificationManager.IMPORTANCE_MIN
+    }
+
+    private fun isTrackableSbn(
+        sbn: StatusBarNotification,
+        rankingMap: RankingMap?,
+        ranking: Ranking,
+        allowDismissibleOngoing: Boolean
+    ): Boolean {
+        val flags = sbn.notification.flags
+        val extras = sbn.notification.extras
+        return NotificationStateUtils.shouldTrackNotification(
+            packageName = sbn.packageName ?: "",
+            isOngoing = sbn.isOngoing || (flags and Notification.FLAG_ONGOING_EVENT) != 0,
+            isForegroundService = (flags and Notification.FLAG_FOREGROUND_SERVICE) != 0,
+            isClearable = sbn.isClearable,
+            isNoClear = (flags and Notification.FLAG_NO_CLEAR) != 0,
+            hasMediaSession = extras?.containsKey(Notification.EXTRA_MEDIA_SESSION) == true,
+            category = sbn.notification.category,
+            template = extras?.getString(Notification.EXTRA_TEMPLATE),
+            isLowImportance = isLowImportance(rankingMap, ranking, sbn.key),
+            allowDismissibleOngoing = allowDismissibleOngoing
+        )
+    }
+
     private fun cancelPackageNotifications(packageName: String): Boolean {
         val keysToCancel = linkedSetOf<String>()
         val dismissedUpdates = linkedMapOf<String, Long>()
+        val rankingMap = try { currentRanking } catch (_: Exception) { null }
+        val ranking = Ranking()
+        val allowDismissibleOngoing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+
         try {
             val active = activeNotifications
             if (active != null) {
                 for (sbn in active) {
                     if (sbn.packageName == packageName) {
-                        val isOngoing = sbn.isOngoing || (sbn.notification.flags and Notification.FLAG_ONGOING_EVENT) != 0
-                        if (!isOngoing) {
+                        val flags = sbn.notification.flags
+                        val isOngoing = sbn.isOngoing || (flags and Notification.FLAG_ONGOING_EVENT) != 0
+                        val isForegroundService = (flags and Notification.FLAG_FOREGROUND_SERVICE) != 0
+                        val extras = sbn.notification.extras
+                        val isMedia = NotificationStateUtils.isMediaNotification(
+                            hasMediaSession = extras?.containsKey(Notification.EXTRA_MEDIA_SESSION) == true,
+                            category = sbn.notification.category,
+                            template = extras?.getString(Notification.EXTRA_TEMPLATE)
+                        )
+                        val isTracked = isTrackableSbn(sbn, rankingMap, ranking, allowDismissibleOngoing)
+                        val isClearableNonMedia = sbn.isClearable && !isOngoing && !isForegroundService && !isMedia
+
+                        if (isTracked || isClearableNonMedia) {
                             dismissedUpdates[sbn.key] = sbn.postTime
-                            if (sbn.isClearable) {
-                                keysToCancel.add(sbn.key)
-                            }
+                            keysToCancel.add(sbn.key)
                         }
                     }
                 }
@@ -146,9 +192,7 @@ class LauncherNotificationService : NotificationListenerService() {
                 if (item.postTime > prev) {
                     dismissedUpdates[item.key] = item.postTime
                 }
-                if (item.isClearable) {
-                    keysToCancel.add(item.key)
-                }
+                keysToCancel.add(item.key)
             }
 
         if (dismissedUpdates.isEmpty() && keysToCancel.isEmpty()) return false
@@ -190,37 +234,29 @@ class LauncherNotificationService : NotificationListenerService() {
             val active = activeNotifications ?: return
             val map = mutableMapOf<String, MutableList<RankedNotification>>()
             val liveActiveKeyPostTimes = mutableMapOf<String, Long>()
+            val rankingMap = try { currentRanking } catch (_: Exception) { null }
+            val ranking = Ranking()
+            val allowDismissibleOngoing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 
             for (sbn in active) {
-                val flags = sbn.notification.flags
-                val isOngoing = sbn.isOngoing || (flags and Notification.FLAG_ONGOING_EVENT) != 0
-                val isNoClear = (flags and Notification.FLAG_NO_CLEAR) != 0
-                val extras = sbn.notification.extras
-                val hasMediaSession = extras?.containsKey(Notification.EXTRA_MEDIA_SESSION) == true
-                val template = extras?.getString(Notification.EXTRA_TEMPLATE)
-
-                if (
-                    !NotificationStateUtils.shouldTrackNotification(
-                        isOngoing = isOngoing,
-                        isClearable = sbn.isClearable,
-                        isNoClear = isNoClear,
-                        hasMediaSession = hasMediaSession,
-                        category = sbn.notification.category,
-                        template = template
-                    )
-                ) {
+                if (!isTrackableSbn(sbn, rankingMap, ranking, allowDismissibleOngoing)) {
                     continue
                 }
 
                 liveActiveKeyPostTimes[sbn.key] = sbn.postTime
 
                 val pkg = sbn.packageName ?: continue
+                val extras = sbn.notification.extras
                 val title = extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()
+                    ?: extras?.getCharSequence(Notification.EXTRA_TITLE_BIG)?.toString()
                 val text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()
                     ?: extras?.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()
+                    ?: extras?.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString()
+                    ?: extras?.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString()
 
                 if (title.isNullOrBlank() && text.isNullOrBlank()) continue
 
+                val flags = sbn.notification.flags
                 val item = AppNotificationItem(
                     key = sbn.key,
                     packageName = pkg,

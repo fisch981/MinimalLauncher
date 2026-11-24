@@ -62,64 +62,197 @@ class NotificationStateUtilsTest {
 
     @Test
     fun testShouldTrackNotificationFiltersMediaAndNonClearable() {
+        // Standard clearable notification
         assertTrue(
             NotificationStateUtils.shouldTrackNotification(
+                packageName = "com.chat",
                 isOngoing = false,
+                isForegroundService = false,
                 isClearable = true,
                 isNoClear = false,
                 hasMediaSession = false,
                 category = "msg",
-                template = null
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = true
             )
         )
-        assertFalse(
+
+        // Upcoming alarm (Clock posts CATEGORY_ALARM with FLAG_ONGOING_EVENT -> isClearable = false)
+        assertTrue(
             NotificationStateUtils.shouldTrackNotification(
-                isOngoing = false,
+                packageName = "com.google.android.deskclock",
+                isOngoing = true,
+                isForegroundService = false,
+                isClearable = false,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = "alarm",
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = true
+            )
+        )
+        assertTrue(
+            NotificationStateUtils.shouldTrackNotification(
+                packageName = "com.google.android.deskclock",
+                isOngoing = true,
+                isForegroundService = false,
+                isClearable = false,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = "alarm",
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = false
+            )
+        )
+
+        // Android 14+ non-FGS ongoing app notification without special category
+        assertTrue(
+            NotificationStateUtils.shouldTrackNotification(
+                packageName = "com.example.timer",
+                isOngoing = true,
+                isForegroundService = false,
                 isClearable = false,
                 isNoClear = false,
                 hasMediaSession = false,
                 category = null,
-                template = null
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = true
             )
         )
         assertFalse(
             NotificationStateUtils.shouldTrackNotification(
-                isOngoing = false,
-                isClearable = true,
-                isNoClear = true,
+                packageName = "com.example.timer",
+                isOngoing = true,
+                isForegroundService = false,
+                isClearable = false,
+                isNoClear = false,
                 hasMediaSession = false,
                 category = null,
-                template = null
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = false
             )
         )
+
+        // Persistent foreground service stays filtered out even with category or API 34+
         assertFalse(
             NotificationStateUtils.shouldTrackNotification(
+                packageName = "com.example.vpn",
+                isOngoing = true,
+                isForegroundService = true,
+                isClearable = false,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = "alarm",
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = true
+            )
+        )
+
+        // Media notifications (Pocket Casts, Spotify, etc.) stay excluded
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                packageName = "au.com.shiftyjelly.pocketcasts",
                 isOngoing = false,
+                isForegroundService = false,
                 isClearable = true,
                 isNoClear = false,
                 hasMediaSession = true,
                 category = null,
-                template = null
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = true
             )
         )
         assertFalse(
             NotificationStateUtils.shouldTrackNotification(
+                packageName = "au.com.shiftyjelly.pocketcasts",
                 isOngoing = false,
+                isForegroundService = false,
                 isClearable = true,
                 isNoClear = false,
                 hasMediaSession = false,
                 category = "transport",
-                template = null
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = true
             )
         )
         assertFalse(
             NotificationStateUtils.shouldTrackNotification(
+                packageName = "au.com.shiftyjelly.pocketcasts",
                 isOngoing = false,
+                isForegroundService = false,
                 isClearable = true,
                 isNoClear = false,
                 hasMediaSession = false,
                 category = null,
-                template = "android.app.Notification\$MediaStyle"
+                template = "android.app.Notification\$MediaStyle",
+                isLowImportance = false,
+                allowDismissibleOngoing = true
+            )
+        )
+
+        // System UI ongoing / service / low-importance chrome stays excluded
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                packageName = "android",
+                isOngoing = true,
+                isForegroundService = false,
+                isClearable = false,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = null,
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = true
+            )
+        )
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                packageName = "com.android.systemui",
+                isOngoing = true,
+                isForegroundService = false,
+                isClearable = false,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = null,
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = true
+            )
+        )
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                packageName = "com.example.bg",
+                isOngoing = true,
+                isForegroundService = false,
+                isClearable = false,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = "service",
+                template = null,
+                isLowImportance = false,
+                allowDismissibleOngoing = true
+            )
+        )
+        assertFalse(
+            NotificationStateUtils.shouldTrackNotification(
+                packageName = "com.example.ambient",
+                isOngoing = true,
+                isForegroundService = false,
+                isClearable = false,
+                isNoClear = false,
+                hasMediaSession = false,
+                category = "alarm",
+                template = null,
+                isLowImportance = true,
+                allowDismissibleOngoing = true
             )
         )
     }
