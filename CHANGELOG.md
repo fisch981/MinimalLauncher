@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.37] - 2026-11-24
+
+### Deutsch
+- **Kein App-Menü mehr beim Wischen:** Horizontales Wischen über App-Einträge öffnet den Eigenschaften-Dialog nicht mehr – dieser wird ab sofort ausschließlich durch Gedrückthalten geöffnet. (Bei Einträgen mit aktiver Benachrichtigung verwirft das Wischen weiterhin nur die Benachrichtigung.)
+- **Einstellbare Haltezeit:** In den *Launcher-Einstellungen → Homescreen & Apps* lässt sich nun per Schieberegler festlegen, wie lange ein App-Eintrag gedrückt gehalten werden muss (`250 ms` bis `2000 ms`, Standard `500 ms`; inklusive Sicherung im `.json`-Backup).
+
+### English
+- **No App Menu on Horizontal Swipe:** Swiping across app entries never opens the properties pop-up menu anymore — it now opens strictly on long-press. (Swiping left or right on entries with active notifications continues to dismiss the notification banner only.)
+- **Configurable Long-Press Duration:** Added a hold-duration slider (`250 ms` to `2000 ms`, default `500 ms`) under *Launcher Settings → Home Screen & Apps*, persisted in DataStore and included in `.json` backups.
+
+---
+
 ## [1.0.36] - 2026-11-24
 
 ### Deutsch

@@ -33,6 +33,7 @@ class LauncherBackupCodecTest {
             appRowSpacingDp = 12,
             dateSizeSp = 13,
             waveFontSizeSp = 12,
+            appLongPressDelayMs = 850,
             showClock = false,
             clockSizeSp = 68,
             showDate = false,
@@ -80,6 +81,7 @@ class LauncherBackupCodecTest {
         assertEquals(12, decoded.appRowSpacingDp)
         assertEquals(13, decoded.dateSizeSp)
         assertEquals(12, decoded.waveFontSizeSp)
+        assertEquals(850, decoded.appLongPressDelayMs)
         assertFalse(decoded.showClock)
         assertEquals(68, decoded.clockSizeSp)
         assertFalse(decoded.showDate)

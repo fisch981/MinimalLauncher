@@ -116,6 +116,7 @@ fun HomeScreen(
     val appRowSpacingDp by viewModel.appRowSpacingDp.collectAsState()
     val dateSizeSp by viewModel.dateSizeSp.collectAsState()
     val waveFontSizeSp by viewModel.waveFontSizeSp.collectAsState()
+    val appLongPressDelayMs by viewModel.appLongPressDelayMs.collectAsState()
 
     val appFontFamily = remember(appFont) { appFont.toFontFamily() }
     val clockDateFontFamily = remember(clockDateFont) { clockDateFont.toFontFamily() }
@@ -354,7 +355,6 @@ fun HomeScreen(
                                 notifications = notifications[app.packageName] ?: emptyList(),
                                 onClick = { viewModel.launchApp(app) },
                                 onLongClick = { viewModel.openPopup(app) },
-                                onSwipeRight = { viewModel.openPopup(app) },
                                 showIcon = showAppIcons,
                                 showNotificationPreview = showNotificationPreview,
                                 fontFamily = appFontFamily,
@@ -365,6 +365,7 @@ fun HomeScreen(
                                 onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) },
                                 slideOutOnDismiss = true,
                                 onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) },
+                                longPressDelayMs = appLongPressDelayMs,
                                 modifier = Modifier.animateItem()
                             )
                         }
@@ -393,7 +394,6 @@ fun HomeScreen(
                             notifications = notifications[app.packageName] ?: emptyList(),
                             onClick = { viewModel.launchApp(app) },
                             onLongClick = { viewModel.openPopup(app) },
-                            onSwipeRight = { viewModel.openPopup(app) },
                             showIcon = showAppIcons,
                             showNotificationPreview = showNotificationPreview,
                             fontFamily = appFontFamily,
@@ -402,7 +402,8 @@ fun HomeScreen(
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave,
                             onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) },
-                            onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) }
+                            onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) },
+                            longPressDelayMs = appLongPressDelayMs
                         )
                     }
 
@@ -425,6 +426,7 @@ fun HomeScreen(
                                 appFontFamily = appFontFamily,
                                 appFontSizeSp = appFontSizeSp,
                                 appRowSpacingDp = appRowSpacingDp,
+                                appLongPressDelayMs = appLongPressDelayMs,
                                 hasLeftWave = hasLeftWave,
                                 hasRightWave = hasRightWave
                             )
@@ -520,7 +522,6 @@ fun HomeScreen(
                             notifications = notifications[app.packageName] ?: emptyList(),
                             onClick = { viewModel.launchApp(app) },
                             onLongClick = { viewModel.openPopup(app) },
-                            onSwipeRight = { viewModel.openPopup(app) },
                             showIcon = showAppIcons,
                             showNotificationPreview = showNotificationPreview,
                             fontFamily = appFontFamily,
@@ -529,7 +530,8 @@ fun HomeScreen(
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave,
                             onDismissNotifications = { viewModel.dismissNotificationsForApp(app.packageName) },
-                            onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) }
+                            onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) },
+                            longPressDelayMs = appLongPressDelayMs
                         )
                     }
                 }
@@ -767,6 +769,7 @@ private fun RecentAppsEntry(
     appFontFamily: FontFamily,
     appFontSizeSp: Int,
     appRowSpacingDp: Int,
+    appLongPressDelayMs: Int = 500,
     hasLeftWave: Boolean,
     hasRightWave: Boolean,
     modifier: Modifier = Modifier
@@ -817,7 +820,6 @@ private fun RecentAppsEntry(
                     notifications = notifications[recentApp.packageName] ?: emptyList(),
                     onClick = { onLaunchApp(recentApp) },
                     onLongClick = { onLongClickApp(recentApp) },
-                    onSwipeRight = { onLongClickApp(recentApp) },
                     showIcon = showIcon,
                     showNotificationPreview = showNotificationPreview,
                     fontFamily = appFontFamily,
@@ -826,7 +828,8 @@ private fun RecentAppsEntry(
                     hasLeftWave = hasLeftWave,
                     hasRightWave = hasRightWave,
                     onDismissNotifications = { onDismissNotifications(recentApp) },
-                    onNotificationActionClick = onNotificationActionClick
+                    onNotificationActionClick = onNotificationActionClick,
+                    longPressDelayMs = appLongPressDelayMs
                 )
             }
         }

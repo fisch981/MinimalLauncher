@@ -95,6 +95,7 @@ fun SettingsScreen(
     val showBattery by viewModel.showBattery.collectAsState()
     val showMedia by viewModel.showMedia.collectAsState()
     val showRecentApps by viewModel.showRecentApps.collectAsState()
+    val appLongPressDelayMs by viewModel.appLongPressDelayMs.collectAsState()
     val showAppIcons by viewModel.showAppIcons.collectAsState()
     val hideStatusBar by viewModel.hideStatusBar.collectAsState()
     val showBottomActions by viewModel.showBottomActions.collectAsState()
@@ -299,6 +300,53 @@ fun SettingsScreen(
                     },
                     onClick = { viewModel.setHiddenAppsOpen(true) }
                 )
+
+                // Long-press duration for app properties dialog (ms)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            strings.appLongPressDelayTitle,
+                            color = PureWhite,
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "${appLongPressDelayMs} ms",
+                            color = PureWhite,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        strings.appLongPressDelaySubtitle,
+                        color = GrayMedium,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Slider(
+                        value = appLongPressDelayMs.toFloat(),
+                        onValueChange = { raw ->
+                            val snapped = ((raw / 50f).roundToInt() * 50).coerceIn(250, 2000)
+                            viewModel.setAppLongPressDelayMs(snapped)
+                        },
+                        valueRange = 250f..2000f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = PureWhite,
+                            activeTrackColor = PureWhite,
+                            inactiveTrackColor = DarkSurfaceVariant
+                        )
+                    )
+                }
             }
 
             // 3. Header & Notifications
@@ -604,7 +652,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "MinimalLauncher v1.0.36",
+                    text = "MinimalLauncher v1.0.37",
                     color = GrayMedium,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 32.dp)

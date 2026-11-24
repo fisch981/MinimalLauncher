@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,7 +73,6 @@ fun AppListItem(
     notifications: List<AppNotificationItem>,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    onSwipeRight: () -> Unit = onLongClick,
     showIcon: Boolean = true,
     showNotificationPreview: Boolean = true,
     fontFamily: FontFamily = FontFamily.SansSerif,
@@ -81,15 +83,22 @@ fun AppListItem(
     onDismissNotifications: (() -> Unit)? = null,
     slideOutOnDismiss: Boolean = false,
     onNotificationActionClick: ((notificationKey: String, actionIndex: Int) -> Unit)? = null,
+    longPressDelayMs: Int = 500,
     modifier: Modifier = Modifier
 ) {
     val activeNotification = notifications.firstOrNull()
     val canDismissNotifications = onDismissNotifications != null && notifications.isNotEmpty()
     val view = LocalView.current
     val density = LocalDensity.current
-    val popupSwipeThresholdPx = with(density) { 48.dp.toPx() }
+    val baseViewConfiguration = LocalViewConfiguration.current
+    val effectiveLongPressMs = longPressDelayMs.coerceIn(250, 2000).toLong()
+    val customViewConfiguration = remember(baseViewConfiguration, effectiveLongPressMs) {
+        object : ViewConfiguration by baseViewConfiguration {
+            override val longPressTimeoutMillis: Long
+                get() = effectiveLongPressMs
+        }
+    }
     val dismissThresholdPx = with(density) { 88.dp.toPx() }
-    val currentOnSwipeRight by rememberUpdatedState(onSwipeRight)
     val currentOnDismissNotifications by rememberUpdatedState(onDismissNotifications)
     val currentCanDismissNotifications by rememberUpdatedState(canDismissNotifications)
     val currentSlideOutOnDismiss by rememberUpdatedState(slideOutOnDismiss)
@@ -132,6 +141,108 @@ fun AppListItem(
             }
         }
 
+        val dragModifier = if (canDismissNotifications) {
+            Modifier.pointerInput(app.key) {
+                var totalDragX = 0f
+                var dismissDragActive = false
+                var thresholdHapticFired = false
+
+                detectHorizontalDragGestures(
+                    onDragStart = {
+                        dismissDragActive = currentCanDismissNotifications
+                        totalDragX = if (dismissDragActive) swipeOffsetX.value else 0f
+                        thresholdHapticFired = abs(totalDragX) >= dismissThresholdPx
+                        if (dismissDragActive) {
+                            coroutineScope.launch { swipeOffsetX.stop() }
+                        }
+                    },
+                    onDragEnd = {
+                        if (dismissDragActive) {
+                            val finalOffset = totalDragX
+                            if (abs(finalOffset) >= dismissThresholdPx) {
+                                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                                if (currentSlideOutOnDismiss) {
+                                    val exitTarget = if (finalOffset > 0f) {
+                                        rowWidthPx.coerceAtLeast(300).toFloat()
+                                    } else {
+                                        -rowWidthPx.coerceAtLeast(300).toFloat()
+                                    }
+                                    coroutineScope.launch {
+                                        swipeOffsetX.animateTo(
+                                            targetValue = exitTarget,
+                                            animationSpec = tween(durationMillis = 150)
+                                        )
+                                        currentOnDismissNotifications?.invoke()
+                                        delay(150L)
+                                        swipeOffsetX.animateTo(
+                                            targetValue = 0f,
+                                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                        )
+                                    }
+                                } else {
+                                    currentOnDismissNotifications?.invoke()
+                                    coroutineScope.launch {
+                                        swipeOffsetX.animateTo(
+                                            targetValue = 0f,
+                                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                        )
+                                    }
+                                }
+                            } else {
+                                coroutineScope.launch {
+                                    swipeOffsetX.animateTo(
+                                        targetValue = 0f,
+                                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                    )
+                                }
+                            }
+                        }
+                        totalDragX = 0f
+                        dismissDragActive = false
+                        thresholdHapticFired = false
+                    },
+                    onDragCancel = {
+                        if (dismissDragActive) {
+                            coroutineScope.launch {
+                                swipeOffsetX.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                )
+                            }
+                        }
+                        totalDragX = 0f
+                        dismissDragActive = false
+                        thresholdHapticFired = false
+                    },
+                    onHorizontalDrag = { _, dragAmount ->
+                        totalDragX += dragAmount
+                        if (dismissDragActive) {
+                            val visualOffset = if (currentSlideOutOnDismiss) {
+                                totalDragX
+                            } else {
+                                val maxOffset = dismissThresholdPx * 1.45f
+                                totalDragX.coerceIn(-maxOffset, maxOffset)
+                            }
+                            totalDragX = visualOffset
+                            coroutineScope.launch {
+                                swipeOffsetX.snapTo(visualOffset)
+                            }
+                            val crossed = abs(visualOffset) >= dismissThresholdPx
+                            if (crossed && !thresholdHapticFired) {
+                                thresholdHapticFired = true
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            } else if (!crossed) {
+                                thresholdHapticFired = false
+                            }
+                        }
+                    }
+                )
+            }
+        } else {
+            Modifier
+        }
+
+        CompositionLocalProvider(LocalViewConfiguration provides customViewConfiguration) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -148,112 +259,7 @@ fun AppListItem(
                     }
                 }
                 .background(PureBlack)
-                .pointerInput(app.key) {
-                    var totalDragX = 0f
-                    var popupTriggered = false
-                    var dismissDragActive = false
-                    var thresholdHapticFired = false
-
-                    detectHorizontalDragGestures(
-                        onDragStart = {
-                            dismissDragActive = currentCanDismissNotifications
-                            totalDragX = if (dismissDragActive) swipeOffsetX.value else 0f
-                            popupTriggered = false
-                            thresholdHapticFired = abs(totalDragX) >= dismissThresholdPx
-                            if (dismissDragActive) {
-                                coroutineScope.launch { swipeOffsetX.stop() }
-                            }
-                        },
-                        onDragEnd = {
-                            if (dismissDragActive) {
-                                val finalOffset = totalDragX
-                                if (abs(finalOffset) >= dismissThresholdPx) {
-                                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                                    if (currentSlideOutOnDismiss) {
-                                        val exitTarget = if (finalOffset > 0f) {
-                                            rowWidthPx.coerceAtLeast(300).toFloat()
-                                        } else {
-                                            -rowWidthPx.coerceAtLeast(300).toFloat()
-                                        }
-                                        coroutineScope.launch {
-                                            swipeOffsetX.animateTo(
-                                                targetValue = exitTarget,
-                                                animationSpec = tween(durationMillis = 150)
-                                            )
-                                            currentOnDismissNotifications?.invoke()
-                                            delay(150L)
-                                            swipeOffsetX.animateTo(
-                                                targetValue = 0f,
-                                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                            )
-                                        }
-                                    } else {
-                                        currentOnDismissNotifications?.invoke()
-                                        coroutineScope.launch {
-                                            swipeOffsetX.animateTo(
-                                                targetValue = 0f,
-                                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                            )
-                                        }
-                                    }
-                                } else {
-                                    coroutineScope.launch {
-                                        swipeOffsetX.animateTo(
-                                            targetValue = 0f,
-                                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                        )
-                                    }
-                                }
-                            }
-                            totalDragX = 0f
-                            popupTriggered = false
-                            dismissDragActive = false
-                            thresholdHapticFired = false
-                        },
-                        onDragCancel = {
-                            if (dismissDragActive) {
-                                coroutineScope.launch {
-                                    swipeOffsetX.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                    )
-                                }
-                            }
-                            totalDragX = 0f
-                            popupTriggered = false
-                            dismissDragActive = false
-                            thresholdHapticFired = false
-                        },
-                        onHorizontalDrag = { _, dragAmount ->
-                            totalDragX += dragAmount
-                            if (dismissDragActive) {
-                                val visualOffset = if (currentSlideOutOnDismiss) {
-                                    totalDragX
-                                } else {
-                                    val maxOffset = dismissThresholdPx * 1.45f
-                                    totalDragX.coerceIn(-maxOffset, maxOffset)
-                                }
-                                totalDragX = visualOffset
-                                coroutineScope.launch {
-                                    swipeOffsetX.snapTo(visualOffset)
-                                }
-                                val crossed = abs(visualOffset) >= dismissThresholdPx
-                                if (crossed && !thresholdHapticFired) {
-                                    thresholdHapticFired = true
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                } else if (!crossed) {
-                                    thresholdHapticFired = false
-                                }
-                            } else {
-                                if (!popupTriggered && totalDragX > popupSwipeThresholdPx) {
-                                    popupTriggered = true
-                                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                                    currentOnSwipeRight()
-                                }
-                            }
-                        }
-                    )
-                }
+                .then(dragModifier)
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = onLongClick
@@ -398,6 +404,7 @@ fun AppListItem(
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
+        }
         }
     }
 }

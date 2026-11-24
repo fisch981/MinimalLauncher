@@ -151,6 +151,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val waveFontSizeSp: StateFlow<Int> = favoritesRepository.waveFontSizeSpFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, 11)
 
+    val appLongPressDelayMs: StateFlow<Int> = favoritesRepository.appLongPressDelayMsFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 500)
+
     private val _scrollToTopEvent = MutableStateFlow(0)
     val scrollToTopEvent: StateFlow<Int> = _scrollToTopEvent.asStateFlow()
 
@@ -811,6 +814,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setWaveFontSizeSp(sizeSp: Int) {
         viewModelScope.launch {
             favoritesRepository.setWaveFontSizeSp(sizeSp)
+        }
+    }
+
+    fun setAppLongPressDelayMs(delayMs: Int) {
+        viewModelScope.launch {
+            favoritesRepository.setAppLongPressDelayMs(delayMs)
         }
     }
 
