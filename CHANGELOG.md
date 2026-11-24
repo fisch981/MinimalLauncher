@@ -6,6 +6,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.38] - 2026-11-24
+
+### Deutsch
+- **Einstellungen komplett in 7 übersichtliche Kategorien unterteilt:** Die Hauptseite der Launcher-Einstellungen dient nun als aufgeräumtes Auswahlmenü. Jede Kategorie öffnet auf einer eigenen Unterseite:
+  - *Homescreen & Apps* (Favoriten, zuletzt benutzte Apps, ausgeblendete Apps, Schnellaktionen unten, Haltezeit)
+  - *Header & Widgets* (Uhrzeit, Datum, Akku, Medienplayer, Statusleiste ausblenden)
+  - *Benachrichtigungen* (Apps mit Benachrichtigungen, Vorschautexte, System-Benachrichtigungszugriff)
+  - *Schriftarten & Größen* (eigene Unterseite mit fixierter Live-Vorschau)
+  - *Icons & Alphabet-Welle* (App-Icons, Lines Icon-Pack, Wellen-Position, Ruhe-Helligkeit)
+  - *Nutzungsstatistik* (Wellen-Statistik & meistgenutzte Apps)
+  - *System, Sprache & Sicherung* (Standard-Launcher, Sprache, `.json`-Backup & Nova-Import)
+
+### English
+- **Reorganized Settings into 7 Dedicated Category Subpages:** The main Settings page is now a clean category hub where each topic opens on its own full-screen subpage:
+  - *Home Screen & Apps* (favorites, recents, hidden apps, bottom action bar, long-press delay)
+  - *Header & Widgets* (clock, date, battery, media player, hide system status bar)
+  - *Notifications* (active notification apps list, text previews, system notification access)
+  - *Fonts & Sizes* (dedicated subpage with pinned Live Preview card)
+  - *Icons & Alphabet Wave* (app icons toggle, Lines icon pack reload, wave position, idle letter brightness)
+  - *Usage Statistics* (wave side analytics & top launched apps)
+  - *System, Language & Backup* (default launcher role, language selector, `.json` backup/restore & Nova import)
+
+---
+
 ## [1.0.37] - 2026-11-24
 
 ### Deutsch

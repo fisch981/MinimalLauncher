@@ -64,11 +64,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _isHiddenAppsOpen = MutableStateFlow(false)
     val isHiddenAppsOpen: StateFlow<Boolean> = _isHiddenAppsOpen.asStateFlow()
 
-    private val _isTypographyOpen = MutableStateFlow(false)
-    val isTypographyOpen: StateFlow<Boolean> = _isTypographyOpen.asStateFlow()
-
-    private val _isUsageStatsOpen = MutableStateFlow(false)
-    val isUsageStatsOpen: StateFlow<Boolean> = _isUsageStatsOpen.asStateFlow()
+    private val _activeSettingsCategory = MutableStateFlow<SettingsCategory?>(null)
+    val activeSettingsCategory: StateFlow<SettingsCategory?> = _activeSettingsCategory.asStateFlow()
 
     private val _isManageFavoritesOpen = MutableStateFlow(false)
     val isManageFavoritesOpen: StateFlow<Boolean> = _isManageFavoritesOpen.asStateFlow()
@@ -170,8 +167,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         if (closeSettings) {
             _isSettingsOpen.value = false
             _isHiddenAppsOpen.value = false
-            _isTypographyOpen.value = false
-            _isUsageStatsOpen.value = false
+            _activeSettingsCategory.value = null
             _isManageFavoritesOpen.value = false
             _appForIconEditing.value = null
             _appForFolderEditing.value = null
@@ -652,8 +648,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         _isSettingsOpen.value = open
         if (!open) {
             _isHiddenAppsOpen.value = false
-            _isTypographyOpen.value = false
-            _isUsageStatsOpen.value = false
+            _activeSettingsCategory.value = null
         }
     }
 
@@ -661,12 +656,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         _isHiddenAppsOpen.value = open
     }
 
-    fun setTypographyOpen(open: Boolean) {
-        _isTypographyOpen.value = open
-    }
-
-    fun setUsageStatsOpen(open: Boolean) {
-        _isUsageStatsOpen.value = open
+    fun openSettingsCategory(category: SettingsCategory?) {
+        _activeSettingsCategory.value = category
+        if (category != SettingsCategory.HOME_APPS) {
+            _isHiddenAppsOpen.value = false
+        }
     }
 
     fun setManageFavoritesOpen(open: Boolean) {
@@ -878,3 +872,13 @@ data class LauncherUiState(
     val availableLetters: Set<Char> = emptySet(),
     val hiddenApps: List<AppItem> = emptyList()
 )
+
+enum class SettingsCategory {
+    HOME_APPS,
+    HEADER_WIDGETS,
+    NOTIFICATIONS,
+    TYPOGRAPHY,
+    ICONS_WAVE,
+    USAGE_STATS,
+    SYSTEM_BACKUP
+}

@@ -22,14 +22,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -54,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,6 +79,7 @@ import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.theme.PureWhite
 import de.fisch981.minimallauncher.ui.viewmodel.LauncherViewModel
+import de.fisch981.minimallauncher.ui.viewmodel.SettingsCategory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -87,29 +94,9 @@ fun SettingsScreen(
     val context = LocalContext.current
     val strings = LocalAppStrings.current
 
-    val appLanguage by viewModel.appLanguage.collectAsState()
-    val scrollerSide by viewModel.scrollerSide.collectAsState()
-    val waveIdleAlphaPercent by viewModel.waveIdleAlphaPercent.collectAsState()
-    val showClock by viewModel.showClock.collectAsState()
-    val showDate by viewModel.showDate.collectAsState()
-    val showBattery by viewModel.showBattery.collectAsState()
-    val showMedia by viewModel.showMedia.collectAsState()
-    val showRecentApps by viewModel.showRecentApps.collectAsState()
-    val appLongPressDelayMs by viewModel.appLongPressDelayMs.collectAsState()
-    val showAppIcons by viewModel.showAppIcons.collectAsState()
-    val hideStatusBar by viewModel.hideStatusBar.collectAsState()
-    val showBottomActions by viewModel.showBottomActions.collectAsState()
-    val showNotificationApps by viewModel.showNotificationApps.collectAsState()
-    val showNotificationPreview by viewModel.showNotificationPreview.collectAsState()
+    val activeSettingsCategory by viewModel.activeSettingsCategory.collectAsState()
     val isHiddenAppsOpen by viewModel.isHiddenAppsOpen.collectAsState()
-    val isTypographyOpen by viewModel.isTypographyOpen.collectAsState()
-    val isUsageStatsOpen by viewModel.isUsageStatsOpen.collectAsState()
     val uiState by viewModel.launcherState.collectAsState()
-    val customIconsCount by viewModel.customIconsCountState.collectAsState()
-    val isDefaultLauncher by viewModel.isDefaultLauncher.collectAsState()
-
-    val isNotificationGranted = LauncherNotificationService.isPermissionGranted(context)
-    val isLinesInstalled = viewModel.iconPackManager.isLinesPackInstalled()
 
     var roleRequestLaunchTimeMs by remember { mutableLongStateOf(0L) }
     val roleRequestLauncher = rememberLauncherForActivityResult(
@@ -172,516 +159,748 @@ fun SettingsScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PureBlack)
-            .padding(top = 16.dp)
-    ) {
-        // Top App Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onClose) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = strings.back,
-                    tint = PureWhite
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = strings.settingsTitle,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Bold,
-                color = PureWhite
-            )
-        }
-
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
+                .background(PureBlack)
+                .padding(top = 16.dp)
         ) {
-            // Standard-Launcher Card
-            item {
-                SectionHeader(strings.sectionDefaultApp)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = strings.defaultLauncherTitle,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PureWhite
-                            )
-                            Text(
-                                text = if (isDefaultLauncher) strings.defaultLauncherActive else strings.defaultLauncherInactive,
-                                fontSize = 12.sp,
-                                color = GrayMedium
-                            )
-                        }
-                        Button(
-                            onClick = {
-                                roleRequestLaunchTimeMs = System.currentTimeMillis()
-                                val roleIntent = LauncherUtils.createRoleRequestIntent(context)
-                                if (roleIntent != null) {
-                                    try {
-                                        roleRequestLauncher.launch(roleIntent)
-                                    } catch (_: Exception) {
-                                        LauncherUtils.openSystemDefaultLauncherSettings(context)
-                                    }
-                                } else {
-                                    LauncherUtils.openSystemDefaultLauncherSettings(context)
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PureWhite,
-                                contentColor = PureBlack
-                            ),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text(
-                                text = if (isDefaultLauncher) strings.changeButton else strings.setButton,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 2. Home Screen & Apps
-            item {
-                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionHomeApps)
-
-                SettingItem(
-                    title = strings.manageFavoritesTitle,
-                    subtitle = strings.manageFavoritesSubtitle(uiState.favoriteApps.size),
-                    onClick = { viewModel.setManageFavoritesOpen(true) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showRecentAppsTitle,
-                    subtitle = strings.showRecentAppsSubtitle,
-                    checked = showRecentApps,
-                    onCheckedChange = { viewModel.toggleShowRecentApps(it) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showNotificationAppsTitle,
-                    subtitle = strings.showNotificationAppsSubtitle,
-                    checked = showNotificationApps,
-                    onCheckedChange = { viewModel.toggleShowNotificationApps(it) }
-                )
-
-                SettingItem(
-                    title = strings.hiddenAppsTitle,
-                    subtitle = if (uiState.hiddenApps.isEmpty()) {
-                        strings.noHiddenApps
-                    } else {
-                        strings.hiddenAppsManageSubtitle(uiState.hiddenApps.size)
-                    },
-                    onClick = { viewModel.setHiddenAppsOpen(true) }
-                )
-
-                // Long-press duration for app properties dialog (ms)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            strings.appLongPressDelayTitle,
-                            color = PureWhite,
-                            fontSize = 15.sp,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "${appLongPressDelayMs} ms",
-                            color = PureWhite,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        strings.appLongPressDelaySubtitle,
-                        color = GrayMedium,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Slider(
-                        value = appLongPressDelayMs.toFloat(),
-                        onValueChange = { raw ->
-                            val snapped = ((raw / 50f).roundToInt() * 50).coerceIn(250, 2000)
-                            viewModel.setAppLongPressDelayMs(snapped)
-                        },
-                        valueRange = 250f..2000f,
-                        colors = SliderDefaults.colors(
-                            thumbColor = PureWhite,
-                            activeTrackColor = PureWhite,
-                            inactiveTrackColor = DarkSurfaceVariant
-                        )
+            // Top App Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onClose) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = strings.back,
+                        tint = PureWhite
                     )
                 }
-            }
-
-            // 3. Header & Notifications
-            item {
-                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionHeaderNotifications)
-
-                SettingSwitchItem(
-                    title = strings.showClockTitle,
-                    subtitle = strings.showClockSubtitle,
-                    checked = showClock,
-                    onCheckedChange = { viewModel.toggleShowClock(it) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showDateTitle,
-                    subtitle = strings.showDateSubtitle,
-                    checked = showDate,
-                    onCheckedChange = { viewModel.toggleShowDate(it) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showBatteryTitle,
-                    subtitle = strings.showBatterySubtitle,
-                    checked = showBattery,
-                    onCheckedChange = { viewModel.toggleShowBattery(it) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showMediaTitle,
-                    subtitle = strings.showMediaSubtitle,
-                    checked = showMedia,
-                    onCheckedChange = { viewModel.toggleShowMedia(it) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showNotificationPreviewTitle,
-                    subtitle = strings.showNotificationPreviewSubtitle,
-                    checked = showNotificationPreview,
-                    onCheckedChange = { viewModel.toggleShowNotificationPreview(it) }
-                )
-
-                SettingItem(
-                    title = strings.notificationAccessTitle,
-                    subtitle = if (isNotificationGranted) strings.notificationAccessGranted else strings.notificationAccessDenied,
-                    onClick = {
-                        try {
-                            context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            })
-                        } catch (_: Exception) {}
-                    }
-                )
-            }
-
-            // 4. Appearance & Wave Scroller
-            item {
-                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionAppearanceWave)
-
-                SettingItem(
-                    title = strings.typographyTitle,
-                    subtitle = strings.typographySubtitle,
-                    onClick = { viewModel.setTypographyOpen(true) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showAppIconsTitle,
-                    subtitle = strings.showAppIconsSubtitle,
-                    checked = showAppIcons,
-                    onCheckedChange = { viewModel.toggleShowAppIcons(it) }
-                )
-
-                SettingItem(
-                    title = strings.linesPackStatusTitle,
-                    subtitle = if (isLinesInstalled) strings.linesPackActiveSubtitle else strings.linesPackInactiveSubtitle,
-                    onClick = { viewModel.reloadIcons() }
-                )
-
-                SettingSwitchItem(
-                    title = strings.hideStatusBarTitle,
-                    subtitle = strings.hideStatusBarSubtitle,
-                    checked = hideStatusBar,
-                    onCheckedChange = { viewModel.toggleHideStatusBar(it) }
-                )
-
-                SettingSwitchItem(
-                    title = strings.showBottomActionsTitle,
-                    subtitle = strings.showBottomActionsSubtitle,
-                    checked = showBottomActions,
-                    onCheckedChange = { viewModel.toggleShowBottomActions(it) }
-                )
-
-                // Alphabet Wave Position: Left / Right / Both
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Text(strings.wavePositionTitle, color = PureWhite, fontSize = 15.sp)
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        strings.wavePositionSubtitle,
-                        color = GrayMedium,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val options = listOf(
-                            ScrollerSide.LEFT to strings.sideLeft,
-                            ScrollerSide.RIGHT to strings.sideRight,
-                            ScrollerSide.BOTH to strings.sideBoth
-                        )
-                        for ((option, label) in options) {
-                            val selected = scrollerSide == option
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (selected) PureWhite else DarkSurfaceVariant)
-                                    .border(
-                                        1.dp,
-                                        if (selected) PureWhite else BorderDark,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable { viewModel.setScrollerSide(option) }
-                                    .padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = label,
-                                    color = if (selected) PureBlack else GrayLight,
-                                    fontSize = 13.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Idle letter brightness
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            strings.waveIdleBrightnessTitle,
-                            color = PureWhite,
-                            fontSize = 15.sp,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "${waveIdleAlphaPercent}%",
-                            color = PureWhite,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        strings.waveIdleBrightnessSubtitle,
-                        color = GrayMedium,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Slider(
-                        value = waveIdleAlphaPercent.toFloat(),
-                        onValueChange = { viewModel.setWaveIdleAlphaPercent(it.roundToInt()) },
-                        valueRange = 0f..100f,
-                        colors = SliderDefaults.colors(
-                            thumbColor = PureWhite,
-                            activeTrackColor = PureWhite,
-                            inactiveTrackColor = DarkSurfaceVariant
-                        )
-                    )
-                }
-            }
-
-            // 5. Statistics & Language
-            item {
-                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionStatsLanguage)
-
-                SettingItem(
-                    title = strings.sectionUsageStats,
-                    subtitle = strings.usageStatsSubtitle,
-                    onClick = { viewModel.setUsageStatsOpen(true) }
-                )
-
-                // App Language: System / Deutsch / English
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Text(strings.languageTitle, color = PureWhite, fontSize = 15.sp)
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        strings.languageSubtitle,
-                        color = GrayMedium,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val languageOptions = listOf(
-                            AppLanguage.SYSTEM to strings.languageSystem,
-                            AppLanguage.DE to strings.languageGerman,
-                            AppLanguage.EN to strings.languageEnglish
-                        )
-                        for ((option, label) in languageOptions) {
-                            val selected = appLanguage == option
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (selected) PureWhite else DarkSurfaceVariant)
-                                    .border(
-                                        1.dp,
-                                        if (selected) PureWhite else BorderDark,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable { viewModel.setAppLanguage(option) }
-                                    .padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = label,
-                                    color = if (selected) PureBlack else GrayLight,
-                                    fontSize = 13.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 6. Backup & Import
-            item {
-                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
-                SectionHeader(strings.sectionBackupImport)
-
-                SettingItem(
-                    title = strings.exportBackupTitle,
-                    subtitle = strings.exportBackupSubtitle,
-                    onClick = {
-                        try {
-                            val dateStamp = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-                            exportBackupLauncher.launch("minimallauncher-backup-$dateStamp.json")
-                        } catch (_: Exception) {}
-                    }
-                )
-
-                SettingItem(
-                    title = strings.importBackupTitle,
-                    subtitle = strings.importBackupSubtitle,
-                    onClick = {
-                        try {
-                            importBackupLauncher.launch(arrayOf("application/json", "*/*"))
-                        } catch (_: Exception) {}
-                    }
-                )
-
-                SettingItem(
-                    title = strings.selectNovaBackupTitle,
-                    subtitle = if (customIconsCount > 0) {
-                        strings.novaCustomMappingsActive(customIconsCount)
-                    } else {
-                        strings.novaBackupSubtitleDefault
-                    },
-                    onClick = {
-                        try {
-                            filePickerLauncher.launch(arrayOf("*/*"))
-                        } catch (_: Exception) {}
-                    }
-                )
-
-                if (customIconsCount > 0) {
-                    SettingItem(
-                        title = strings.resetNovaMappingsTitle,
-                        subtitle = strings.resetNovaMappingsSubtitle(customIconsCount),
-                        onClick = {
-                            viewModel.clearCustomIcons()
-                            Toast.makeText(context, strings.novaMappingsResetToast, Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "MinimalLauncher v1.0.37",
-                    color = GrayMedium,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(bottom = 32.dp)
+                    text = strings.settingsTitle,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PureWhite
                 )
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+            ) {
+                item {
+                    SettingsCategoryRow(
+                        icon = Icons.Default.Apps,
+                        title = strings.sectionHomeApps,
+                        subtitle = strings.categoryHomeAppsSubtitle,
+                        onClick = { viewModel.openSettingsCategory(SettingsCategory.HOME_APPS) }
+                    )
+                    HorizontalDivider(color = BorderDark)
+
+                    SettingsCategoryRow(
+                        icon = Icons.Default.Schedule,
+                        title = strings.categoryHeaderWidgetsTitle,
+                        subtitle = strings.categoryHeaderWidgetsSubtitle,
+                        onClick = { viewModel.openSettingsCategory(SettingsCategory.HEADER_WIDGETS) }
+                    )
+                    HorizontalDivider(color = BorderDark)
+
+                    SettingsCategoryRow(
+                        icon = Icons.Default.Notifications,
+                        title = strings.categoryNotificationsTitle,
+                        subtitle = strings.categoryNotificationsSubtitle,
+                        onClick = { viewModel.openSettingsCategory(SettingsCategory.NOTIFICATIONS) }
+                    )
+                    HorizontalDivider(color = BorderDark)
+
+                    SettingsCategoryRow(
+                        icon = Icons.Default.TextFields,
+                        title = strings.typographyTitle,
+                        subtitle = strings.typographySubtitle,
+                        onClick = { viewModel.openSettingsCategory(SettingsCategory.TYPOGRAPHY) }
+                    )
+                    HorizontalDivider(color = BorderDark)
+
+                    SettingsCategoryRow(
+                        icon = Icons.Default.Tune,
+                        title = strings.categoryIconsWaveTitle,
+                        subtitle = strings.categoryIconsWaveSubtitle,
+                        onClick = { viewModel.openSettingsCategory(SettingsCategory.ICONS_WAVE) }
+                    )
+                    HorizontalDivider(color = BorderDark)
+
+                    SettingsCategoryRow(
+                        icon = Icons.Default.BarChart,
+                        title = strings.sectionUsageStats,
+                        subtitle = strings.usageStatsSubtitle,
+                        onClick = { viewModel.openSettingsCategory(SettingsCategory.USAGE_STATS) }
+                    )
+                    HorizontalDivider(color = BorderDark)
+
+                    SettingsCategoryRow(
+                        icon = Icons.Default.Settings,
+                        title = strings.categorySystemBackupTitle,
+                        subtitle = strings.categorySystemBackupSubtitle,
+                        onClick = { viewModel.openSettingsCategory(SettingsCategory.SYSTEM_BACKUP) }
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text(
+                        text = "MinimalLauncher v1.0.38",
+                        color = GrayMedium,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(bottom = 32.dp)
+                    )
+                }
             }
         }
-    }
 
-    if (isTypographyOpen) {
-        TypographySubScreen(
-            viewModel = viewModel,
-            onBack = { viewModel.setTypographyOpen(false) }
+        when (activeSettingsCategory) {
+            SettingsCategory.HOME_APPS -> HomeAppsSubScreen(
+                viewModel = viewModel,
+                onBack = { viewModel.openSettingsCategory(null) }
+            )
+            SettingsCategory.HEADER_WIDGETS -> HeaderWidgetsSubScreen(
+                viewModel = viewModel,
+                onBack = { viewModel.openSettingsCategory(null) }
+            )
+            SettingsCategory.NOTIFICATIONS -> NotificationsSubScreen(
+                viewModel = viewModel,
+                onBack = { viewModel.openSettingsCategory(null) }
+            )
+            SettingsCategory.TYPOGRAPHY -> TypographySubScreen(
+                viewModel = viewModel,
+                onBack = { viewModel.openSettingsCategory(null) }
+            )
+            SettingsCategory.ICONS_WAVE -> IconsWaveSubScreen(
+                viewModel = viewModel,
+                onBack = { viewModel.openSettingsCategory(null) }
+            )
+            SettingsCategory.USAGE_STATS -> UsageStatsSubScreen(
+                viewModel = viewModel,
+                onBack = { viewModel.openSettingsCategory(null) }
+            )
+            SettingsCategory.SYSTEM_BACKUP -> SystemBackupSubScreen(
+                viewModel = viewModel,
+                onRequestDefaultLauncher = {
+                    roleRequestLaunchTimeMs = System.currentTimeMillis()
+                    val roleIntent = LauncherUtils.createRoleRequestIntent(context)
+                    if (roleIntent != null) {
+                        try {
+                            roleRequestLauncher.launch(roleIntent)
+                        } catch (_: Exception) {
+                            LauncherUtils.openSystemDefaultLauncherSettings(context)
+                        }
+                    } else {
+                        LauncherUtils.openSystemDefaultLauncherSettings(context)
+                    }
+                },
+                onExportBackup = {
+                    try {
+                        val dateStamp = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+                        exportBackupLauncher.launch("minimallauncher-backup-$dateStamp.json")
+                    } catch (_: Exception) {}
+                },
+                onImportBackup = {
+                    try {
+                        importBackupLauncher.launch(arrayOf("application/json", "*/*"))
+                    } catch (_: Exception) {}
+                },
+                onImportNovaBackup = {
+                    try {
+                        filePickerLauncher.launch(arrayOf("*/*"))
+                    } catch (_: Exception) {}
+                },
+                onBack = { viewModel.openSettingsCategory(null) }
+            )
+            null -> Unit
+        }
+
+        if (isHiddenAppsOpen) {
+            HiddenAppsSubScreen(
+                hiddenApps = uiState.hiddenApps,
+                onUnhideApp = { viewModel.unhideApp(it) },
+                onBack = { viewModel.setHiddenAppsOpen(false) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsCategoryRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = PureWhite,
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                color = PureWhite,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                color = GrayMedium,
+                fontSize = 12.sp
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = GrayMedium,
+            modifier = Modifier.size(20.dp)
         )
     }
+}
 
-    if (isUsageStatsOpen) {
-        UsageStatsSubScreen(
-            viewModel = viewModel,
-            onBack = { viewModel.setUsageStatsOpen(false) }
-        )
-    }
+@Composable
+private fun SettingsSubPageScaffold(
+    title: String,
+    onBack: () -> Unit,
+    content: LazyListScope.() -> Unit
+) {
+    val strings = LocalAppStrings.current
+    Surface(
+        color = PureBlack,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = strings.back,
+                        tint = PureWhite
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PureWhite
+                )
+            }
 
-    if (isHiddenAppsOpen) {
-        HiddenAppsSubScreen(
-            hiddenApps = uiState.hiddenApps,
-            onUnhideApp = { viewModel.unhideApp(it) },
-            onBack = { viewModel.setHiddenAppsOpen(false) }
-        )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                content = content
+            )
+        }
     }
+}
+
+@Composable
+private fun HomeAppsSubScreen(
+    viewModel: LauncherViewModel,
+    onBack: () -> Unit
+) {
+    val strings = LocalAppStrings.current
+    val uiState by viewModel.launcherState.collectAsState()
+    val showRecentApps by viewModel.showRecentApps.collectAsState()
+    val showBottomActions by viewModel.showBottomActions.collectAsState()
+    val appLongPressDelayMs by viewModel.appLongPressDelayMs.collectAsState()
+
+    SettingsSubPageScaffold(title = strings.sectionHomeApps, onBack = onBack) {
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingItem(
+                title = strings.manageFavoritesTitle,
+                subtitle = strings.manageFavoritesSubtitle(uiState.favoriteApps.size),
+                onClick = { viewModel.setManageFavoritesOpen(true) }
+            )
+
+            SettingSwitchItem(
+                title = strings.showRecentAppsTitle,
+                subtitle = strings.showRecentAppsSubtitle,
+                checked = showRecentApps,
+                onCheckedChange = { viewModel.toggleShowRecentApps(it) }
+            )
+
+            SettingItem(
+                title = strings.hiddenAppsTitle,
+                subtitle = if (uiState.hiddenApps.isEmpty()) {
+                    strings.noHiddenApps
+                } else {
+                    strings.hiddenAppsManageSubtitle(uiState.hiddenApps.size)
+                },
+                onClick = { viewModel.setHiddenAppsOpen(true) }
+            )
+
+            SettingSwitchItem(
+                title = strings.showBottomActionsTitle,
+                subtitle = strings.showBottomActionsSubtitle,
+                checked = showBottomActions,
+                onCheckedChange = { viewModel.toggleShowBottomActions(it) }
+            )
+
+            HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        strings.appLongPressDelayTitle,
+                        color = PureWhite,
+                        fontSize = 15.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "${appLongPressDelayMs} ms",
+                        color = PureWhite,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    strings.appLongPressDelaySubtitle,
+                    color = GrayMedium,
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Slider(
+                    value = appLongPressDelayMs.toFloat(),
+                    onValueChange = { raw ->
+                        val snapped = ((raw / 50f).roundToInt() * 50).coerceIn(250, 2000)
+                        viewModel.setAppLongPressDelayMs(snapped)
+                    },
+                    valueRange = 250f..2000f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = PureWhite,
+                        activeTrackColor = PureWhite,
+                        inactiveTrackColor = DarkSurfaceVariant
+                    )
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun HeaderWidgetsSubScreen(
+    viewModel: LauncherViewModel,
+    onBack: () -> Unit
+) {
+    val strings = LocalAppStrings.current
+    val showClock by viewModel.showClock.collectAsState()
+    val showDate by viewModel.showDate.collectAsState()
+    val showBattery by viewModel.showBattery.collectAsState()
+    val showMedia by viewModel.showMedia.collectAsState()
+    val hideStatusBar by viewModel.hideStatusBar.collectAsState()
+
+    SettingsSubPageScaffold(title = strings.categoryHeaderWidgetsTitle, onBack = onBack) {
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingSwitchItem(
+                title = strings.showClockTitle,
+                subtitle = strings.showClockSubtitle,
+                checked = showClock,
+                onCheckedChange = { viewModel.toggleShowClock(it) }
+            )
+
+            SettingSwitchItem(
+                title = strings.showDateTitle,
+                subtitle = strings.showDateSubtitle,
+                checked = showDate,
+                onCheckedChange = { viewModel.toggleShowDate(it) }
+            )
+
+            SettingSwitchItem(
+                title = strings.showBatteryTitle,
+                subtitle = strings.showBatterySubtitle,
+                checked = showBattery,
+                onCheckedChange = { viewModel.toggleShowBattery(it) }
+            )
+
+            SettingSwitchItem(
+                title = strings.showMediaTitle,
+                subtitle = strings.showMediaSubtitle,
+                checked = showMedia,
+                onCheckedChange = { viewModel.toggleShowMedia(it) }
+            )
+
+            SettingSwitchItem(
+                title = strings.hideStatusBarTitle,
+                subtitle = strings.hideStatusBarSubtitle,
+                checked = hideStatusBar,
+                onCheckedChange = { viewModel.toggleHideStatusBar(it) }
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun NotificationsSubScreen(
+    viewModel: LauncherViewModel,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val strings = LocalAppStrings.current
+    val showNotificationApps by viewModel.showNotificationApps.collectAsState()
+    val showNotificationPreview by viewModel.showNotificationPreview.collectAsState()
+    val isNotificationGranted = LauncherNotificationService.isPermissionGranted(context)
+
+    SettingsSubPageScaffold(title = strings.categoryNotificationsTitle, onBack = onBack) {
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingSwitchItem(
+                title = strings.showNotificationAppsTitle,
+                subtitle = strings.showNotificationAppsSubtitle,
+                checked = showNotificationApps,
+                onCheckedChange = { viewModel.toggleShowNotificationApps(it) }
+            )
+
+            SettingSwitchItem(
+                title = strings.showNotificationPreviewTitle,
+                subtitle = strings.showNotificationPreviewSubtitle,
+                checked = showNotificationPreview,
+                onCheckedChange = { viewModel.toggleShowNotificationPreview(it) }
+            )
+
+            HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+
+            SettingItem(
+                title = strings.notificationAccessTitle,
+                subtitle = if (isNotificationGranted) strings.notificationAccessGranted else strings.notificationAccessDenied,
+                onClick = {
+                    try {
+                        context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        })
+                    } catch (_: Exception) {}
+                }
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun IconsWaveSubScreen(
+    viewModel: LauncherViewModel,
+    onBack: () -> Unit
+) {
+    val strings = LocalAppStrings.current
+    val showAppIcons by viewModel.showAppIcons.collectAsState()
+    val scrollerSide by viewModel.scrollerSide.collectAsState()
+    val waveIdleAlphaPercent by viewModel.waveIdleAlphaPercent.collectAsState()
+    val isLinesInstalled = viewModel.iconPackManager.isLinesPackInstalled()
+
+    SettingsSubPageScaffold(title = strings.categoryIconsWaveTitle, onBack = onBack) {
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingSwitchItem(
+                title = strings.showAppIconsTitle,
+                subtitle = strings.showAppIconsSubtitle,
+                checked = showAppIcons,
+                onCheckedChange = { viewModel.toggleShowAppIcons(it) }
+            )
+
+            SettingItem(
+                title = strings.linesPackStatusTitle,
+                subtitle = if (isLinesInstalled) strings.linesPackActiveSubtitle else strings.linesPackInactiveSubtitle,
+                onClick = { viewModel.reloadIcons() }
+            )
+
+            HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+
+            // Alphabet Wave Position: Left / Right / Both
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Text(strings.wavePositionTitle, color = PureWhite, fontSize = 15.sp)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    strings.wavePositionSubtitle,
+                    color = GrayMedium,
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val options = listOf(
+                        ScrollerSide.LEFT to strings.sideLeft,
+                        ScrollerSide.RIGHT to strings.sideRight,
+                        ScrollerSide.BOTH to strings.sideBoth
+                    )
+                    for ((option, label) in options) {
+                        val selected = scrollerSide == option
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (selected) PureWhite else DarkSurfaceVariant)
+                                .border(
+                                    1.dp,
+                                    if (selected) PureWhite else BorderDark,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { viewModel.setScrollerSide(option) }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                color = if (selected) PureBlack else GrayLight,
+                                fontSize = 13.sp,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Idle letter brightness
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        strings.waveIdleBrightnessTitle,
+                        color = PureWhite,
+                        fontSize = 15.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "${waveIdleAlphaPercent}%",
+                        color = PureWhite,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    strings.waveIdleBrightnessSubtitle,
+                    color = GrayMedium,
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Slider(
+                    value = waveIdleAlphaPercent.toFloat(),
+                    onValueChange = { viewModel.setWaveIdleAlphaPercent(it.roundToInt()) },
+                    valueRange = 0f..100f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = PureWhite,
+                        activeTrackColor = PureWhite,
+                        inactiveTrackColor = DarkSurfaceVariant
+                    )
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun SystemBackupSubScreen(
+    viewModel: LauncherViewModel,
+    onRequestDefaultLauncher: () -> Unit,
+    onExportBackup: () -> Unit,
+    onImportBackup: () -> Unit,
+    onImportNovaBackup: () -> Unit,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val strings = LocalAppStrings.current
+    val isDefaultLauncher by viewModel.isDefaultLauncher.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
+    val customIconsCount by viewModel.customIconsCountState.collectAsState()
+
+    SettingsSubPageScaffold(title = strings.categorySystemBackupTitle, onBack = onBack) {
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            SectionHeader(strings.sectionDefaultApp)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = strings.defaultLauncherTitle,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PureWhite
+                        )
+                        Text(
+                            text = if (isDefaultLauncher) strings.defaultLauncherActive else strings.defaultLauncherInactive,
+                            fontSize = 12.sp,
+                            color = GrayMedium
+                        )
+                    }
+                    Button(
+                        onClick = onRequestDefaultLauncher,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PureWhite,
+                            contentColor = PureBlack
+                        ),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = if (isDefaultLauncher) strings.changeButton else strings.setButton,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+
+            // App Language: System / Deutsch / English
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Text(strings.languageTitle, color = PureWhite, fontSize = 15.sp)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    strings.languageSubtitle,
+                    color = GrayMedium,
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val languageOptions = listOf(
+                        AppLanguage.SYSTEM to strings.languageSystem,
+                        AppLanguage.DE to strings.languageGerman,
+                        AppLanguage.EN to strings.languageEnglish
+                    )
+                    for ((option, label) in languageOptions) {
+                        val selected = appLanguage == option
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (selected) PureWhite else DarkSurfaceVariant)
+                                .border(
+                                    1.dp,
+                                    if (selected) PureWhite else BorderDark,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { viewModel.setAppLanguage(option) }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                color = if (selected) PureBlack else GrayLight,
+                                fontSize = 13.sp,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+            SectionHeader(strings.sectionBackupImport)
+
+            SettingItem(
+                title = strings.exportBackupTitle,
+                subtitle = strings.exportBackupSubtitle,
+                onClick = onExportBackup
+            )
+
+            SettingItem(
+                title = strings.importBackupTitle,
+                subtitle = strings.importBackupSubtitle,
+                onClick = onImportBackup
+            )
+
+            SettingItem(
+                title = strings.selectNovaBackupTitle,
+                subtitle = if (customIconsCount > 0) {
+                    strings.novaCustomMappingsActive(customIconsCount)
+                } else {
+                    strings.novaBackupSubtitleDefault
+                },
+                onClick = onImportNovaBackup
+            )
+
+            if (customIconsCount > 0) {
+                SettingItem(
+                    title = strings.resetNovaMappingsTitle,
+                    subtitle = strings.resetNovaMappingsSubtitle(customIconsCount),
+                    onClick = {
+                        viewModel.clearCustomIcons()
+                        Toast.makeText(context, strings.novaMappingsResetToast, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
 
