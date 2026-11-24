@@ -138,7 +138,23 @@ class NotificationStateUtilsTest {
             )
         )
 
-        // Persistent foreground service stays filtered out even with category or API 34+
+        // Upcoming alarm (even if flagged ongoing, FGS, or low-importance) stays tracked
+        assertTrue(
+            NotificationStateUtils.shouldTrackNotification(
+                packageName = "com.google.android.deskclock",
+                isOngoing = true,
+                isForegroundService = true,
+                isClearable = false,
+                isNoClear = true,
+                hasMediaSession = false,
+                category = "alarm",
+                template = null,
+                isLowImportance = true,
+                allowDismissibleOngoing = false
+            )
+        )
+
+        // Persistent foreground service (non-alarm) stays filtered out even on API 34+
         assertFalse(
             NotificationStateUtils.shouldTrackNotification(
                 packageName = "com.example.vpn",
@@ -147,7 +163,7 @@ class NotificationStateUtilsTest {
                 isClearable = false,
                 isNoClear = false,
                 hasMediaSession = false,
-                category = "alarm",
+                category = "service",
                 template = null,
                 isLowImportance = false,
                 allowDismissibleOngoing = true
@@ -249,7 +265,7 @@ class NotificationStateUtilsTest {
                 isClearable = false,
                 isNoClear = false,
                 hasMediaSession = false,
-                category = "alarm",
+                category = null,
                 template = null,
                 isLowImportance = true,
                 allowDismissibleOngoing = true

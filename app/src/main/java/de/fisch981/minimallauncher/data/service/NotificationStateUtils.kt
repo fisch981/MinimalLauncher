@@ -44,13 +44,14 @@ internal object NotificationStateUtils {
         allowDismissibleOngoing: Boolean
     ): Boolean {
         if (isMediaNotification(hasMediaSession, category, template)) return false
+        val normalizedCategory = category?.lowercase()
+        if (normalizedCategory == "alarm") return true
         if (isForegroundService) return false
         if (!isOngoing && isClearable && !isNoClear) return true
-        if (isLowImportance) return false
         if (packageName in SYSTEM_NOISE_PACKAGES) return false
-        val normalizedCategory = category?.lowercase()
         if (normalizedCategory in SYSTEM_NOISE_CATEGORIES) return false
         if (normalizedCategory in USER_ACTIONABLE_ONGOING_CATEGORIES) return true
+        if (isLowImportance) return false
         return allowDismissibleOngoing && isOngoing && !isNoClear
     }
 

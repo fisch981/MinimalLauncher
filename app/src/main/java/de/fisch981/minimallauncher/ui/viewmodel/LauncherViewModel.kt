@@ -3,6 +3,7 @@ package de.fisch981.minimallauncher.ui.viewmodel
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.os.Process
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import de.fisch981.minimallauncher.data.backup.LauncherBackupCodec
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -443,13 +445,57 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         mediaHelper.stopListening()
     }
 
+    private val fallbackNotifyingAppCache = ConcurrentHashMap<String, AppItem>()
+    private val missingFallbackPackages = ConcurrentHashMap.newKeySet<String>()
+
+    fun resolveNotifyingAppFallback(packageName: String): AppItem? {
+        if (packageName in missingFallbackPackages) return null
+        fallbackNotifyingAppCache[packageName]?.let { return it }
+
+        val appContext = getApplication<Application>()
+        val pm = appContext.packageManager
+        return try {
+            val appInfo = pm.getApplicationInfo(packageName, 0)
+            val label = pm.getApplicationLabel(appInfo)?.toString()?.takeIf { it.isNotBlank() } ?: packageName
+            val icon = iconPackManager.getAppIcon(packageName, "") {
+                try {
+                    pm.getApplicationIcon(appInfo)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            val item = AppItem(
+                packageName = packageName,
+                activityName = "",
+                label = label,
+                userHandle = Process.myUserHandle(),
+                icon = icon,
+                isFavorite = false,
+                isHidden = false
+            )
+            fallbackNotifyingAppCache[packageName] = item
+            item
+        } catch (_: Exception) {
+            missingFallbackPackages.add(packageName)
+            null
+        }
+    }
+
     fun launchApp(app: AppItem) {
-        val isFav = app.isFavorite || launcherState.value.favoriteApps.any { it.key == app.key }
-        viewModelScope.launch {
-            favoritesRepository.recordAppLaunch(app.key, isFavorite = isFav)
+        if (app.activityName.isNotBlank()) {
+            val isFav = app.isFavorite || launcherState.value.favoriteApps.any { it.key == app.key }
+            viewModelScope.launch {
+                favoritesRepository.recordAppLaunch(app.key, isFavorite = isFav)
+            }
         }
         onReturnToLauncher()
-        appRepository.launchApp(app)
+        if (app.activityName.isBlank()) {
+            if (!LauncherNotificationService.openNotificationForPackage(app.packageName)) {
+                appRepository.launchApp(app)
+            }
+        } else {
+            appRepository.launchApp(app)
+        }
     }
 
     fun launchShortcut(shortcut: ShortcutItem) {

@@ -182,16 +182,40 @@ fun HomeScreen(
         viewModel.checkDefaultLauncher()
     }
 
-    val notifyingApps = remember(uiState.allApps, notifications) {
+    val notifyingApps = remember(uiState.allApps, uiState.hiddenApps, uiState.favoriteApps, notifications) {
         if (notifications.isEmpty()) {
             emptyList()
         } else {
-            uiState.allApps
-                .filter { !it.isFavorite && !notifications[it.packageName].isNullOrEmpty() }
-                .distinctBy { it.packageName }
-                .sortedByDescending { app ->
-                    notifications[app.packageName]?.maxOfOrNull { it.postTime } ?: 0L
+            val favoritePackages = uiState.favoriteApps.mapTo(HashSet()) { it.packageName }
+            val byPackage = LinkedHashMap<String, AppItem>()
+
+            for (app in uiState.allApps) {
+                if (!app.isFavorite &&
+                    app.packageName !in favoritePackages &&
+                    !notifications[app.packageName].isNullOrEmpty()
+                ) {
+                    byPackage.putIfAbsent(app.packageName, app)
                 }
+            }
+            for (app in uiState.hiddenApps) {
+                if (app.packageName !in favoritePackages &&
+                    !notifications[app.packageName].isNullOrEmpty()
+                ) {
+                    byPackage.putIfAbsent(app.packageName, app)
+                }
+            }
+            for (pkg in notifications.keys) {
+                if (pkg !in favoritePackages &&
+                    !byPackage.containsKey(pkg) &&
+                    !notifications[pkg].isNullOrEmpty()
+                ) {
+                    viewModel.resolveNotifyingAppFallback(pkg)?.let { byPackage[pkg] = it }
+                }
+            }
+
+            byPackage.values.sortedByDescending { app ->
+                notifications[app.packageName]?.maxOfOrNull { it.postTime } ?: 0L
+            }
         }
     }
 

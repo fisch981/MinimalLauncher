@@ -1,5 +1,6 @@
 package de.fisch981.minimallauncher.data.service
 
+import android.app.ActivityOptions
 import android.app.Notification
 import android.app.NotificationManager
 import android.content.ComponentName
@@ -84,6 +85,10 @@ class LauncherNotificationService : NotificationListenerService() {
             )
             return true
         }
+
+        fun openNotificationForPackage(packageName: String): Boolean {
+            return activeService?.launchPackageNotificationIntent(packageName) ?: false
+        }
     }
 
     override fun onListenerConnected() {
@@ -148,6 +153,39 @@ class LauncherNotificationService : NotificationListenerService() {
             isLowImportance = isLowImportance(rankingMap, ranking, sbn.key),
             allowDismissibleOngoing = allowDismissibleOngoing
         )
+    }
+
+    private fun launchPackageNotificationIntent(packageName: String): Boolean {
+        val trackedKeys = _notifications.value[packageName].orEmpty().map { it.key }.toSet()
+        val intent = try {
+            activeNotifications
+                ?.filter { it.packageName == packageName && it.notification.contentIntent != null }
+                ?.sortedWith(
+                    compareByDescending<StatusBarNotification> { it.key in trackedKeys }
+                        .thenByDescending { it.postTime }
+                )
+                ?.firstOrNull()
+                ?.notification
+                ?.contentIntent
+        } catch (_: Exception) {
+            null
+        } ?: return false
+
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val options = ActivityOptions.makeBasic()
+                    .setPendingIntentBackgroundActivityStartMode(
+                        ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                    )
+                    .toBundle()
+                intent.send(this, 0, null, null, null, null, options)
+            } else {
+                intent.send()
+            }
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 
     private fun cancelPackageNotifications(packageName: String): Boolean {

@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.35] - 2026-11-24
+
+### Deutsch
+- **Benachrichtigungen auch für ausgeblendete & System-Apps anzeigen:** Aktive Benachrichtigungen von ausgeblendeten Apps (z. B. *Uhr – Anstehender Weckruf*) sowie von Paketen ohne direktes App-Drawer-Icon werden nun zwischen Datum und Favoriten angezeigt, lassen sich per Tap direkt öffnen und per Wischgeste nach links oder rechts löschen. Im App-Drawer bleiben ausgeblendete Apps weiterhin verborgen.
+- **Vorrang für `CATEGORY_ALARM`:** Wecker-Benachrichtigungen werden auch dann erfasst, wenn der Hersteller-Wecker sie als Vordergrunddienst (`FLAG_FOREGROUND_SERVICE`) oder mit niedriger Priorität (`IMPORTANCE_MIN`) postet.
+
+### English
+- **Show Notifications for Hidden & Non-Launcher Apps:** Active notifications belonging to hidden apps (e.g., *Clock – Upcoming alarm*) or packages without a launcher activity now appear cleanly between the date and Favorites, launch when tapped, and dismiss when swiped left or right, while remaining hidden in the A–Z app drawer.
+- **Priority Handling for `CATEGORY_ALARM`:** Alarm notifications are always tracked even when posted with `FLAG_FOREGROUND_SERVICE` or `IMPORTANCE_MIN`.
+
+---
+
 ## [1.0.34] - 2026-11-24
 
 ### Deutsch
