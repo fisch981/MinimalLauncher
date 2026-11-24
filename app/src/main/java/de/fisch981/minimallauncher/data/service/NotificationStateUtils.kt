@@ -146,4 +146,25 @@ internal object NotificationStateUtils {
         }
         return updated
     }
+
+    /**
+     * Counts active notifications per package without double-counting synthetic group summaries
+     * when individual child notifications are present.
+     */
+    fun countActiveNotifications(items: List<AppNotificationItem>): Int {
+        if (items.isEmpty()) return 0
+        val nonSummaryCount = items.count { !it.isGroupSummary }
+        return if (nonSummaryCount > 0) nonSummaryCount else items.size
+    }
+
+    /**
+     * Filters out synthetic group summaries when individual child notifications exist so popup
+     * details do not repeat a redundant summary card.
+     */
+    fun visibleNotificationsForDisplay(items: List<AppNotificationItem>): List<AppNotificationItem> {
+        if (items.any { !it.isGroupSummary }) {
+            return items.filterNot { it.isGroupSummary }
+        }
+        return items
+    }
 }

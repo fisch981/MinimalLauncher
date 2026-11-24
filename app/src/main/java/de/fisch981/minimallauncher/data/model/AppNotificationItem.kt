@@ -12,5 +12,6 @@ data class AppNotificationItem(
     val text: String?,
     val postTime: Long,
     val isClearable: Boolean = true,
-    val actions: List<NotificationActionItem> = emptyList()
+    val actions: List<NotificationActionItem> = emptyList(),
+    val isGroupSummary: Boolean = false
 )

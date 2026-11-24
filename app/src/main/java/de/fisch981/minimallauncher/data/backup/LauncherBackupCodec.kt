@@ -1,5 +1,7 @@
 package de.fisch981.minimallauncher.data.backup
 
+import de.fisch981.minimallauncher.data.model.HomeGestureAction
+
 data class LauncherBackupData(
     val format: String = LauncherBackupCodec.FORMAT_ID,
     val version: Int = LauncherBackupCodec.CURRENT_VERSION,
@@ -22,12 +24,17 @@ data class LauncherBackupData(
     val showDate: Boolean = true,
     val showMedia: Boolean = true,
     val showBattery: Boolean = true,
+    val showNextAlarm: Boolean = true,
     val showRecentApps: Boolean = true,
     val showAppIcons: Boolean = true,
     val hideStatusBar: Boolean = false,
     val showBottomActions: Boolean = true,
     val showNotificationApps: Boolean = true,
     val showNotificationPreview: Boolean = true,
+    val showNotificationCount: Boolean = true,
+    val homeSwipeDownAction: String = HomeGestureAction.EXPAND_NOTIFICATIONS.code,
+    val homeSwipeUpAction: String = HomeGestureAction.SEARCH.code,
+    val homeDoubleTapAction: String = HomeGestureAction.NONE.code,
     val recentApps: List<String> = emptyList(),
     val leftWaveCount: Int = 0,
     val rightWaveCount: Int = 0,
@@ -66,12 +73,17 @@ object LauncherBackupCodec {
         appendBoolField(sb, "showDate", data.showDate, indent = 2, trailingComma = true)
         appendBoolField(sb, "showMedia", data.showMedia, indent = 2, trailingComma = true)
         appendBoolField(sb, "showBattery", data.showBattery, indent = 2, trailingComma = true)
+        appendBoolField(sb, "showNextAlarm", data.showNextAlarm, indent = 2, trailingComma = true)
         appendBoolField(sb, "showRecentApps", data.showRecentApps, indent = 2, trailingComma = true)
         appendBoolField(sb, "showAppIcons", data.showAppIcons, indent = 2, trailingComma = true)
         appendBoolField(sb, "hideStatusBar", data.hideStatusBar, indent = 2, trailingComma = true)
         appendBoolField(sb, "showBottomActions", data.showBottomActions, indent = 2, trailingComma = true)
         appendBoolField(sb, "showNotificationApps", data.showNotificationApps, indent = 2, trailingComma = true)
         appendBoolField(sb, "showNotificationPreview", data.showNotificationPreview, indent = 2, trailingComma = true)
+        appendBoolField(sb, "showNotificationCount", data.showNotificationCount, indent = 2, trailingComma = true)
+        appendField(sb, "homeSwipeDownAction", data.homeSwipeDownAction, indent = 2, trailingComma = true)
+        appendField(sb, "homeSwipeUpAction", data.homeSwipeUpAction, indent = 2, trailingComma = true)
+        appendField(sb, "homeDoubleTapAction", data.homeDoubleTapAction, indent = 2, trailingComma = true)
         appendStringListField(sb, "recentApps", data.recentApps, indent = 2, trailingComma = true)
         appendIntField(sb, "leftWaveCount", data.leftWaveCount, indent = 2, trailingComma = true)
         appendIntField(sb, "rightWaveCount", data.rightWaveCount, indent = 2, trailingComma = true)
@@ -116,12 +128,26 @@ object LauncherBackupCodec {
             showDate = (root["showDate"] as? Boolean) ?: true,
             showMedia = (root["showMedia"] as? Boolean) ?: true,
             showBattery = (root["showBattery"] as? Boolean) ?: true,
+            showNextAlarm = (root["showNextAlarm"] as? Boolean) ?: true,
             showRecentApps = (root["showRecentApps"] as? Boolean) ?: true,
             showAppIcons = (root["showAppIcons"] as? Boolean) ?: true,
             hideStatusBar = (root["hideStatusBar"] as? Boolean) ?: false,
             showBottomActions = (root["showBottomActions"] as? Boolean) ?: true,
             showNotificationApps = (root["showNotificationApps"] as? Boolean) ?: true,
             showNotificationPreview = (root["showNotificationPreview"] as? Boolean) ?: true,
+            showNotificationCount = (root["showNotificationCount"] as? Boolean) ?: true,
+            homeSwipeDownAction = HomeGestureAction.fromCode(
+                root["homeSwipeDownAction"] as? String,
+                HomeGestureAction.EXPAND_NOTIFICATIONS
+            ).code,
+            homeSwipeUpAction = HomeGestureAction.fromCode(
+                root["homeSwipeUpAction"] as? String,
+                HomeGestureAction.SEARCH
+            ).code,
+            homeDoubleTapAction = HomeGestureAction.fromCode(
+                root["homeDoubleTapAction"] as? String,
+                HomeGestureAction.NONE
+            ).code,
             recentApps = asStringList(root["recentApps"]),
             leftWaveCount = ((root["leftWaveCount"] as? Number)?.toInt() ?: 0).coerceAtLeast(0),
             rightWaveCount = ((root["rightWaveCount"] as? Number)?.toInt() ?: 0).coerceAtLeast(0),

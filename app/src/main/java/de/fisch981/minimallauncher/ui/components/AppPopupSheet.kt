@@ -40,6 +40,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -53,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.data.model.AppNotificationItem
 import de.fisch981.minimallauncher.data.model.ShortcutItem
+import de.fisch981.minimallauncher.data.service.NotificationStateUtils
 import de.fisch981.minimallauncher.ui.theme.BorderDark
 import de.fisch981.minimallauncher.ui.theme.DarkSurface
 import de.fisch981.minimallauncher.ui.theme.GrayLight
@@ -229,9 +231,19 @@ fun AppPopupSheet(
             }
 
             // Active Notifications
-            if (notifications.isNotEmpty()) {
+            val displayNotifications = remember(notifications) {
+                NotificationStateUtils.visibleNotificationsForDisplay(notifications)
+            }
+            val notificationCount = remember(notifications) {
+                NotificationStateUtils.countActiveNotifications(notifications)
+            }
+            if (displayNotifications.isNotEmpty()) {
                 Text(
-                    text = strings.notificationsHeader,
+                    text = if (notificationCount > 1) {
+                        "${strings.notificationsHeader} ($notificationCount)"
+                    } else {
+                        strings.notificationsHeader
+                    },
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily,
@@ -239,7 +251,7 @@ fun AppPopupSheet(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
-                notifications.forEach { notif ->
+                displayNotifications.forEach { notif ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

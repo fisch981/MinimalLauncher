@@ -39,12 +39,17 @@ class LauncherBackupCodecTest {
             showDate = false,
             showMedia = false,
             showBattery = true,
+            showNextAlarm = false,
             showRecentApps = false,
             showAppIcons = false,
             hideStatusBar = true,
             showBottomActions = false,
             showNotificationApps = false,
             showNotificationPreview = false,
+            showNotificationCount = false,
+            homeSwipeDownAction = "all_apps",
+            homeSwipeUpAction = "none",
+            homeDoubleTapAction = "search",
             recentApps = listOf("com.example.browser/com.example.browser.Main#0"),
             leftWaveCount = 14,
             rightWaveCount = 29,
@@ -87,12 +92,17 @@ class LauncherBackupCodecTest {
         assertFalse(decoded.showDate)
         assertFalse(decoded.showMedia)
         assertTrue(decoded.showBattery)
+        assertFalse(decoded.showNextAlarm)
         assertFalse(decoded.showRecentApps)
         assertFalse(decoded.showAppIcons)
         assertTrue(decoded.hideStatusBar)
         assertFalse(decoded.showBottomActions)
         assertFalse(decoded.showNotificationApps)
         assertFalse(decoded.showNotificationPreview)
+        assertFalse(decoded.showNotificationCount)
+        assertEquals("all_apps", decoded.homeSwipeDownAction)
+        assertEquals("none", decoded.homeSwipeUpAction)
+        assertEquals("search", decoded.homeDoubleTapAction)
         assertEquals(original.recentApps, decoded.recentApps)
         assertEquals(14, decoded.leftWaveCount)
         assertEquals(29, decoded.rightWaveCount)
@@ -105,6 +115,16 @@ class LauncherBackupCodecTest {
     @Test(expected = IllegalArgumentException::class)
     fun decode_rejectsWrongFormat() {
         LauncherBackupCodec.decodeFromJson("""{"format": "other-launcher", "version": 1}""")
+    }
+
+    @Test
+    fun decode_legacyJsonDefaultsNewFieldsSafely() {
+        val decoded = LauncherBackupCodec.decodeFromJson("""{"format": "minimallauncher-backup", "version": 1}""")
+        assertTrue(decoded.showNextAlarm)
+        assertTrue(decoded.showNotificationCount)
+        assertEquals("notifications", decoded.homeSwipeDownAction)
+        assertEquals("search", decoded.homeSwipeUpAction)
+        assertEquals("none", decoded.homeDoubleTapAction)
     }
 
     @Test(expected = IllegalArgumentException::class)

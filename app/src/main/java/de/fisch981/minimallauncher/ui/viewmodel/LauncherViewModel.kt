@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import de.fisch981.minimallauncher.data.backup.LauncherBackupCodec
 import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.data.model.AppNotificationItem
+import de.fisch981.minimallauncher.data.model.HomeGestureAction
 import de.fisch981.minimallauncher.data.model.MediaState
 import de.fisch981.minimallauncher.data.model.ScrollerSide
 import de.fisch981.minimallauncher.data.model.ShortcutItem
@@ -88,6 +89,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val showBattery: StateFlow<Boolean> = favoritesRepository.showBatteryFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
+    val showNextAlarm: StateFlow<Boolean> = favoritesRepository.showNextAlarmFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     val showClock: StateFlow<Boolean> = favoritesRepository.showClockFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
@@ -117,6 +121,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     val showNotificationPreview: StateFlow<Boolean> = favoritesRepository.showNotificationPreviewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val showNotificationCount: StateFlow<Boolean> = favoritesRepository.showNotificationCountFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val homeSwipeDownAction: StateFlow<HomeGestureAction> = favoritesRepository.homeSwipeDownActionFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, HomeGestureAction.EXPAND_NOTIFICATIONS)
+
+    val homeSwipeUpAction: StateFlow<HomeGestureAction> = favoritesRepository.homeSwipeUpActionFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, HomeGestureAction.SEARCH)
+
+    val homeDoubleTapAction: StateFlow<HomeGestureAction> = favoritesRepository.homeDoubleTapActionFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, HomeGestureAction.NONE)
 
     val waveUsageStats: StateFlow<WaveUsageStats> = favoritesRepository.waveUsageStatsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, WaveUsageStats())
@@ -673,6 +689,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun toggleShowNextAlarm(show: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setShowNextAlarm(show)
+        }
+    }
+
     fun toggleShowClock(show: Boolean) {
         viewModelScope.launch {
             favoritesRepository.setShowClock(show)
@@ -724,6 +746,30 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun toggleShowNotificationPreview(show: Boolean) {
         viewModelScope.launch {
             favoritesRepository.setShowNotificationPreview(show)
+        }
+    }
+
+    fun toggleShowNotificationCount(show: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setShowNotificationCount(show)
+        }
+    }
+
+    fun setHomeSwipeDownAction(action: HomeGestureAction) {
+        viewModelScope.launch {
+            favoritesRepository.setHomeSwipeDownAction(action)
+        }
+    }
+
+    fun setHomeSwipeUpAction(action: HomeGestureAction) {
+        viewModelScope.launch {
+            favoritesRepository.setHomeSwipeUpAction(action)
+        }
+    }
+
+    fun setHomeDoubleTapAction(action: HomeGestureAction) {
+        viewModelScope.launch {
+            favoritesRepository.setHomeDoubleTapAction(action)
         }
     }
 

@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import de.fisch981.minimallauncher.data.backup.LauncherBackupData
+import de.fisch981.minimallauncher.data.model.HomeGestureAction
 import de.fisch981.minimallauncher.data.model.ScrollerSide
 import de.fisch981.minimallauncher.ui.theme.AppLanguage
 import de.fisch981.minimallauncher.ui.theme.LauncherFont
@@ -28,6 +29,7 @@ class FavoritesRepository(private val context: Context) {
         private val KEY_SCROLLER_SIDE = stringPreferencesKey("scroller_side")
         private val KEY_SHOW_MEDIA = booleanPreferencesKey("show_media_widget")
         private val KEY_SHOW_BATTERY = booleanPreferencesKey("show_battery")
+        private val KEY_SHOW_NEXT_ALARM = booleanPreferencesKey("show_next_alarm")
         private val KEY_CUSTOM_ICONS = stringPreferencesKey("custom_icons_overrides")
         private val KEY_CUSTOM_NAMES = stringPreferencesKey("custom_app_names")
         private val KEY_RECENT_APPS = stringPreferencesKey("recent_apps_order")
@@ -45,6 +47,10 @@ class FavoritesRepository(private val context: Context) {
         private val KEY_SHOW_BOTTOM_ACTIONS = booleanPreferencesKey("show_bottom_actions")
         private val KEY_SHOW_NOTIFICATION_APPS = booleanPreferencesKey("show_notification_apps")
         private val KEY_SHOW_NOTIFICATION_PREVIEW = booleanPreferencesKey("show_notification_preview")
+        private val KEY_SHOW_NOTIFICATION_COUNT = booleanPreferencesKey("show_notification_count")
+        private val KEY_HOME_SWIPE_DOWN_ACTION = stringPreferencesKey("home_swipe_down_action")
+        private val KEY_HOME_SWIPE_UP_ACTION = stringPreferencesKey("home_swipe_up_action")
+        private val KEY_HOME_DOUBLE_TAP_ACTION = stringPreferencesKey("home_double_tap_action")
         private val KEY_APP_FONT = stringPreferencesKey("app_font")
         private val KEY_CLOCK_DATE_FONT = stringPreferencesKey("clock_date_font")
         private val KEY_WAVE_FONT = stringPreferencesKey("wave_font")
@@ -90,6 +96,10 @@ class FavoritesRepository(private val context: Context) {
         prefs[KEY_SHOW_BATTERY] ?: true
     }
 
+    val showNextAlarmFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SHOW_NEXT_ALARM] ?: true
+    }
+
     val showClockFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[KEY_SHOW_CLOCK] ?: true
     }
@@ -120,6 +130,31 @@ class FavoritesRepository(private val context: Context) {
 
     val showNotificationPreviewFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[KEY_SHOW_NOTIFICATION_PREVIEW] ?: true
+    }
+
+    val showNotificationCountFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SHOW_NOTIFICATION_COUNT] ?: true
+    }
+
+    val homeSwipeDownActionFlow: Flow<HomeGestureAction> = context.dataStore.data.map { prefs ->
+        HomeGestureAction.fromCode(
+            prefs[KEY_HOME_SWIPE_DOWN_ACTION],
+            HomeGestureAction.EXPAND_NOTIFICATIONS
+        )
+    }
+
+    val homeSwipeUpActionFlow: Flow<HomeGestureAction> = context.dataStore.data.map { prefs ->
+        HomeGestureAction.fromCode(
+            prefs[KEY_HOME_SWIPE_UP_ACTION],
+            HomeGestureAction.SEARCH
+        )
+    }
+
+    val homeDoubleTapActionFlow: Flow<HomeGestureAction> = context.dataStore.data.map { prefs ->
+        HomeGestureAction.fromCode(
+            prefs[KEY_HOME_DOUBLE_TAP_ACTION],
+            HomeGestureAction.NONE
+        )
     }
 
     val appFontFlow: Flow<LauncherFont> = context.dataStore.data.map { prefs ->
@@ -297,6 +332,12 @@ class FavoritesRepository(private val context: Context) {
         }
     }
 
+    suspend fun setShowNextAlarm(show: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SHOW_NEXT_ALARM] = show
+        }
+    }
+
     suspend fun setShowClock(show: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[KEY_SHOW_CLOCK] = show
@@ -342,6 +383,30 @@ class FavoritesRepository(private val context: Context) {
     suspend fun setShowNotificationPreview(show: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[KEY_SHOW_NOTIFICATION_PREVIEW] = show
+        }
+    }
+
+    suspend fun setShowNotificationCount(show: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SHOW_NOTIFICATION_COUNT] = show
+        }
+    }
+
+    suspend fun setHomeSwipeDownAction(action: HomeGestureAction) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_HOME_SWIPE_DOWN_ACTION] = action.code
+        }
+    }
+
+    suspend fun setHomeSwipeUpAction(action: HomeGestureAction) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_HOME_SWIPE_UP_ACTION] = action.code
+        }
+    }
+
+    suspend fun setHomeDoubleTapAction(action: HomeGestureAction) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_HOME_DOUBLE_TAP_ACTION] = action.code
         }
     }
 
@@ -573,12 +638,26 @@ class FavoritesRepository(private val context: Context) {
             showDate = prefs[KEY_SHOW_DATE] ?: true,
             showMedia = prefs[KEY_SHOW_MEDIA] ?: true,
             showBattery = prefs[KEY_SHOW_BATTERY] ?: true,
+            showNextAlarm = prefs[KEY_SHOW_NEXT_ALARM] ?: true,
             showRecentApps = prefs[KEY_SHOW_RECENT_APPS] ?: true,
             showAppIcons = prefs[KEY_SHOW_APP_ICONS] ?: true,
             hideStatusBar = prefs[KEY_HIDE_STATUS_BAR] ?: false,
             showBottomActions = prefs[KEY_SHOW_BOTTOM_ACTIONS] ?: true,
             showNotificationApps = prefs[KEY_SHOW_NOTIFICATION_APPS] ?: true,
             showNotificationPreview = prefs[KEY_SHOW_NOTIFICATION_PREVIEW] ?: true,
+            showNotificationCount = prefs[KEY_SHOW_NOTIFICATION_COUNT] ?: true,
+            homeSwipeDownAction = HomeGestureAction.fromCode(
+                prefs[KEY_HOME_SWIPE_DOWN_ACTION],
+                HomeGestureAction.EXPAND_NOTIFICATIONS
+            ).code,
+            homeSwipeUpAction = HomeGestureAction.fromCode(
+                prefs[KEY_HOME_SWIPE_UP_ACTION],
+                HomeGestureAction.SEARCH
+            ).code,
+            homeDoubleTapAction = HomeGestureAction.fromCode(
+                prefs[KEY_HOME_DOUBLE_TAP_ACTION],
+                HomeGestureAction.NONE
+            ).code,
             recentApps = if (recentsRaw.isBlank()) emptyList() else recentsRaw.split(",").filter { it.isNotBlank() },
             leftWaveCount = (prefs[KEY_LEFT_WAVE_COUNT] ?: 0).coerceAtLeast(0),
             rightWaveCount = (prefs[KEY_RIGHT_WAVE_COUNT] ?: 0).coerceAtLeast(0),
@@ -614,12 +693,26 @@ class FavoritesRepository(private val context: Context) {
             prefs[KEY_SHOW_DATE] = data.showDate
             prefs[KEY_SHOW_MEDIA] = data.showMedia
             prefs[KEY_SHOW_BATTERY] = data.showBattery
+            prefs[KEY_SHOW_NEXT_ALARM] = data.showNextAlarm
             prefs[KEY_SHOW_RECENT_APPS] = data.showRecentApps
             prefs[KEY_SHOW_APP_ICONS] = data.showAppIcons
             prefs[KEY_HIDE_STATUS_BAR] = data.hideStatusBar
             prefs[KEY_SHOW_BOTTOM_ACTIONS] = data.showBottomActions
             prefs[KEY_SHOW_NOTIFICATION_APPS] = data.showNotificationApps
             prefs[KEY_SHOW_NOTIFICATION_PREVIEW] = data.showNotificationPreview
+            prefs[KEY_SHOW_NOTIFICATION_COUNT] = data.showNotificationCount
+            prefs[KEY_HOME_SWIPE_DOWN_ACTION] = HomeGestureAction.fromCode(
+                data.homeSwipeDownAction,
+                HomeGestureAction.EXPAND_NOTIFICATIONS
+            ).code
+            prefs[KEY_HOME_SWIPE_UP_ACTION] = HomeGestureAction.fromCode(
+                data.homeSwipeUpAction,
+                HomeGestureAction.SEARCH
+            ).code
+            prefs[KEY_HOME_DOUBLE_TAP_ACTION] = HomeGestureAction.fromCode(
+                data.homeDoubleTapAction,
+                HomeGestureAction.NONE
+            ).code
             prefs[KEY_RECENT_APPS] = data.recentApps.filter { it.isNotBlank() }.take(15).joinToString(",")
             prefs[KEY_LEFT_WAVE_COUNT] = data.leftWaveCount.coerceAtLeast(0)
             prefs[KEY_RIGHT_WAVE_COUNT] = data.rightWaveCount.coerceAtLeast(0)

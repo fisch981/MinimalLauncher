@@ -6,6 +6,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.0] - 2026-11-24
+
+### Deutsch
+- **Akku-Optimierung im Header (Event-gesteuert statt 1-Sekunden-Schleife):** Uhrzeit, Datum, Akkustand und Wecker-Anzeige reagieren jetzt ausschließlich auf System-Events (`ACTION_TIME_TICK`, `ACTION_BATTERY_CHANGED`, `ACTION_NEXT_ALARM_CLOCK_CHANGED`, `ON_RESUME`) – 60× weniger Hintergrund-Wakeups bei vollem Funktionsumfang.
+- **Nächster aktiver Wecker im strengen Weiß-auf-Schwarz-Design:** Neben Datum und Akku wird optional der nächste gestellte System-Wecker mit rein monochromem Vektor-Symbol (ohne farbige Emojis) angezeigt und lässt sich direkt antippen (konfigurierbar unter *Header & Widgets*).
+- **Dezenter Zähler für aktive Benachrichtigungen:** Hat eine App mehrere aktive Benachrichtigungen, wird dezent ein monochromer Zähler (`· N`) angezeigt – ohne Doppelzählung von Gruppen-Zusammenfassungen und abschaltbar unter *Benachrichtigungen*.
+- **Konfigurierbare Homescreen-Gesten (inkl. *„Keine Aktion“*):** Unter *Homescreen & Apps* lassen sich *Nach unten wischen*, *Nach oben wischen* und *Doppeltipp auf freien Bereich* individuell belegen (*Keine Aktion*, *Benachrichtigungen*, *Suche*, *Alle Apps*).
+- **R8 Code- & Resource-Shrinking aktiviert:** Deutlich kompaktere Release-APK und schnellerer App-Start bei vollständiger Erhaltung sämtlicher Funktionen, Icon-Packs, Nova-Imports und Einstellungen.
+
+### English
+- **Event-Driven Header Battery Optimization:** Replaced the 1-second header polling loop with system broadcast listeners (`ACTION_TIME_TICK`, `ACTION_BATTERY_CHANGED`, `ACTION_NEXT_ALARM_CLOCK_CHANGED`) and `ON_RESUME` refresh, cutting idle wakeups by 60× with zero loss of responsiveness.
+- **Strict Monochrome Next Active Alarm Indicator:** Optionally shows the next scheduled system alarm (`AlarmManager`) in the header using a crisp monochrome white-on-black vector icon (no color emojis) that opens alarms when tapped, configurable under *Header & Widgets*.
+- **Subtle Active Notification Counter:** Displays a monochrome count (`· N`) when an app has multiple active notifications, excluding redundant synthetic group summaries and toggleable under *Notifications*.
+- **Configurable Home Screen Gestures (Including *“No action”*):** Added gesture selectors under *Home Screen & Apps* for *Swipe down*, *Swipe up*, and *Double-tap on empty space* (*No action*, *Notifications*, *Search*, *All apps*).
+- **R8 Code & Resource Shrinking:** Enabled safe R8 minification and resource shrinking for release builds to significantly reduce APK size and speed up startup while preserving 100% of launcher features.
+
+---
+
 ## [1.0.39] - 2026-11-24
 
 ### Deutsch

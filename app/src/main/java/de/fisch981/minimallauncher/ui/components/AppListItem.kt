@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.data.model.AppNotificationItem
+import de.fisch981.minimallauncher.data.service.NotificationStateUtils
 import de.fisch981.minimallauncher.ui.theme.BorderDark
 import de.fisch981.minimallauncher.ui.theme.DarkSurfaceVariant
 import de.fisch981.minimallauncher.ui.theme.GrayLight
@@ -75,6 +76,7 @@ fun AppListItem(
     onLongClick: () -> Unit,
     showIcon: Boolean = true,
     showNotificationPreview: Boolean = true,
+    showNotificationCount: Boolean = true,
     fontFamily: FontFamily = FontFamily.SansSerif,
     fontSizeSp: Int = 17,
     verticalPaddingDp: Int = 8,
@@ -86,7 +88,13 @@ fun AppListItem(
     longPressDelayMs: Int = 500,
     modifier: Modifier = Modifier
 ) {
-    val activeNotification = notifications.firstOrNull()
+    val visibleNotifications = remember(notifications) {
+        NotificationStateUtils.visibleNotificationsForDisplay(notifications)
+    }
+    val activeNotification = visibleNotifications.firstOrNull()
+    val notificationCount = remember(notifications) {
+        NotificationStateUtils.countActiveNotifications(notifications)
+    }
     val canDismissNotifications = onDismissNotifications != null && notifications.isNotEmpty()
     val view = LocalView.current
     val density = LocalDensity.current
@@ -329,13 +337,33 @@ fun AppListItem(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false)
                     )
-                    if (!showIcon && notifications.isNotEmpty()) {
+                    if (!showIcon && notificationCount > 0) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(CircleShape)
                                 .background(PureWhite)
+                        )
+                        if (showNotificationCount && notificationCount > 1) {
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = notificationCount.toString(),
+                                fontSize = (fontSizeSp.coerceIn(13, 24) - 3).coerceIn(11, 18).sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = fontFamily,
+                                color = GrayLight,
+                                maxLines = 1
+                            )
+                        }
+                    } else if (showNotificationCount && notificationCount > 1) {
+                        Text(
+                            text = " · $notificationCount",
+                            fontSize = (fontSizeSp.coerceIn(13, 24) - 3).coerceIn(11, 18).sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = fontFamily,
+                            color = GrayMedium,
+                            maxLines = 1
                         )
                     }
                 }

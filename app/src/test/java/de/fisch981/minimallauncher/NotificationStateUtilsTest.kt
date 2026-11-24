@@ -364,4 +364,25 @@ class NotificationStateUtilsTest {
         assertEquals(6, filtered[2].index)
         assertEquals("Löschen", filtered[2].title)
     }
+
+    @Test
+    fun testCountActiveNotificationsExcludesGroupSummaryWhenChildrenExist() {
+        val grouped = listOf(
+            AppNotificationItem("m1", "com.chat", "Alice", "Hi", 100L, isGroupSummary = false),
+            AppNotificationItem("m2", "com.chat", "Bob", "Hey", 200L, isGroupSummary = false),
+            AppNotificationItem("sum", "com.chat", "Chat", "2 messages", 300L, isGroupSummary = true)
+        )
+        assertEquals(2, NotificationStateUtils.countActiveNotifications(grouped))
+        assertEquals(
+            listOf("m1", "m2"),
+            NotificationStateUtils.visibleNotificationsForDisplay(grouped).map { it.key }
+        )
+
+        val summaryOnly = listOf(
+            AppNotificationItem("sum", "com.mail", "Inbox", "3 emails", 500L, isGroupSummary = true)
+        )
+        assertEquals(1, NotificationStateUtils.countActiveNotifications(summaryOnly))
+        assertEquals(listOf("sum"), NotificationStateUtils.visibleNotificationsForDisplay(summaryOnly).map { it.key })
+        assertEquals(0, NotificationStateUtils.countActiveNotifications(emptyList()))
+    }
 }

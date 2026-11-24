@@ -1,5 +1,6 @@
 package de.fisch981.minimallauncher.data.repository
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.role.RoleManager
 import android.content.Context
@@ -48,6 +49,19 @@ object LauncherUtils {
                 context.startActivity(intent)
                 return
             } catch (_: Exception) {}
+        }
+    }
+
+    @SuppressLint("WrongConstant", "PrivateApi")
+    fun expandNotificationShade(context: Context): Boolean {
+        return try {
+            val service = context.getSystemService("statusbar") ?: return false
+            val statusBarManager = Class.forName("android.app.StatusBarManager")
+            val expand = statusBarManager.getMethod("expandNotificationsPanel")
+            expand.invoke(service)
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 }

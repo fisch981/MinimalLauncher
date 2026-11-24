@@ -338,6 +338,7 @@ class LauncherNotificationService : NotificationListenerService() {
                             action.semanticAction == Notification.Action.SEMANTIC_ACTION_REPLY
                     )
                 }
+                val isGroupSummary = (flags and Notification.FLAG_GROUP_SUMMARY) != 0
                 val item = AppNotificationItem(
                     key = sbn.key,
                     packageName = pkg,
@@ -345,9 +346,9 @@ class LauncherNotificationService : NotificationListenerService() {
                     text = text,
                     postTime = sbn.postTime,
                     isClearable = sbn.isClearable,
-                    actions = NotificationStateUtils.filterOneTapActions(rawActions, maxCount = 3)
+                    actions = NotificationStateUtils.filterOneTapActions(rawActions, maxCount = 3),
+                    isGroupSummary = isGroupSummary
                 )
-                val isGroupSummary = (flags and Notification.FLAG_GROUP_SUMMARY) != 0
 
                 map.getOrPut(pkg) { mutableListOf() }.add(RankedNotification(item, isGroupSummary))
             }

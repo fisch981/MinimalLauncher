@@ -66,6 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.fisch981.minimallauncher.data.model.AppItem
+import de.fisch981.minimallauncher.data.model.HomeGestureAction
 import de.fisch981.minimallauncher.data.model.ScrollerSide
 import de.fisch981.minimallauncher.data.repository.LauncherUtils
 import de.fisch981.minimallauncher.data.service.LauncherNotificationService
@@ -253,7 +254,7 @@ fun SettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
-                        text = "MinimalLauncher v1.0.39",
+                        text = "MinimalLauncher v1.1.0",
                         color = GrayMedium,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(bottom = 32.dp)
@@ -436,6 +437,9 @@ private fun HomeAppsSubScreen(
     val showRecentApps by viewModel.showRecentApps.collectAsState()
     val showBottomActions by viewModel.showBottomActions.collectAsState()
     val appLongPressDelayMs by viewModel.appLongPressDelayMs.collectAsState()
+    val homeSwipeDownAction by viewModel.homeSwipeDownAction.collectAsState()
+    val homeSwipeUpAction by viewModel.homeSwipeUpAction.collectAsState()
+    val homeDoubleTapAction by viewModel.homeDoubleTapAction.collectAsState()
 
     SettingsSubPageScaffold(title = strings.sectionHomeApps, onBack = onBack) {
         item {
@@ -517,7 +521,95 @@ private fun HomeAppsSubScreen(
                     )
                 )
             }
+
+            HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+            SectionHeader(strings.sectionHomeGestures)
+
+            HomeGestureSelector(
+                title = strings.gestureSwipeDownTitle,
+                subtitle = strings.gestureSwipeDownSubtitle,
+                selectedAction = homeSwipeDownAction,
+                onSelectAction = { viewModel.setHomeSwipeDownAction(it) }
+            )
+
+            HomeGestureSelector(
+                title = strings.gestureSwipeUpTitle,
+                subtitle = strings.gestureSwipeUpSubtitle,
+                selectedAction = homeSwipeUpAction,
+                onSelectAction = { viewModel.setHomeSwipeUpAction(it) }
+            )
+
+            HomeGestureSelector(
+                title = strings.gestureDoubleTapTitle,
+                subtitle = strings.gestureDoubleTapSubtitle,
+                selectedAction = homeDoubleTapAction,
+                onSelectAction = { viewModel.setHomeDoubleTapAction(it) }
+            )
             Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun HomeGestureSelector(
+    title: String,
+    subtitle: String,
+    selectedAction: HomeGestureAction,
+    onSelectAction: (HomeGestureAction) -> Unit
+) {
+    val strings = LocalAppStrings.current
+    val options = remember(strings) {
+        listOf(
+            HomeGestureAction.NONE to strings.gestureActionNone,
+            HomeGestureAction.EXPAND_NOTIFICATIONS to strings.gestureActionNotifications,
+            HomeGestureAction.SEARCH to strings.gestureActionSearch,
+            HomeGestureAction.ALL_APPS to strings.gestureActionAllApps
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(title, color = PureWhite, fontSize = 15.sp)
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(subtitle, color = GrayMedium, fontSize = 12.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.chunked(2).forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rowItems.forEach { (actionOption, actionLabel) ->
+                        val selected = selectedAction == actionOption
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (selected) PureWhite else DarkSurfaceVariant)
+                                .border(
+                                    1.dp,
+                                    if (selected) PureWhite else BorderDark,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { onSelectAction(actionOption) }
+                                .padding(vertical = 10.dp, horizontal = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = actionLabel,
+                                color = if (selected) PureBlack else GrayLight,
+                                fontSize = 13.sp,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -531,6 +623,7 @@ private fun HeaderWidgetsSubScreen(
     val showClock by viewModel.showClock.collectAsState()
     val showDate by viewModel.showDate.collectAsState()
     val showBattery by viewModel.showBattery.collectAsState()
+    val showNextAlarm by viewModel.showNextAlarm.collectAsState()
     val showMedia by viewModel.showMedia.collectAsState()
     val hideStatusBar by viewModel.hideStatusBar.collectAsState()
 
@@ -556,6 +649,13 @@ private fun HeaderWidgetsSubScreen(
                 subtitle = strings.showBatterySubtitle,
                 checked = showBattery,
                 onCheckedChange = { viewModel.toggleShowBattery(it) }
+            )
+
+            SettingSwitchItem(
+                title = strings.showNextAlarmTitle,
+                subtitle = strings.showNextAlarmSubtitle,
+                checked = showNextAlarm,
+                onCheckedChange = { viewModel.toggleShowNextAlarm(it) }
             )
 
             SettingSwitchItem(
@@ -585,6 +685,7 @@ private fun NotificationsSubScreen(
     val strings = LocalAppStrings.current
     val showNotificationApps by viewModel.showNotificationApps.collectAsState()
     val showNotificationPreview by viewModel.showNotificationPreview.collectAsState()
+    val showNotificationCount by viewModel.showNotificationCount.collectAsState()
     val isNotificationGranted = LauncherNotificationService.isPermissionGranted(context)
 
     SettingsSubPageScaffold(title = strings.categoryNotificationsTitle, onBack = onBack) {
@@ -602,6 +703,13 @@ private fun NotificationsSubScreen(
                 subtitle = strings.showNotificationPreviewSubtitle,
                 checked = showNotificationPreview,
                 onCheckedChange = { viewModel.toggleShowNotificationPreview(it) }
+            )
+
+            SettingSwitchItem(
+                title = strings.showNotificationCountTitle,
+                subtitle = strings.showNotificationCountSubtitle,
+                checked = showNotificationCount,
+                onCheckedChange = { viewModel.toggleShowNotificationCount(it) }
             )
 
             HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))

@@ -1,8 +1,14 @@
 package de.fisch981.minimallauncher.ui.components
 
+import android.app.ActivityOptions
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.BatteryManager
+import android.os.Build
 import android.provider.AlarmClock
 import android.provider.CalendarContract
 import androidx.compose.animation.AnimatedVisibility
@@ -18,16 +24,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,12 +48,15 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import de.fisch981.minimallauncher.data.model.MediaState
 import de.fisch981.minimallauncher.ui.theme.GrayLight
 import de.fisch981.minimallauncher.ui.theme.GrayMedium
 import de.fisch981.minimallauncher.ui.theme.LocalAppStrings
 import de.fisch981.minimallauncher.ui.theme.PureWhite
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -63,40 +74,121 @@ fun HeaderWidget(
     dateSizeSp: Int = 15,
     fontFamily: FontFamily = FontFamily.SansSerif,
     showBattery: Boolean = true,
+    showNextAlarm: Boolean = true,
     showMedia: Boolean = true,
     hasLeftWave: Boolean = false,
     hasRightWave: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val strings = LocalAppStrings.current
     var currentTime by remember { mutableStateOf("") }
     var currentDate by remember { mutableStateOf("") }
     var batteryPercent by remember { mutableIntStateOf(100) }
+    var nextAlarmText by remember { mutableStateOf<String?>(null) }
+    var nextAlarmShowIntent by remember { mutableStateOf<PendingIntent?>(null) }
 
-    LaunchedEffect(strings.isGerman, showClock, showDate, showBattery) {
-        if (!showClock && !showDate && !showBattery) return@LaunchedEffect
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val dateFormat = SimpleDateFormat(strings.dateFormatPattern, strings.dateLocale)
+    DisposableEffect(
+        context,
+        lifecycleOwner,
+        strings.isGerman,
+        showClock,
+        showDate,
+        showBattery,
+        showNextAlarm
+    ) {
+        if (!showClock && !showDate && !showBattery && !showNextAlarm) {
+            return@DisposableEffect onDispose {}
+        }
+
         val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
 
-        while (true) {
+        fun refreshHeader(batteryIntent: Intent? = null) {
             val now = Date()
             if (showClock) {
-                currentTime = timeFormat.format(now)
+                currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(now)
             }
             if (showDate) {
-                currentDate = dateFormat.format(now)
+                currentDate = SimpleDateFormat(strings.dateFormatPattern, strings.dateLocale).format(now)
             }
+            if (showBattery) {
+                val managerFallback = batteryManager
+                    ?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                    ?.takeIf { it in 0..100 }
+                    ?: batteryPercent
+                batteryPercent = HeaderFormatUtils.parseBatteryPercent(batteryIntent, managerFallback)
+            }
+            if (showNextAlarm) {
+                val alarmInfo = try {
+                    alarmManager?.nextAlarmClock
+                } catch (_: Exception) {
+                    null
+                }
+                if (alarmInfo != null) {
+                    val formatted = HeaderFormatUtils.formatNextAlarm(
+                        triggerTimeMillis = alarmInfo.triggerTime,
+                        nowMillis = now.time,
+                        locale = strings.dateLocale
+                    )
+                    nextAlarmText = formatted
+                    nextAlarmShowIntent = if (formatted != null) alarmInfo.showIntent else null
+                } else {
+                    nextAlarmText = null
+                    nextAlarmShowIntent = null
+                }
+            } else {
+                nextAlarmText = null
+                nextAlarmShowIntent = null
+            }
+        }
 
-            if (showBattery && batteryManager != null) {
-                batteryPercent = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        val filter = IntentFilter().apply {
+            if (showClock || showDate || showNextAlarm) {
+                addAction(Intent.ACTION_TIME_TICK)
+                addAction(Intent.ACTION_TIME_CHANGED)
+                addAction(Intent.ACTION_TIMEZONE_CHANGED)
+                addAction(Intent.ACTION_LOCALE_CHANGED)
             }
-            delay(1000)
+            if (showBattery) {
+                addAction(Intent.ACTION_BATTERY_CHANGED)
+            }
+            if (showNextAlarm) {
+                addAction(AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED)
+            }
+        }
+
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(ctx: Context?, intent: Intent?) {
+                val batteryIntent = if (intent?.action == Intent.ACTION_BATTERY_CHANGED) intent else null
+                refreshHeader(batteryIntent)
+            }
+        }
+
+        val initialSticky = runCatching {
+            ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
+        }.getOrNull()
+        refreshHeader(initialSticky)
+
+        val lifecycleObserver = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                refreshHeader()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
+
+        onDispose {
+            runCatching { lifecycleOwner.lifecycle.removeObserver(lifecycleObserver) }
+            runCatching { context.unregisterReceiver(receiver) }
         }
     }
 
-    val hasAnyHeaderContent = showClock || showDate || showBattery || (showMedia && mediaState.hasActiveMedia)
+    val clampedDateSize = dateSizeSp.coerceIn(11, 24)
+    val secondaryTextSize = (clampedDateSize - 1).coerceIn(10, 23)
+    val hasActiveAlarm = showNextAlarm && !nextAlarmText.isNullOrBlank()
+    val hasAnyHeaderContent =
+        showClock || showDate || showBattery || hasActiveAlarm || (showMedia && mediaState.hasActiveMedia)
     if (!hasAnyHeaderContent) return
 
     Column(
@@ -119,51 +211,83 @@ fun HeaderWidget(
                 letterSpacing = (-1).sp,
                 color = PureWhite,
                 modifier = Modifier.clickable {
-                    try {
-                        val intent = Intent(AlarmClock.ACTION_SHOW_ALARMS).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                        context.startActivity(intent)
-                    } catch (_: Exception) {}
+                    launchAlarmApp(context, null)
                 }
             )
         }
 
-        if (showClock && (showDate || showBattery)) {
+        if (showClock && (showDate || showBattery || hasActiveAlarm)) {
             Spacer(modifier = Modifier.height(2.dp))
         }
 
-        // Date and optional Battery - click opens calendar
-        if (showDate || showBattery) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable {
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            data = CalendarContract.CONTENT_URI.buildUpon().appendPath("time").build()
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        // Date, optional Battery, and strict monochrome Next Alarm
+        if (showDate || showBattery || hasActiveAlarm) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (showDate || showBattery) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    data = CalendarContract.CONTENT_URI.buildUpon().appendPath("time").build()
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
                         }
-                        context.startActivity(intent)
-                    } catch (_: Exception) {}
+                    ) {
+                        if (showDate) {
+                            Text(
+                                text = currentDate,
+                                fontSize = clampedDateSize.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = fontFamily,
+                                color = GrayLight
+                            )
+                        }
+                        if (showBattery) {
+                            Text(
+                                text = if (showDate) " • $batteryPercent%" else "$batteryPercent%",
+                                fontSize = secondaryTextSize.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = fontFamily,
+                                color = GrayMedium
+                            )
+                        }
+                    }
                 }
-            ) {
-                if (showDate) {
-                    Text(
-                        text = currentDate,
-                        fontSize = dateSizeSp.coerceIn(11, 24).sp,
-                        fontWeight = FontWeight.Normal,
-                        fontFamily = fontFamily,
-                        color = GrayLight
-                    )
-                }
-                if (showBattery) {
-                    Text(
-                        text = if (showDate) " • $batteryPercent%" else "$batteryPercent%",
-                        fontSize = (dateSizeSp.coerceIn(11, 24) - 1).coerceIn(10, 23).sp,
-                        fontWeight = FontWeight.Normal,
-                        fontFamily = fontFamily,
-                        color = GrayMedium
-                    )
+
+                if (hasActiveAlarm) {
+                    if (showDate || showBattery) {
+                        Text(
+                            text = " • ",
+                            fontSize = secondaryTextSize.sp,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = fontFamily,
+                            color = GrayMedium
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            launchAlarmApp(context, nextAlarmShowIntent)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Alarm,
+                            contentDescription = strings.nextAlarmContentDesc,
+                            tint = GrayLight,
+                            modifier = Modifier.size((clampedDateSize - 1).coerceIn(11, 22).dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = nextAlarmText.orEmpty(),
+                            fontSize = secondaryTextSize.sp,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = fontFamily,
+                            color = GrayLight
+                        )
+                    }
                 }
             }
         }
@@ -177,7 +301,7 @@ fun HeaderWidget(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = if (showClock || showDate || showBattery) 16.dp else 4.dp),
+                    .padding(top = if (showClock || showDate || showBattery || hasActiveAlarm) 16.dp else 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
@@ -236,4 +360,31 @@ fun HeaderWidget(
             }
         }
     }
+}
+
+private fun launchAlarmApp(context: Context, showIntent: PendingIntent?) {
+    if (showIntent != null) {
+        val launched = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val options = ActivityOptions.makeBasic()
+                    .setPendingIntentBackgroundActivityStartMode(
+                        ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                    )
+                    .toBundle()
+                showIntent.send(context, 0, null, null, null, null, options)
+            } else {
+                showIntent.send()
+            }
+            true
+        } catch (_: Exception) {
+            false
+        }
+        if (launched) return
+    }
+    try {
+        val intent = Intent(AlarmClock.ACTION_SHOW_ALARMS).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(intent)
+    } catch (_: Exception) {}
 }

@@ -1,13 +1,18 @@
 package de.fisch981.minimallauncher.ui.screens
 
 import android.app.Activity
+import android.view.HapticFeedbackConstants
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateDpAsState
 import de.fisch981.minimallauncher.data.model.AppItem
+import de.fisch981.minimallauncher.data.model.HomeGestureAction
+import de.fisch981.minimallauncher.data.repository.LauncherUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,11 +51,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -76,6 +86,8 @@ import de.fisch981.minimallauncher.ui.theme.PureBlack
 import de.fisch981.minimallauncher.ui.viewmodel.LauncherViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.hypot
 
 @Composable
 fun HomeScreen(
@@ -83,6 +95,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
     val configuration = LocalConfiguration.current
     val appLanguage by viewModel.appLanguage.collectAsState()
     val systemLocale = remember(configuration) {
@@ -103,12 +116,17 @@ fun HomeScreen(
     val clockSizeSp by viewModel.clockSizeSp.collectAsState()
     val showDate by viewModel.showDate.collectAsState()
     val showBattery by viewModel.showBattery.collectAsState()
+    val showNextAlarm by viewModel.showNextAlarm.collectAsState()
     val showMedia by viewModel.showMedia.collectAsState()
     val showRecentApps by viewModel.showRecentApps.collectAsState()
     val showAppIcons by viewModel.showAppIcons.collectAsState()
     val showBottomActions by viewModel.showBottomActions.collectAsState()
     val showNotificationApps by viewModel.showNotificationApps.collectAsState()
     val showNotificationPreview by viewModel.showNotificationPreview.collectAsState()
+    val showNotificationCount by viewModel.showNotificationCount.collectAsState()
+    val homeSwipeDownAction by viewModel.homeSwipeDownAction.collectAsState()
+    val homeSwipeUpAction by viewModel.homeSwipeUpAction.collectAsState()
+    val homeDoubleTapAction by viewModel.homeDoubleTapAction.collectAsState()
     val appFont by viewModel.appFont.collectAsState()
     val clockDateFont by viewModel.clockDateFont.collectAsState()
     val waveFont by viewModel.waveFont.collectAsState()
@@ -285,6 +303,18 @@ fun HomeScreen(
         }
     }
 
+    fun executeHomeGesture(action: HomeGestureAction) {
+        when (action) {
+            HomeGestureAction.NONE -> Unit
+            HomeGestureAction.EXPAND_NOTIFICATIONS -> LauncherUtils.expandNotificationShade(context)
+            HomeGestureAction.SEARCH -> viewModel.setSearchOpen(true)
+            HomeGestureAction.ALL_APPS -> {
+                pendingDrawerScroll = 0 to 0
+                isAppDrawerMode = true
+            }
+        }
+    }
+
     var pendingIconEditApp by remember { mutableStateOf<AppItem?>(null) }
     val externalIconPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -313,10 +343,153 @@ fun HomeScreen(
             // ==========================================
             // MODE A: HOMESCREEN (NUR FAVORITEN)
             // ==========================================
+            val leftWaveGuardPx = with(density) { if (hasLeftWave) 52.dp.toPx() else 0f }
+            val rightWaveGuardPx = with(density) { if (hasRightWave) 52.dp.toPx() else 0f }
+            val verticalTriggerDistancePx = with(density) { 64.dp.toPx() }
+            val verticalSwipeEnabled =
+                homeSwipeDownAction != HomeGestureAction.NONE || homeSwipeUpAction != HomeGestureAction.NONE
+
+            val doubleTapModifier = if (homeDoubleTapAction != HomeGestureAction.NONE) {
+                Modifier.pointerInput(homeDoubleTapAction, hasLeftWave, hasRightWave) {
+                    val doubleTapTimeout = viewConfiguration.doubleTapTimeoutMillis
+                    val doubleTapMinTime = viewConfiguration.doubleTapMinTimeMillis
+                    val touchSlop = viewConfiguration.touchSlop
+                    val doubleTapSlop = touchSlop * 5f
+                    var lastTapTime = 0L
+                    var lastTapPos = Offset.Zero
+
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
+                        val startX = down.position.x
+                        if (down.isConsumed ||
+                            (hasLeftWave && startX < leftWaveGuardPx) ||
+                            (hasRightWave && startX > size.width - rightWaveGuardPx)
+                        ) {
+                            lastTapTime = 0L
+                            return@awaitEachGesture
+                        }
+
+                        var tapValid = true
+                        var upPos = down.position
+                        var upTime = down.uptimeMillis
+
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Final)
+                            if (event.changes.size > 1) {
+                                tapValid = false
+                                break
+                            }
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (change.isConsumed || (change.position - down.position).getDistance() > touchSlop) {
+                                tapValid = false
+                                break
+                            }
+                            if (change.changedToUpIgnoreConsumed()) {
+                                upPos = change.position
+                                upTime = change.uptimeMillis
+                                break
+                            }
+                        }
+
+                        if (!tapValid) {
+                            lastTapTime = 0L
+                            return@awaitEachGesture
+                        }
+
+                        val dt = upTime - lastTapTime
+                        if (lastTapTime > 0L &&
+                            dt in doubleTapMinTime..doubleTapTimeout &&
+                            (upPos - lastTapPos).getDistance() <= doubleTapSlop
+                        ) {
+                            lastTapTime = 0L
+                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            executeHomeGesture(homeDoubleTapAction)
+                        } else {
+                            lastTapTime = upTime
+                            lastTapPos = upPos
+                        }
+                    }
+                }
+            } else {
+                Modifier
+            }
+
+            val verticalSwipeModifier = if (verticalSwipeEnabled) {
+                Modifier.pointerInput(homeSwipeDownAction, homeSwipeUpAction, hasLeftWave, hasRightWave) {
+                    val touchSlop = viewConfiguration.touchSlop
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        val startX = down.position.x
+                        if ((hasLeftWave && startX < leftWaveGuardPx) ||
+                            (hasRightWave && startX > size.width - rightWaveGuardPx)
+                        ) {
+                            return@awaitEachGesture
+                        }
+
+                        val canTriggerDown =
+                            homeSwipeDownAction != HomeGestureAction.NONE && !homeListState.canScrollBackward
+                        val canTriggerUp =
+                            homeSwipeUpAction != HomeGestureAction.NONE && !homeListState.canScrollForward
+                        if (!canTriggerDown && !canTriggerUp) {
+                            return@awaitEachGesture
+                        }
+
+                        var lockedVertical = false
+                        var triggered = false
+
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            if (event.changes.size > 1) break
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                if (lockedVertical) {
+                                    change.consume()
+                                }
+                                break
+                            }
+
+                            val dx = change.position.x - down.position.x
+                            val dy = change.position.y - down.position.y
+
+                            if (!lockedVertical) {
+                                if (hypot(dx, dy) > touchSlop * 1.15f) {
+                                    val isVerticalDown =
+                                        dy > 0f && canTriggerDown && abs(dy) > abs(dx) * 1.35f
+                                    val isVerticalUp =
+                                        dy < 0f && canTriggerUp && abs(dy) > abs(dx) * 1.35f
+                                    if (isVerticalDown || isVerticalUp) {
+                                        lockedVertical = true
+                                        change.consume()
+                                    } else {
+                                        break
+                                    }
+                                }
+                            } else {
+                                change.consume()
+                                if (!triggered && abs(dy) >= verticalTriggerDistancePx) {
+                                    triggered = true
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    val action = if (dy > 0f) homeSwipeDownAction else homeSwipeUpAction
+                                    executeHomeGesture(action)
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Modifier
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(doubleTapModifier)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .offset(x = waveClearanceOffset)
+                    .then(verticalSwipeModifier)
             ) {
                 LazyColumn(
                     state = homeListState,
@@ -339,6 +512,7 @@ fun HomeScreen(
                             dateSizeSp = dateSizeSp,
                             fontFamily = clockDateFontFamily,
                             showBattery = showBattery,
+                            showNextAlarm = showNextAlarm,
                             showMedia = showMedia,
                             hasLeftWave = hasLeftWave,
                             hasRightWave = hasRightWave
@@ -357,6 +531,7 @@ fun HomeScreen(
                                 onLongClick = { viewModel.openPopup(app) },
                                 showIcon = showAppIcons,
                                 showNotificationPreview = showNotificationPreview,
+                                showNotificationCount = showNotificationCount,
                                 fontFamily = appFontFamily,
                                 fontSizeSp = appFontSizeSp,
                                 verticalPaddingDp = appRowSpacingDp,
@@ -396,6 +571,7 @@ fun HomeScreen(
                             onLongClick = { viewModel.openPopup(app) },
                             showIcon = showAppIcons,
                             showNotificationPreview = showNotificationPreview,
+                            showNotificationCount = showNotificationCount,
                             fontFamily = appFontFamily,
                             fontSizeSp = appFontSizeSp,
                             verticalPaddingDp = appRowSpacingDp,
@@ -423,6 +599,7 @@ fun HomeScreen(
                                 onNotificationActionClick = { key, idx -> viewModel.triggerNotificationAction(key, idx) },
                                 showIcon = showAppIcons,
                                 showNotificationPreview = showNotificationPreview,
+                                showNotificationCount = showNotificationCount,
                                 appFontFamily = appFontFamily,
                                 appFontSizeSp = appFontSizeSp,
                                 appRowSpacingDp = appRowSpacingDp,
@@ -479,6 +656,7 @@ fun HomeScreen(
                     }
                 }
             }
+            }
         } else {
             // ==========================================
             // MODE B: APP DRAWER (ALLE APPS A-Z)
@@ -525,6 +703,7 @@ fun HomeScreen(
                             onLongClick = { viewModel.openPopup(app) },
                             showIcon = showAppIcons,
                             showNotificationPreview = showNotificationPreview,
+                            showNotificationCount = showNotificationCount,
                             fontFamily = appFontFamily,
                             fontSizeSp = appFontSizeSp,
                             verticalPaddingDp = appRowSpacingDp,
@@ -775,6 +954,7 @@ private fun RecentAppsEntry(
     onNotificationActionClick: (String, Int) -> Unit = { _, _ -> },
     showIcon: Boolean,
     showNotificationPreview: Boolean,
+    showNotificationCount: Boolean = true,
     appFontFamily: FontFamily,
     appFontSizeSp: Int,
     appRowSpacingDp: Int,
@@ -831,6 +1011,7 @@ private fun RecentAppsEntry(
                     onLongClick = { onLongClickApp(recentApp) },
                     showIcon = showIcon,
                     showNotificationPreview = showNotificationPreview,
+                    showNotificationCount = showNotificationCount,
                     fontFamily = appFontFamily,
                     fontSizeSp = appFontSizeSp,
                     verticalPaddingDp = appRowSpacingDp,
