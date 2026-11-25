@@ -6,6 +6,8 @@ import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -26,8 +28,26 @@ class LauncherNotificationService : NotificationListenerService() {
         @Volatile
         private var activeService: LauncherNotificationService? = null
 
+        @Volatile
+        private var isLauncherVisible: Boolean = false
+
+        @Volatile
+        private var hasPendingRefresh: Boolean = false
+
+        private const val NOTIFICATION_DEBOUNCE_MS = 120L
+
         private val locallyDismissedLock = Any()
         private var locallyDismissedKeyPostTimes: Map<String, Long> = emptyMap()
+
+        fun setLauncherVisible(visible: Boolean, context: Context) {
+            isLauncherVisible = visible
+            if (!visible) {
+                activeService?.cancelPendingDebouncedRefresh()
+            } else if (hasPendingRefresh) {
+                hasPendingRefresh = false
+                syncOrRebind(context)
+            }
+        }
 
         fun isPermissionGranted(context: Context): Boolean {
             val enabledListeners = Settings.Secure.getString(
@@ -95,15 +115,33 @@ class LauncherNotificationService : NotificationListenerService() {
         }
     }
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val debouncedRefreshRunnable = Runnable { refreshAllNotifications() }
+
+    private fun cancelPendingDebouncedRefresh() {
+        mainHandler.removeCallbacks(debouncedRefreshRunnable)
+    }
+
+    private fun scheduleNotificationRefresh() {
+        if (!isLauncherVisible) {
+            hasPendingRefresh = true
+            return
+        }
+        mainHandler.removeCallbacks(debouncedRefreshRunnable)
+        mainHandler.postDelayed(debouncedRefreshRunnable, NOTIFICATION_DEBOUNCE_MS)
+    }
+
     override fun onListenerConnected() {
         super.onListenerConnected()
         activeService = this
         _isServiceConnected.value = true
+        hasPendingRefresh = false
         refreshAllNotifications()
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
+        cancelPendingDebouncedRefresh()
         if (activeService === this) {
             activeService = null
         }
@@ -112,6 +150,7 @@ class LauncherNotificationService : NotificationListenerService() {
     }
 
     override fun onDestroy() {
+        cancelPendingDebouncedRefresh()
         if (activeService === this) {
             activeService = null
         }
@@ -120,12 +159,12 @@ class LauncherNotificationService : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
-        refreshAllNotifications()
+        scheduleNotificationRefresh()
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         super.onNotificationRemoved(sbn)
-        refreshAllNotifications()
+        scheduleNotificationRefresh()
     }
 
     private fun isLowImportance(
@@ -301,6 +340,7 @@ class LauncherNotificationService : NotificationListenerService() {
     }
 
     private fun refreshAllNotifications() {
+        hasPendingRefresh = false
         try {
             val active = activeNotifications ?: return
             val map = mutableMapOf<String, MutableList<RankedNotification>>()

@@ -17,6 +17,8 @@ import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.data.model.ShortcutItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,26 +39,50 @@ class AppRepository(
     @Volatile
     private var isCallbackRegistered = false
 
+    @Volatile
+    private var isForeground = false
+
+    @Volatile
+    private var pendingBackgroundRefresh = false
+
+    private var refreshJob: Job? = null
+
     private val launcherAppsCallback = object : LauncherApps.Callback() {
         override fun onPackageAdded(packageName: String, user: UserHandle) {
-            refreshApps()
+            schedulePackageRefresh()
         }
 
         override fun onPackageRemoved(packageName: String, user: UserHandle) {
-            refreshApps()
+            schedulePackageRefresh()
         }
 
         override fun onPackageChanged(packageName: String, user: UserHandle) {
-            refreshApps()
+            schedulePackageRefresh()
         }
 
         override fun onPackagesAvailable(packageNames: Array<out String>, user: UserHandle, replacing: Boolean) {
-            refreshApps()
+            schedulePackageRefresh()
         }
 
         override fun onPackagesUnavailable(packageNames: Array<out String>, user: UserHandle, replacing: Boolean) {
-            refreshApps()
+            schedulePackageRefresh()
         }
+    }
+
+    fun setForeground(foreground: Boolean) {
+        isForeground = foreground
+        if (foreground && pendingBackgroundRefresh) {
+            pendingBackgroundRefresh = false
+            refreshApps(debounceMs = 0L)
+        }
+    }
+
+    private fun schedulePackageRefresh() {
+        if (!isForeground) {
+            pendingBackgroundRefresh = true
+            return
+        }
+        refreshApps(debounceMs = PACKAGE_REFRESH_DEBOUNCE_MS)
     }
 
     fun seedInitialApps(cachedApps: List<AppItem>) {
@@ -78,14 +104,20 @@ class AppRepository(
     }
 
     fun stopListening() {
+        refreshJob?.cancel()
+        refreshJob = null
         if (isCallbackRegistered) {
             launcherApps.unregisterCallback(launcherAppsCallback)
             isCallbackRegistered = false
         }
     }
 
-    fun refreshApps(priorityKeys: Set<String> = emptySet()) {
-        repositoryScope.launch {
+    fun refreshApps(priorityKeys: Set<String> = emptySet(), debounceMs: Long = 0L) {
+        refreshJob?.cancel()
+        refreshJob = repositoryScope.launch {
+            if (debounceMs > 0L) {
+                delay(debounceMs)
+            }
             val apps = loadInstalledAppsInternal(priorityKeys)
             _installedApps.value = apps
         }
@@ -225,5 +257,9 @@ class AppRepository(
                 launcherApps.startShortcut(shortcut.rawShortcutInfo, null, null)
             } catch (_: Exception) {}
         }
+    }
+
+    companion object {
+        private const val PACKAGE_REFRESH_DEBOUNCE_MS = 400L
     }
 }

@@ -35,4 +35,22 @@ internal object HeaderFormatUtils {
         }
         return fallbackPercent.coerceIn(0, 100)
     }
+
+    fun parseIsCharging(intent: Intent?, fallbackIsCharging: Boolean): Boolean {
+        if (intent != null) {
+            val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+            return computeIsCharging(status, fallbackIsCharging)
+        }
+        return fallbackIsCharging
+    }
+
+    fun computeIsCharging(status: Int, fallbackIsCharging: Boolean): Boolean {
+        return when (status) {
+            BatteryManager.BATTERY_STATUS_CHARGING -> true
+            BatteryManager.BATTERY_STATUS_DISCHARGING,
+            BatteryManager.BATTERY_STATUS_NOT_CHARGING,
+            BatteryManager.BATTERY_STATUS_FULL -> false
+            else -> fallbackIsCharging
+        }
+    }
 }

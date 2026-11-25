@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -80,20 +81,24 @@ fun WaveScroller(
             currentFadeAlpha = 1f
         } else if (wasTouching) {
             wasTouching = false
-            currentFadeAlpha = 1f
-            delay(1000L)
-            val startAlpha = 1f
-            val durationMs = 1800f
-            val startTimeMs = SystemClock.uptimeMillis()
-            while (true) {
-                withFrameNanos { }
-                val elapsedMs = (SystemClock.uptimeMillis() - startTimeMs).coerceAtLeast(0L)
-                val t = (elapsedMs.toFloat() / durationMs).coerceIn(0f, 1f)
-                val smoothT = t * t * (3f - 2f * t)
-                currentFadeAlpha = startAlpha + (idleAlpha - startAlpha) * smoothT
-                if (t >= 1f) break
+            if (idleAlpha >= 0.999f) {
+                currentFadeAlpha = idleAlpha
+            } else {
+                currentFadeAlpha = 1f
+                delay(1000L)
+                val startAlpha = 1f
+                val durationMs = 1800f
+                val startTimeMs = SystemClock.uptimeMillis()
+                while (true) {
+                    withFrameNanos { }
+                    val elapsedMs = (SystemClock.uptimeMillis() - startTimeMs).coerceAtLeast(0L)
+                    val t = (elapsedMs.toFloat() / durationMs).coerceIn(0f, 1f)
+                    val smoothT = t * t * (3f - 2f * t)
+                    currentFadeAlpha = startAlpha + (idleAlpha - startAlpha) * smoothT
+                    if (t >= 1f) break
+                }
+                currentFadeAlpha = idleAlpha
             }
-            currentFadeAlpha = idleAlpha
         } else {
             currentFadeAlpha = idleAlpha
         }
@@ -168,46 +173,54 @@ fun WaveScroller(
             val maxHorizontalOffset = with(density) { 54.dp.toPx() }
             val maxScale = 1.55f
 
-            alphabet.forEachIndexed { index, letter ->
-                val letterCenterY = index * slotHeightPx + slotHeightPx / 2f
-                val isAvailable = letter == '★' || availableLetters.contains(letter)
-                val baseColor = if (isAvailable) PureWhite else PureWhite.copy(alpha = 0.35f)
-                val fadeAlpha = currentFadeAlpha.coerceIn(0f, 1f)
-                val fadedColor = baseColor.copy(alpha = (baseColor.alpha * fadeAlpha).coerceIn(0f, 1f))
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        clip = false
+                        alpha = currentFadeAlpha.coerceIn(0f, 1f)
+                    },
+                contentAlignment = if (isRightHanded) Alignment.TopEnd else Alignment.TopStart
+            ) {
+                alphabet.forEachIndexed { index, letter ->
+                    val letterCenterY = index * slotHeightPx + slotHeightPx / 2f
+                    val isAvailable = letter == '★' || availableLetters.contains(letter)
+                    val baseColor = if (isAvailable) PureWhite else PureWhite.copy(alpha = 0.35f)
 
-                val (horizontalOffsetPx, scaleFactor, textColor) = if (isTouching && touchY >= 0f) {
-                    val distance = abs(touchY - letterCenterY)
-                    val gaussian = exp(-(distance * distance) / (2f * sigma * sigma))
+                    val (horizontalOffsetPx, scaleFactor, textColor) = if (isTouching && touchY >= 0f) {
+                        val distance = abs(touchY - letterCenterY)
+                        val gaussian = exp(-(distance * distance) / (2f * sigma * sigma))
 
-                    val offsetDir = if (isRightHanded) -1f else 1f
-                    val hOffset = offsetDir * (maxHorizontalOffset * gaussian)
-                    val scale = 1.0f + (maxScale - 1.0f) * gaussian
-                    Triple(hOffset, scale, fadedColor)
-                } else {
-                    Triple(0f, 1f, fadedColor)
-                }
+                        val offsetDir = if (isRightHanded) -1f else 1f
+                        val hOffset = offsetDir * (maxHorizontalOffset * gaussian)
+                        val scale = 1.0f + (maxScale - 1.0f) * gaussian
+                        Triple(hOffset, scale, baseColor)
+                    } else {
+                        Triple(0f, 1f, baseColor)
+                    }
 
-                val topOffsetPx = (index * slotHeightPx).roundToInt()
+                    val topOffsetPx = (index * slotHeightPx).roundToInt()
 
-                Box(
-                    modifier = Modifier
-                        .offset {
-                            IntOffset(
-                                x = horizontalOffsetPx.roundToInt(),
-                                y = topOffsetPx
-                            )
-                        }
-                        .scale(scaleFactor)
-                        .size(width = 24.dp, height = slotHeightDp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = letter.toString(),
-                        fontSize = letterFontSizeSp.coerceIn(9, 16).sp,
-                        fontWeight = if (isTouching && scaleFactor > 1.25f) FontWeight.Bold else FontWeight.Medium,
-                        fontFamily = fontFamily,
-                        color = textColor
-                    )
+                    Box(
+                        modifier = Modifier
+                            .offset {
+                                IntOffset(
+                                    x = horizontalOffsetPx.roundToInt(),
+                                    y = topOffsetPx
+                                )
+                            }
+                            .scale(scaleFactor)
+                            .size(width = 24.dp, height = slotHeightDp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = letter.toString(),
+                            fontSize = letterFontSizeSp.coerceIn(9, 16).sp,
+                            fontWeight = if (isTouching && scaleFactor > 1.25f) FontWeight.Bold else FontWeight.Medium,
+                            fontFamily = fontFamily,
+                            color = textColor
+                        )
+                    }
                 }
             }
 

@@ -6,6 +6,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.2] - 2026-11-25
+
+### Deutsch
+- **Monochromes Lade-Symbol im Header:** Solange das Gerät lädt, erscheint direkt hinter der Akku-Prozentanzeige ein dezentes weißes Blitz-Symbol (`Icons.Filled.Bolt`) im einheitlichen Weiß-auf-Schwarz-Design.
+- **Akku- & Energie-Optimierung (ohne Funktions- oder Anzeige-Einschränkung):**
+  - **Lifecycle-gebundene Header-Broadcasts:** Uhrzeit-, Datums-, Akku- und Wecker-Empfänger (`HeaderWidget`) sind nur noch aktiv, solange der Launcher sichtbar ist (`ON_START`–`ON_STOP`), verarbeiten Events selektiv (Akku-Updates aktualisieren nur noch den Akkustand) und verwenden `SimpleDateFormat`-Instanzen wieder.
+  - **Foreground-Gating & Debouncing für Benachrichtigungen:** Im Hintergrund oder bei ausgeschaltetem Display führt `LauncherNotificationService` keine Binder-IPCs oder Ranking-Scans mehr aus, sondern merkt sich Änderungen leichtgewichtig und synchronisiert sofort beim Rückkehren auf den Homescreen; im Vordergrund werden Bursts mit 120 ms gebündelt.
+  - **MediaSession-Listener an Lifecycle & Einstellung gekoppelt:** Der Media-Listener pausiert automatisch im Hintergrund (`onStop`) sowie bei deaktiviertem Media-Widget (`showMedia = false`).
+  - **Startup-Cache ohne unnötige Flash-Schreibvorgänge:** `StartupCache.saveSnapshot` wird nur noch ausgeführt, wenn sich Favoriten, Ordner-Icons oder verfügbare Buchstaben wirklich geändert haben (nicht mehr bei jedem normalen App-Start).
+  - **Debounced App-Updates:** Hintergrund-Paketänderungen (z. B. Play-Store-Updates) werden auf den nächsten Vordergrund-Aufruf verschoben und per 400 ms Debounce gebündelt.
+  - **GPU-effizientes WaveScroller-Fading & Bitmap-Caching:** Das 1,8-s-Ausblenden der Buchstabenleiste läuft über `graphicsLayer` ohne 120-Hz-Text-Rekomposition (und wird bei 100 % Deckkraft komplett übersprungen); App-Icons werden in `AppListItem` per `remember(app.icon)` gecacht.
+
+### English
+- **Monochrome Charging Indicator in Header:** Displays a subtle white lightning bolt (`Icons.Filled.Bolt`) directly after the battery percentage while charging, matching the strict monochrome design.
+- **Battery & Power Efficiency Optimizations (Zero Functional or Visual Trade-offs):**
+  - **Lifecycle-Bound Selective Header Broadcasts:** `HeaderWidget` receivers now register only while the launcher is visible (`ON_START`–`ON_STOP`), handle battery and alarm broadcasts selectively without redundant date/alarm work, and reuse `SimpleDateFormat` instances.
+  - **Foreground-Gated & Debounced Notification Sync:** While the launcher is in the background or the screen is off, `LauncherNotificationService` skips Binder IPC scans and records a lightweight pending flag, syncing immediately on return; foreground bursts are debounced (120 ms).
+  - **Lifecycle- & Setting-Aware MediaSession Listener:** `MediaSessionHelper` automatically stops listening in `onStop` and whenever the media widget is disabled (`showMedia = false`).
+  - **Signature-Gated StartupCache Writes:** `StartupCache.saveSnapshot` now only runs when favorites, folder icons, or available letters actually change rather than re-encoding PNGs on every app launch.
+  - **Debounced Background App Refreshes:** Package add/change/remove callbacks during background Play Store updates are deferred until foreground return and debounced (400 ms).
+  - **GPU-Only WaveScroller Fade & Bitmap Caching:** `WaveScroller` idle fading uses `graphicsLayer` alpha without 120 Hz text recomposition (and skips the animation loop at 100% idle opacity), and `AppListItem` caches `asImageBitmap()` per icon instance.
+
+---
+
 ## [1.1.1] - 2026-11-24
 
 ### Deutsch

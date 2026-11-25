@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
@@ -60,6 +61,7 @@ import de.fisch981.minimallauncher.ui.theme.PureWhite
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun HeaderWidget(
@@ -86,6 +88,7 @@ fun HeaderWidget(
     var currentTime by remember { mutableStateOf("") }
     var currentDate by remember { mutableStateOf("") }
     var batteryPercent by remember { mutableIntStateOf(100) }
+    var isCharging by remember { mutableStateOf(false) }
     var nextAlarmText by remember { mutableStateOf<String?>(null) }
     var nextAlarmShowIntent by remember { mutableStateOf<PendingIntent?>(null) }
 
@@ -104,22 +107,36 @@ fun HeaderWidget(
 
         val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val dateFormat = SimpleDateFormat(strings.dateFormatPattern, strings.dateLocale)
 
-        fun refreshHeader(batteryIntent: Intent? = null) {
-            val now = Date()
+        fun updateFormatterTimeZones() {
+            val tz = TimeZone.getDefault()
+            timeFormat.timeZone = tz
+            dateFormat.timeZone = tz
+        }
+
+        fun refreshTimeAndDate(now: Date = Date()) {
             if (showClock) {
-                currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(now)
+                currentTime = timeFormat.format(now)
             }
             if (showDate) {
-                currentDate = SimpleDateFormat(strings.dateFormatPattern, strings.dateLocale).format(now)
+                currentDate = dateFormat.format(now)
             }
-            if (showBattery) {
-                val managerFallback = batteryManager
-                    ?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-                    ?.takeIf { it in 0..100 }
-                    ?: batteryPercent
-                batteryPercent = HeaderFormatUtils.parseBatteryPercent(batteryIntent, managerFallback)
-            }
+        }
+
+        fun refreshBattery(batteryIntent: Intent? = null) {
+            if (!showBattery) return
+            val managerFallback = batteryManager
+                ?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                ?.takeIf { it in 0..100 }
+                ?: batteryPercent
+            batteryPercent = HeaderFormatUtils.parseBatteryPercent(batteryIntent, managerFallback)
+            val chargingFallback = batteryManager?.isCharging ?: isCharging
+            isCharging = HeaderFormatUtils.parseIsCharging(batteryIntent, chargingFallback)
+        }
+
+        fun refreshNextAlarm(nowMillis: Long = System.currentTimeMillis()) {
             if (showNextAlarm) {
                 val alarmInfo = try {
                     alarmManager?.nextAlarmClock
@@ -129,7 +146,7 @@ fun HeaderWidget(
                 if (alarmInfo != null) {
                     val formatted = HeaderFormatUtils.formatNextAlarm(
                         triggerTimeMillis = alarmInfo.triggerTime,
-                        nowMillis = now.time,
+                        nowMillis = nowMillis,
                         locale = strings.dateLocale
                     )
                     nextAlarmText = formatted
@@ -142,6 +159,13 @@ fun HeaderWidget(
                 nextAlarmText = null
                 nextAlarmShowIntent = null
             }
+        }
+
+        fun refreshAll(batteryIntent: Intent? = null) {
+            val now = Date()
+            refreshTimeAndDate(now)
+            refreshBattery(batteryIntent)
+            refreshNextAlarm(now.time)
         }
 
         val filter = IntentFilter().apply {
@@ -161,26 +185,71 @@ fun HeaderWidget(
 
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, intent: Intent?) {
-                val batteryIntent = if (intent?.action == Intent.ACTION_BATTERY_CHANGED) intent else null
-                refreshHeader(batteryIntent)
+                when (intent?.action) {
+                    Intent.ACTION_BATTERY_CHANGED -> refreshBattery(intent)
+                    AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED -> refreshNextAlarm()
+                    Intent.ACTION_TIMEZONE_CHANGED,
+                    Intent.ACTION_LOCALE_CHANGED -> {
+                        updateFormatterTimeZones()
+                        refreshAll()
+                    }
+                    Intent.ACTION_TIME_TICK,
+                    Intent.ACTION_TIME_CHANGED -> {
+                        val now = Date()
+                        refreshTimeAndDate(now)
+                        if (showNextAlarm && nextAlarmText != null) {
+                            refreshNextAlarm(now.time)
+                        }
+                    }
+                    else -> refreshAll()
+                }
             }
         }
 
-        val initialSticky = runCatching {
-            ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
-        }.getOrNull()
-        refreshHeader(initialSticky)
+        var isReceiverRegistered = false
+
+        fun registerIfNeeded(): Intent? {
+            if (isReceiverRegistered) return null
+            val sticky = runCatching {
+                ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
+            }.getOrNull()
+            isReceiverRegistered = true
+            return sticky
+        }
+
+        fun unregisterIfNeeded() {
+            if (!isReceiverRegistered) return
+            runCatching { context.unregisterReceiver(receiver) }
+            isReceiverRegistered = false
+        }
+
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            val initialSticky = registerIfNeeded()
+            refreshAll(initialSticky)
+        }
 
         val lifecycleObserver = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                refreshHeader()
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    updateFormatterTimeZones()
+                    val sticky = registerIfNeeded()
+                    refreshAll(sticky)
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    updateFormatterTimeZones()
+                    refreshAll()
+                }
+                Lifecycle.Event.ON_STOP -> {
+                    unregisterIfNeeded()
+                }
+                else -> Unit
             }
         }
         lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
 
         onDispose {
             runCatching { lifecycleOwner.lifecycle.removeObserver(lifecycleObserver) }
-            runCatching { context.unregisterReceiver(receiver) }
+            unregisterIfNeeded()
         }
     }
 
@@ -252,6 +321,15 @@ fun HeaderWidget(
                                 fontFamily = fontFamily,
                                 color = GrayLight
                             )
+                            if (isCharging) {
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Icon(
+                                    imageVector = Icons.Filled.Bolt,
+                                    contentDescription = strings.batteryChargingContentDesc,
+                                    tint = GrayLight,
+                                    modifier = Modifier.size((clampedDateSize - 1).coerceIn(11, 22).dp)
+                                )
+                            }
                         }
                     }
                 }

@@ -282,13 +282,14 @@ fun AppListItem(
         ) {
             // App Icon (Lines outline or Monochrome converted)
             if (showIcon) {
+                val iconBitmap = remember(app.icon) { app.icon?.asImageBitmap() }
                 Box(
                     modifier = Modifier.size(36.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (app.icon != null) {
+                    if (iconBitmap != null) {
                         Image(
-                            bitmap = app.icon.asImageBitmap(),
+                            bitmap = iconBitmap,
                             contentDescription = app.label,
                             modifier = Modifier.size(34.dp)
                         )

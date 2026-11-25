@@ -52,6 +52,7 @@ data class AppStrings(
     val mediaPlayPause: String,
     val mediaNext: String,
     val nextAlarmContentDesc: String,
+    val batteryChargingContentDesc: String,
 
     // AppPopupSheet
     val folderSubAppsHeader: String,
@@ -271,6 +272,7 @@ val GermanStrings = AppStrings(
     mediaPlayPause = "Play/Pause",
     mediaNext = "Nächster",
     nextAlarmContentDesc = "Nächster Wecker",
+    batteryChargingContentDesc = "Wird geladen",
 
     folderSubAppsHeader = "Ordner / Unter-Apps",
     shortcutsHeader = "Shortcuts",
@@ -469,6 +471,7 @@ val EnglishStrings = AppStrings(
     mediaPlayPause = "Play/Pause",
     mediaNext = "Next",
     nextAlarmContentDesc = "Next alarm",
+    batteryChargingContentDesc = "Charging",
 
     folderSubAppsHeader = "Folder / Sub-apps",
     shortcutsHeader = "Shortcuts",

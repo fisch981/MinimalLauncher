@@ -185,5 +185,62 @@ class StartupCache(private val context: Context) {
         private const val ICONS_DIR_NAME = "startup_fav_icons"
         private const val KEY_FAVORITES_JSON = "favorites_json"
         private const val KEY_AVAILABLE_LETTERS = "available_letters"
+
+        data class SnapshotSignatureEntry(
+            val packageName: String,
+            val activityName: String,
+            val label: String,
+            val originalLabel: String,
+            val userHash: Int,
+            val iconIdentityHash: Int,
+            val subApps: List<SnapshotSignatureEntry> = emptyList()
+        )
+
+        fun buildSnapshotSignature(state: LauncherUiState): String {
+            return buildSnapshotSignatureFromEntries(
+                availableLetters = state.availableLetters,
+                favorites = state.favoriteApps.map { it.toSignatureEntry() }
+            )
+        }
+
+        fun buildSnapshotSignatureFromEntries(
+            availableLetters: Set<Char>,
+            favorites: List<SnapshotSignatureEntry>
+        ): String {
+            val sb = StringBuilder()
+            sb.append("letters=")
+            availableLetters.sorted().forEach { sb.append(it) }
+            sb.append("|favs=")
+            favorites.forEach { appendSignatureEntry(sb, it) }
+            return sb.toString()
+        }
+
+        private fun AppItem.toSignatureEntry(): SnapshotSignatureEntry {
+            return SnapshotSignatureEntry(
+                packageName = packageName,
+                activityName = activityName,
+                label = label,
+                originalLabel = originalLabel,
+                userHash = userHandle.hashCode(),
+                iconIdentityHash = System.identityHashCode(icon),
+                subApps = subApps.map { it.toSignatureEntry() }
+            )
+        }
+
+        private fun appendSignatureEntry(sb: StringBuilder, entry: SnapshotSignatureEntry) {
+            sb.append('[')
+                .append(entry.packageName).append('/')
+                .append(entry.activityName).append('#')
+                .append(entry.userHash).append(':')
+                .append(entry.label).append(':')
+                .append(entry.originalLabel).append(':')
+                .append(entry.iconIdentityHash)
+            if (entry.subApps.isNotEmpty()) {
+                sb.append("{")
+                entry.subApps.forEach { appendSignatureEntry(sb, it) }
+                sb.append("}")
+            }
+            sb.append(']')
+        }
     }
 }

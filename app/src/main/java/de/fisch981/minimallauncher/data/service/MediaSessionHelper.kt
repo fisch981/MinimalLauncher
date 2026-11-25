@@ -67,12 +67,14 @@ class MediaSessionHelper(private val context: Context) {
         }
     }
 
-    fun stopListening() {
+    fun stopListening(clearState: Boolean = true) {
         try {
             mediaSessionManager?.removeOnActiveSessionsChangedListener(sessionsChangedListener)
             activeController?.unregisterCallback(controllerCallback)
             activeController = null
-            _mediaState.value = MediaState()
+            if (clearState) {
+                _mediaState.value = MediaState()
+            }
         } catch (_: Exception) {
         } finally {
             isListening = false

@@ -324,11 +324,19 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _customIconsCount = MutableStateFlow(0)
     val customIconsCountState: StateFlow<Int> = _customIconsCount.asStateFlow()
 
+    @Volatile
+    private var isLauncherStarted = false
+
     init {
         _customIconsCount.value = importedIcons.count()
         appRepository.seedInitialApps(initialCachedState.favoriteApps)
         appRepository.registerCallbackOnly()
-        mediaHelper.startListening()
+
+        viewModelScope.launch {
+            showMedia.collectLatest { enabled ->
+                syncMediaListener(clearStateIfStopped = !enabled)
+            }
+        }
 
         viewModelScope.launch(Dispatchers.IO) {
             val initialOverrides = favoritesRepository.customIconsFlow.first()
@@ -346,12 +354,17 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             }
         }
 
-        // Aktuelle Favoriten samt kleinen Monochrom-Icons als Startup-Snapshot sichern (oder bei 0 Favoriten leeren)
+        // Aktuelle Favoriten samt kleinen Monochrom-Icons nur bei echter Änderung als Startup-Snapshot sichern
         viewModelScope.launch {
+            var lastSavedSnapshotSignature: String? = null
             launcherState.collectLatest { state ->
                 if (state.allApps.isNotEmpty()) {
-                    withContext(Dispatchers.IO) {
-                        startupCache.saveSnapshot(state)
+                    val signature = StartupCache.buildSnapshotSignature(state)
+                    if (signature != lastSavedSnapshotSignature) {
+                        withContext(Dispatchers.IO) {
+                            startupCache.saveSnapshot(state)
+                        }
+                        lastSavedSnapshotSignature = signature
                     }
                 }
             }
@@ -873,10 +886,32 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun onLauncherStart() {
+        isLauncherStarted = true
+        appRepository.setForeground(true)
+        LauncherNotificationService.setLauncherVisible(true, getApplication())
+        syncMediaListener(clearStateIfStopped = false)
+    }
+
+    fun onLauncherStop() {
+        isLauncherStarted = false
+        appRepository.setForeground(false)
+        LauncherNotificationService.setLauncherVisible(false, getApplication())
+        mediaHelper.stopListening(clearState = false)
+    }
+
+    private fun syncMediaListener(clearStateIfStopped: Boolean) {
+        if (isLauncherStarted && showMedia.value) {
+            mediaHelper.startListening()
+        } else {
+            mediaHelper.stopListening(clearState = clearStateIfStopped)
+        }
+    }
+
     fun mediaPlayPause() = mediaHelper.togglePlayPause()
     fun mediaNext() = mediaHelper.skipToNext()
     fun mediaPrevious() = mediaHelper.skipToPrevious()
-    fun refreshMediaListener() = mediaHelper.startListening()
+    fun refreshMediaListener() = syncMediaListener(clearStateIfStopped = !showMedia.value)
     fun refreshNotifications() = LauncherNotificationService.syncOrRebind(getApplication())
 
     fun dismissNotificationsForApp(packageName: String) {

@@ -89,12 +89,22 @@ class MainActivity : ComponentActivity() {
         viewModel.onReturnToLauncher(closeSettings = true)
     }
 
+    override fun onStart() {
+        super.onStart()
+        viewModel.onLauncherStart()
+    }
+
     override fun onResume() {
         super.onResume()
         viewModel.checkDefaultLauncher()
         viewModel.refreshMediaListener()
         viewModel.refreshNotifications()
         viewModel.onReturnToLauncher(closeSettings = false)
+    }
+
+    override fun onStop() {
+        viewModel.onLauncherStop()
+        super.onStop()
     }
 
     private fun applyStatusBarVisibility(hide: Boolean) {
