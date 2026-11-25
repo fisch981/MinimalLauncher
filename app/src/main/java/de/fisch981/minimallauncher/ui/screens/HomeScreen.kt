@@ -175,7 +175,9 @@ fun HomeScreen(
                 isAppDrawerMode = false
             }
             isRecentExpanded = false
-            homeListState.scrollToItem(0)
+            if (homeListState.firstVisibleItemIndex != 0 || homeListState.firstVisibleItemScrollOffset != 0) {
+                homeListState.scrollToItem(0)
+            }
         }
     }
 
@@ -192,7 +194,9 @@ fun HomeScreen(
     }
 
     LaunchedEffect(isRecentExpanded) {
-        if (!isRecentExpanded) {
+        if (!isRecentExpanded &&
+            (homeListState.firstVisibleItemIndex != 0 || homeListState.firstVisibleItemScrollOffset != 0)
+        ) {
             homeListState.scrollToItem(0)
         }
     }

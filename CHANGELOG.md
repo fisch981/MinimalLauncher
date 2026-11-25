@@ -6,6 +6,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.5] - 2026-11-25
+
+### Deutsch
+- **Vertikales Zucken beim Entsperren & App-Wechsel behoben:** Die Root-Fläche nutzt jetzt stabile `*IgnoringVisibility`-Insets (`WindowInsets.navigationBarsIgnoringVisibility` bei ausgeblendeter Statusleiste bzw. `WindowInsets.systemBarsIgnoringVisibility` sonst), sodass temporäre Sichtbarkeitswechsel von Status- oder Navigationsleiste (z. B. beim Entsperren vom Sperrbildschirm oder beim Zurückkehren aus Apps) keinen Layout-Versatz mehr auslösen. Zudem wird `applyStatusBarVisibility` bereits in `onResume` angewendet und redundantes `scrollToItem(0)` übersprungen.
+
+### English
+- **Fixed Vertical Lockscreen & App-Return Layout Twitch:** Root `Surface` now uses stable `*IgnoringVisibility` insets (`WindowInsets.navigationBarsIgnoringVisibility` when status bar is hidden, `WindowInsets.systemBarsIgnoringVisibility` otherwise) so transient bar-visibility transitions on lockscreen unlock or app return never shift the vertically centered Home Screen. Also applies `applyStatusBarVisibility` immediately in `onResume` and skips redundant `scrollToItem(0)` calls.
+
+---
+
 ## [1.1.4] - 2026-11-25
 
 ### Deutsch
