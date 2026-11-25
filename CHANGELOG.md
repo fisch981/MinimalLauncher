@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.3] - 2026-11-25
+
+### Deutsch
+- **Sanftes Einblenden nach Standby & Sperrbildschirm:** Beim Entsperren bzw. Aufwecken des Smartphones blendet sich der Homescreen per GPU-Animation (`graphicsLayer`) weich aus reinem Schwarz ein.
+- **Deaktivierbar & in der Dauer einstellbar:** Unter *Einstellungen → Homescreen & Apps* lässt sich *Sanftes Einblenden* ein-/ausschalten und die Einblend-Dauer stufenlos zwischen `200 ms` und `2000 ms` (Standard: `500 ms`) anpassen (inkl. JSON-Backup/Restore).
+
+### English
+- **Smooth Wake & Unlock Fade-In:** Smoothly fades in the home screen from pure black via GPU `graphicsLayer` when waking or unlocking the device.
+- **Toggleable & Adjustable Duration:** Under *Settings → Home Screen & Apps*, *Smooth fade-in* can be toggled on/off and its duration adjusted from `200 ms` to `2000 ms` (default: `500 ms`), including JSON backup/restore support.
+
+---
+
 ## [1.1.2] - 2026-11-25
 
 ### Deutsch

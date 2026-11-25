@@ -59,6 +59,8 @@ class FavoritesRepository(private val context: Context) {
         private val KEY_DATE_SIZE_SP = intPreferencesKey("date_size_sp")
         private val KEY_WAVE_FONT_SIZE_SP = intPreferencesKey("wave_font_size_sp")
         private val KEY_APP_LONG_PRESS_DELAY_MS = intPreferencesKey("app_long_press_delay_ms")
+        private val KEY_WAKE_FADE_IN_ENABLED = booleanPreferencesKey("wake_fade_in_enabled")
+        private val KEY_WAKE_FADE_IN_DURATION_MS = intPreferencesKey("wake_fade_in_duration_ms")
     }
 
     val customIconsFlow: Flow<Map<String, String>> = context.dataStore.data.map { prefs ->
@@ -211,6 +213,26 @@ class FavoritesRepository(private val context: Context) {
 
     val appLanguageFlow: Flow<AppLanguage> = context.dataStore.data.map { prefs ->
         AppLanguage.fromCode(prefs[KEY_APP_LANGUAGE])
+    }
+
+    val wakeFadeInEnabledFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_WAKE_FADE_IN_ENABLED] ?: true
+    }
+
+    val wakeFadeInDurationMsFlow: Flow<Int> = context.dataStore.data.map { prefs ->
+        (prefs[KEY_WAKE_FADE_IN_DURATION_MS] ?: 500).coerceIn(200, 2000)
+    }
+
+    suspend fun setWakeFadeInEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_WAKE_FADE_IN_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setWakeFadeInDurationMs(durationMs: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_WAKE_FADE_IN_DURATION_MS] = durationMs.coerceIn(200, 2000)
+        }
     }
 
     val appLaunchCountsFlow: Flow<Map<String, Int>> = context.dataStore.data.map { prefs ->
@@ -633,6 +655,8 @@ class FavoritesRepository(private val context: Context) {
             dateSizeSp = (prefs[KEY_DATE_SIZE_SP] ?: 15).coerceIn(11, 24),
             waveFontSizeSp = (prefs[KEY_WAVE_FONT_SIZE_SP] ?: 11).coerceIn(9, 16),
             appLongPressDelayMs = (prefs[KEY_APP_LONG_PRESS_DELAY_MS] ?: 500).coerceIn(250, 2000),
+            wakeFadeInEnabled = prefs[KEY_WAKE_FADE_IN_ENABLED] ?: true,
+            wakeFadeInDurationMs = (prefs[KEY_WAKE_FADE_IN_DURATION_MS] ?: 500).coerceIn(200, 2000),
             showClock = prefs[KEY_SHOW_CLOCK] ?: true,
             clockSizeSp = (prefs[KEY_CLOCK_SIZE_SP] ?: 52).coerceIn(28, 84),
             showDate = prefs[KEY_SHOW_DATE] ?: true,
@@ -688,6 +712,8 @@ class FavoritesRepository(private val context: Context) {
             prefs[KEY_DATE_SIZE_SP] = data.dateSizeSp.coerceIn(11, 24)
             prefs[KEY_WAVE_FONT_SIZE_SP] = data.waveFontSizeSp.coerceIn(9, 16)
             prefs[KEY_APP_LONG_PRESS_DELAY_MS] = data.appLongPressDelayMs.coerceIn(250, 2000)
+            prefs[KEY_WAKE_FADE_IN_ENABLED] = data.wakeFadeInEnabled
+            prefs[KEY_WAKE_FADE_IN_DURATION_MS] = data.wakeFadeInDurationMs.coerceIn(200, 2000)
             prefs[KEY_SHOW_CLOCK] = data.showClock
             prefs[KEY_CLOCK_SIZE_SP] = data.clockSizeSp.coerceIn(28, 84)
             prefs[KEY_SHOW_DATE] = data.showDate

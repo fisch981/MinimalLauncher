@@ -34,6 +34,8 @@ class LauncherBackupCodecTest {
             dateSizeSp = 13,
             waveFontSizeSp = 12,
             appLongPressDelayMs = 850,
+            wakeFadeInEnabled = false,
+            wakeFadeInDurationMs = 1200,
             showClock = false,
             clockSizeSp = 68,
             showDate = false,
@@ -87,6 +89,8 @@ class LauncherBackupCodecTest {
         assertEquals(13, decoded.dateSizeSp)
         assertEquals(12, decoded.waveFontSizeSp)
         assertEquals(850, decoded.appLongPressDelayMs)
+        assertFalse(decoded.wakeFadeInEnabled)
+        assertEquals(1200, decoded.wakeFadeInDurationMs)
         assertFalse(decoded.showClock)
         assertEquals(68, decoded.clockSizeSp)
         assertFalse(decoded.showDate)
@@ -125,6 +129,8 @@ class LauncherBackupCodecTest {
         assertEquals("notifications", decoded.homeSwipeDownAction)
         assertEquals("search", decoded.homeSwipeUpAction)
         assertEquals("none", decoded.homeDoubleTapAction)
+        assertTrue(decoded.wakeFadeInEnabled)
+        assertEquals(500, decoded.wakeFadeInDurationMs)
     }
 
     @Test(expected = IllegalArgumentException::class)

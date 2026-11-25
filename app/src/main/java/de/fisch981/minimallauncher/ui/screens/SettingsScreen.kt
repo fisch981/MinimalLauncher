@@ -254,7 +254,7 @@ fun SettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
-                        text = "MinimalLauncher v1.1.2",
+                        text = "MinimalLauncher v1.1.3",
                         color = GrayMedium,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(bottom = 32.dp)
@@ -437,6 +437,8 @@ private fun HomeAppsSubScreen(
     val showRecentApps by viewModel.showRecentApps.collectAsState()
     val showBottomActions by viewModel.showBottomActions.collectAsState()
     val appLongPressDelayMs by viewModel.appLongPressDelayMs.collectAsState()
+    val wakeFadeInEnabled by viewModel.wakeFadeInEnabled.collectAsState()
+    val wakeFadeInDurationMs by viewModel.wakeFadeInDurationMs.collectAsState()
     val homeSwipeDownAction by viewModel.homeSwipeDownAction.collectAsState()
     val homeSwipeUpAction by viewModel.homeSwipeUpAction.collectAsState()
     val homeDoubleTapAction by viewModel.homeDoubleTapAction.collectAsState()
@@ -520,6 +522,63 @@ private fun HomeAppsSubScreen(
                         inactiveTrackColor = DarkSurfaceVariant
                     )
                 )
+            }
+
+            HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))
+
+            SettingSwitchItem(
+                title = strings.wakeFadeInTitle,
+                subtitle = strings.wakeFadeInSubtitle,
+                checked = wakeFadeInEnabled,
+                onCheckedChange = { viewModel.toggleWakeFadeInEnabled(it) }
+            )
+
+            if (wakeFadeInEnabled) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            strings.wakeFadeInDurationTitle,
+                            color = PureWhite,
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "${wakeFadeInDurationMs} ms",
+                            color = PureWhite,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        strings.wakeFadeInDurationSubtitle,
+                        color = GrayMedium,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Slider(
+                        value = wakeFadeInDurationMs.toFloat(),
+                        onValueChange = { raw ->
+                            val snapped = ((raw / 50f).roundToInt() * 50).coerceIn(200, 2000)
+                            viewModel.setWakeFadeInDurationMs(snapped)
+                        },
+                        valueRange = 200f..2000f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = PureWhite,
+                            activeTrackColor = PureWhite,
+                            inactiveTrackColor = DarkSurfaceVariant
+                        )
+                    )
+                }
             }
 
             HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 12.dp))

@@ -167,6 +167,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val appLongPressDelayMs: StateFlow<Int> = favoritesRepository.appLongPressDelayMsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, 500)
 
+    val wakeFadeInEnabled: StateFlow<Boolean> = favoritesRepository.wakeFadeInEnabledFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val wakeFadeInDurationMs: StateFlow<Int> = favoritesRepository.wakeFadeInDurationMsFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 500)
+
     private val _scrollToTopEvent = MutableStateFlow(0)
     val scrollToTopEvent: StateFlow<Int> = _scrollToTopEvent.asStateFlow()
 
@@ -873,6 +879,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setAppLongPressDelayMs(delayMs: Int) {
         viewModelScope.launch {
             favoritesRepository.setAppLongPressDelayMs(delayMs)
+        }
+    }
+
+    fun toggleWakeFadeInEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            favoritesRepository.setWakeFadeInEnabled(enabled)
+        }
+    }
+
+    fun setWakeFadeInDurationMs(durationMs: Int) {
+        viewModelScope.launch {
+            favoritesRepository.setWakeFadeInDurationMs(durationMs)
         }
     }
 
