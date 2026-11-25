@@ -19,8 +19,6 @@ data class LauncherBackupData(
     val dateSizeSp: Int = 15,
     val waveFontSizeSp: Int = 11,
     val appLongPressDelayMs: Int = 500,
-    val wakeFadeInEnabled: Boolean = true,
-    val wakeFadeInDurationMs: Int = 500,
     val showClock: Boolean = true,
     val clockSizeSp: Int = 52,
     val showDate: Boolean = true,
@@ -70,8 +68,6 @@ object LauncherBackupCodec {
         appendIntField(sb, "dateSizeSp", data.dateSizeSp, indent = 2, trailingComma = true)
         appendIntField(sb, "waveFontSizeSp", data.waveFontSizeSp, indent = 2, trailingComma = true)
         appendIntField(sb, "appLongPressDelayMs", data.appLongPressDelayMs, indent = 2, trailingComma = true)
-        appendBoolField(sb, "wakeFadeInEnabled", data.wakeFadeInEnabled, indent = 2, trailingComma = true)
-        appendIntField(sb, "wakeFadeInDurationMs", data.wakeFadeInDurationMs, indent = 2, trailingComma = true)
         appendBoolField(sb, "showClock", data.showClock, indent = 2, trailingComma = true)
         appendIntField(sb, "clockSizeSp", data.clockSizeSp, indent = 2, trailingComma = true)
         appendBoolField(sb, "showDate", data.showDate, indent = 2, trailingComma = true)
@@ -127,8 +123,6 @@ object LauncherBackupCodec {
             dateSizeSp = ((root["dateSizeSp"] as? Number)?.toInt() ?: 15).coerceIn(11, 24),
             waveFontSizeSp = ((root["waveFontSizeSp"] as? Number)?.toInt() ?: 11).coerceIn(9, 16),
             appLongPressDelayMs = ((root["appLongPressDelayMs"] as? Number)?.toInt() ?: 500).coerceIn(250, 2000),
-            wakeFadeInEnabled = (root["wakeFadeInEnabled"] as? Boolean) ?: true,
-            wakeFadeInDurationMs = ((root["wakeFadeInDurationMs"] as? Number)?.toInt() ?: 500).coerceIn(200, 2000),
             showClock = (root["showClock"] as? Boolean) ?: true,
             clockSizeSp = ((root["clockSizeSp"] as? Number)?.toInt() ?: 52).coerceIn(28, 84),
             showDate = (root["showDate"] as? Boolean) ?: true,

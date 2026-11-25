@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.4] - 2026-11-25
+
+### Deutsch
+- **Zucken beim Entsperren aus dem Sperrbildschirm behoben:** `HeaderWidget`, `LauncherNotificationService`, `MediaSessionHelper` und `AppRepository` pausieren im Hintergrund nicht mehr über `onStop`/`ON_STOP`, sodass Uhrzeit, Akku, Lade-Blitz, Benachrichtigungen und Media-Widget beim Entsperren bereits aktuell sind und das Layout nicht mehr kurz springt. Die übrigen Energiespar-Optimierungen (selektive Broadcast-Auswertung, Debouncing, `StartupCache`-Signaturprüfung, GPU-`WaveScroller`-Fade, Bitmap-Caching) bleiben vollständig erhalten.
+- **Standby-/Entsperr-Einblenden entfernt:** Das in `v1.1.3` testweise eingeführte Einblenden nach dem Entsperren sowie die zugehörige Einstellung wurden wieder entfernt.
+
+### English
+- **Fixed Lockscreen-Return Layout Twitch:** Removed `onStop`/`ON_STOP` listener freezing in `HeaderWidget`, `LauncherNotificationService`, `MediaSessionHelper`, and `AppRepository` so header, notifications, and media state stay current before unlock and never cause a post-unlock jump. All twitch-free power optimizations (selective broadcast handling, debouncing, `StartupCache` signature gating, GPU `WaveScroller` fade, bitmap caching) remain active.
+- **Removed Wake/Unlock Fade-In:** Removed the experimental wake/unlock fade-in animation and its settings introduced in `v1.1.3`.
+
+---
+
 ## [1.1.3] - 2026-11-25
 
 ### Deutsch

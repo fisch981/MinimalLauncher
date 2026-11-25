@@ -206,50 +206,22 @@ fun HeaderWidget(
             }
         }
 
-        var isReceiverRegistered = false
-
-        fun registerIfNeeded(): Intent? {
-            if (isReceiverRegistered) return null
-            val sticky = runCatching {
-                ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
-            }.getOrNull()
-            isReceiverRegistered = true
-            return sticky
-        }
-
-        fun unregisterIfNeeded() {
-            if (!isReceiverRegistered) return
-            runCatching { context.unregisterReceiver(receiver) }
-            isReceiverRegistered = false
-        }
-
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-            val initialSticky = registerIfNeeded()
-            refreshAll(initialSticky)
-        }
+        val initialSticky = runCatching {
+            ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
+        }.getOrNull()
+        refreshAll(initialSticky)
 
         val lifecycleObserver = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> {
-                    updateFormatterTimeZones()
-                    val sticky = registerIfNeeded()
-                    refreshAll(sticky)
-                }
-                Lifecycle.Event.ON_RESUME -> {
-                    updateFormatterTimeZones()
-                    refreshAll()
-                }
-                Lifecycle.Event.ON_STOP -> {
-                    unregisterIfNeeded()
-                }
-                else -> Unit
+            if (event == Lifecycle.Event.ON_RESUME) {
+                updateFormatterTimeZones()
+                refreshAll()
             }
         }
         lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
 
         onDispose {
             runCatching { lifecycleOwner.lifecycle.removeObserver(lifecycleObserver) }
-            unregisterIfNeeded()
+            runCatching { context.unregisterReceiver(receiver) }
         }
     }
 

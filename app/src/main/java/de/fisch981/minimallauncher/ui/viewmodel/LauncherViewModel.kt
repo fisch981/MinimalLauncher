@@ -167,12 +167,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val appLongPressDelayMs: StateFlow<Int> = favoritesRepository.appLongPressDelayMsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, 500)
 
-    val wakeFadeInEnabled: StateFlow<Boolean> = favoritesRepository.wakeFadeInEnabledFlow
-        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
-
-    val wakeFadeInDurationMs: StateFlow<Int> = favoritesRepository.wakeFadeInDurationMsFlow
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 500)
-
     private val _scrollToTopEvent = MutableStateFlow(0)
     val scrollToTopEvent: StateFlow<Int> = _scrollToTopEvent.asStateFlow()
 
@@ -330,9 +324,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _customIconsCount = MutableStateFlow(0)
     val customIconsCountState: StateFlow<Int> = _customIconsCount.asStateFlow()
 
-    @Volatile
-    private var isLauncherStarted = false
-
     init {
         _customIconsCount.value = importedIcons.count()
         appRepository.seedInitialApps(initialCachedState.favoriteApps)
@@ -340,7 +331,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
         viewModelScope.launch {
             showMedia.collectLatest { enabled ->
-                syncMediaListener(clearStateIfStopped = !enabled)
+                syncMediaListener(enabled)
             }
         }
 
@@ -882,18 +873,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun toggleWakeFadeInEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            favoritesRepository.setWakeFadeInEnabled(enabled)
-        }
-    }
-
-    fun setWakeFadeInDurationMs(durationMs: Int) {
-        viewModelScope.launch {
-            favoritesRepository.setWakeFadeInDurationMs(durationMs)
-        }
-    }
-
     fun reloadIcons() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -904,32 +883,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun onLauncherStart() {
-        isLauncherStarted = true
-        appRepository.setForeground(true)
-        LauncherNotificationService.setLauncherVisible(true, getApplication())
-        syncMediaListener(clearStateIfStopped = false)
-    }
-
-    fun onLauncherStop() {
-        isLauncherStarted = false
-        appRepository.setForeground(false)
-        LauncherNotificationService.setLauncherVisible(false, getApplication())
-        mediaHelper.stopListening(clearState = false)
-    }
-
-    private fun syncMediaListener(clearStateIfStopped: Boolean) {
-        if (isLauncherStarted && showMedia.value) {
+    private fun syncMediaListener(enabled: Boolean) {
+        if (enabled) {
             mediaHelper.startListening()
         } else {
-            mediaHelper.stopListening(clearState = clearStateIfStopped)
+            mediaHelper.stopListening(clearState = true)
         }
     }
 
     fun mediaPlayPause() = mediaHelper.togglePlayPause()
     fun mediaNext() = mediaHelper.skipToNext()
     fun mediaPrevious() = mediaHelper.skipToPrevious()
-    fun refreshMediaListener() = syncMediaListener(clearStateIfStopped = !showMedia.value)
+    fun refreshMediaListener() = syncMediaListener(showMedia.value)
     fun refreshNotifications() = LauncherNotificationService.syncOrRebind(getApplication())
 
     fun dismissNotificationsForApp(packageName: String) {

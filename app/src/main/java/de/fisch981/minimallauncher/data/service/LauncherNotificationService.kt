@@ -28,26 +28,10 @@ class LauncherNotificationService : NotificationListenerService() {
         @Volatile
         private var activeService: LauncherNotificationService? = null
 
-        @Volatile
-        private var isLauncherVisible: Boolean = false
-
-        @Volatile
-        private var hasPendingRefresh: Boolean = false
-
         private const val NOTIFICATION_DEBOUNCE_MS = 120L
 
         private val locallyDismissedLock = Any()
         private var locallyDismissedKeyPostTimes: Map<String, Long> = emptyMap()
-
-        fun setLauncherVisible(visible: Boolean, context: Context) {
-            isLauncherVisible = visible
-            if (!visible) {
-                activeService?.cancelPendingDebouncedRefresh()
-            } else if (hasPendingRefresh) {
-                hasPendingRefresh = false
-                syncOrRebind(context)
-            }
-        }
 
         fun isPermissionGranted(context: Context): Boolean {
             val enabledListeners = Settings.Secure.getString(
@@ -123,10 +107,6 @@ class LauncherNotificationService : NotificationListenerService() {
     }
 
     private fun scheduleNotificationRefresh() {
-        if (!isLauncherVisible) {
-            hasPendingRefresh = true
-            return
-        }
         mainHandler.removeCallbacks(debouncedRefreshRunnable)
         mainHandler.postDelayed(debouncedRefreshRunnable, NOTIFICATION_DEBOUNCE_MS)
     }
@@ -135,7 +115,6 @@ class LauncherNotificationService : NotificationListenerService() {
         super.onListenerConnected()
         activeService = this
         _isServiceConnected.value = true
-        hasPendingRefresh = false
         refreshAllNotifications()
     }
 
@@ -340,7 +319,6 @@ class LauncherNotificationService : NotificationListenerService() {
     }
 
     private fun refreshAllNotifications() {
-        hasPendingRefresh = false
         try {
             val active = activeNotifications ?: return
             val map = mutableMapOf<String, MutableList<RankedNotification>>()

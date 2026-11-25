@@ -39,12 +39,6 @@ class AppRepository(
     @Volatile
     private var isCallbackRegistered = false
 
-    @Volatile
-    private var isForeground = false
-
-    @Volatile
-    private var pendingBackgroundRefresh = false
-
     private var refreshJob: Job? = null
 
     private val launcherAppsCallback = object : LauncherApps.Callback() {
@@ -69,19 +63,7 @@ class AppRepository(
         }
     }
 
-    fun setForeground(foreground: Boolean) {
-        isForeground = foreground
-        if (foreground && pendingBackgroundRefresh) {
-            pendingBackgroundRefresh = false
-            refreshApps(debounceMs = 0L)
-        }
-    }
-
     private fun schedulePackageRefresh() {
-        if (!isForeground) {
-            pendingBackgroundRefresh = true
-            return
-        }
         refreshApps(debounceMs = PACKAGE_REFRESH_DEBOUNCE_MS)
     }
 
