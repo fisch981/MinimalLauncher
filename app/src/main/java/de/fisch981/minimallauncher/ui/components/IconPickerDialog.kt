@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -183,6 +184,7 @@ fun IconPickerDialog(
                 Button(
                     onClick = onResetDefault,
                     modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = DarkSurfaceVariant,
                         contentColor = PureWhite
@@ -191,7 +193,12 @@ fun IconPickerDialog(
                 ) {
                     Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(strings.restoreDefaultIconAction, fontSize = 14.sp)
+                    Text(
+                        text = strings.restoreDefaultIconAction,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }

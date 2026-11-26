@@ -6,6 +6,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.6] - 2026-11-26
+
+### Deutsch
+- **Zeilenumbrüche in Buttons & Auswahlfeldern behoben:** Im Dialog *App umbenennen* nutzt der Dialog nun komfortable Breite mit einzeiligen Aktionen (`Zurücksetzen`, `Abbrechen`, `Speichern`), sodass der *Speichern*-Button nicht mehr umbricht. Zudem sind auch der Standard-Launcher-Button, die Position-/Sprach-Auswahlfelder, die Statistik-Zähler sowie die Buttons im Icon-Picker und Favoriten-Dialog einzeilig abgesichert.
+
+### English
+- **Fixed Button & Selector Text Wrapping:** Updated `RenameAppDialog` with `usePlatformDefaultWidth = false`, comfortable horizontal margins, and single-line action labels (`Reset`, `Cancel`, `Save`) so *Save* never wraps mid-word. Also hardened the default launcher button, wave-position and language selector chips, usage-stats counters, and action buttons in `IconPickerDialog` and `FavoritesSelectionDialog` against unintended wrapping.
+
+---
+
 ## [1.1.5] - 2026-11-25
 
 ### Deutsch

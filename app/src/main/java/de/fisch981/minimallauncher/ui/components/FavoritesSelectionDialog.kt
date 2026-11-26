@@ -154,7 +154,14 @@ fun FavoritesSelectionDialog(
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(strings.done, fontWeight = FontWeight.Bold, fontFamily = fontFamily, fontSize = 15.sp)
+                    Text(
+                        text = strings.done,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = fontFamily,
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 }
             }
         }

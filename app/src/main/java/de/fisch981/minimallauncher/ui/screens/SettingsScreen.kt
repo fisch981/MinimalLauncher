@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -254,7 +255,7 @@ fun SettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
-                        text = "MinimalLauncher v1.1.5",
+                        text = "MinimalLauncher v1.1.6",
                         color = GrayMedium,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(bottom = 32.dp)
@@ -795,14 +796,17 @@ private fun IconsWaveSubScreen(
                                     RoundedCornerShape(8.dp)
                                 )
                                 .clickable { viewModel.setScrollerSide(option) }
-                                .padding(vertical = 10.dp),
+                                .padding(vertical = 10.dp, horizontal = 6.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = label,
                                 color = if (selected) PureBlack else GrayLight,
                                 fontSize = 13.sp,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -903,8 +907,10 @@ private fun SystemBackupSubScreen(
                             color = GrayMedium
                         )
                     }
+                    Spacer(modifier = Modifier.width(12.dp))
                     Button(
                         onClick = onRequestDefaultLauncher,
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PureWhite,
                             contentColor = PureBlack
@@ -914,7 +920,9 @@ private fun SystemBackupSubScreen(
                         Text(
                             text = if (isDefaultLauncher) strings.changeButton else strings.setButton,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }
@@ -958,14 +966,17 @@ private fun SystemBackupSubScreen(
                                     RoundedCornerShape(8.dp)
                                 )
                                 .clickable { viewModel.setAppLanguage(option) }
-                                .padding(vertical = 10.dp),
+                                .padding(vertical = 10.dp, horizontal = 6.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = label,
                                 color = if (selected) PureBlack else GrayLight,
                                 fontSize = 13.sp,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1415,7 +1426,9 @@ private fun UsageStatsSubScreen(
                                 text = "${waveUsageStats.leftCount}× (${waveUsageStats.leftPercent}%)",
                                 color = PureWhite,
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -1437,7 +1450,9 @@ private fun UsageStatsSubScreen(
                                 text = "${waveUsageStats.rightCount}× (${waveUsageStats.rightPercent}%)",
                                 color = PureWhite,
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }

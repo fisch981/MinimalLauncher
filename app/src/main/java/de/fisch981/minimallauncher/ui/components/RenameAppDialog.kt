@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,9 +31,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import de.fisch981.minimallauncher.data.model.AppItem
 import de.fisch981.minimallauncher.ui.theme.BorderDark
 import de.fisch981.minimallauncher.ui.theme.DarkSurfaceVariant
@@ -55,10 +58,14 @@ fun RenameAppDialog(
         focusRequester.requestFocus()
     }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = 24.dp)
                 .background(PureBlack, RoundedCornerShape(12.dp))
                 .border(1.dp, BorderDark, RoundedCornerShape(12.dp))
                 .padding(20.dp)
@@ -115,6 +122,9 @@ fun RenameAppDialog(
                     text = strings.reset,
                     fontSize = 13.sp,
                     color = GrayMedium,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .clickable { onSave("") }
                         .padding(vertical = 8.dp, horizontal = 4.dp)
@@ -125,6 +135,9 @@ fun RenameAppDialog(
                         text = strings.cancel,
                         fontSize = 13.sp,
                         color = GrayMedium,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .clickable(onClick = onDismiss)
                             .padding(vertical = 8.dp, horizontal = 10.dp)
@@ -132,13 +145,21 @@ fun RenameAppDialog(
                     Spacer(modifier = Modifier.width(6.dp))
                     Button(
                         onClick = { onSave(text.trim()) },
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PureWhite,
                             contentColor = PureBlack
                         ),
                         shape = RoundedCornerShape(6.dp)
                     ) {
-                        Text(strings.save, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = strings.save,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
